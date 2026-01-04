@@ -115,7 +115,7 @@ function App() {
           w="full"
         >
           {/* Hero section */}
-          <Flex direction="column" w="full" h="full" pt={{ base: "30px", md: "100px" }}>
+          <Flex direction="column" w="full" h="full" pt={{ base: "50px", md: "100px" }}>
             <MotionFlex
               direction="column"
               align="center"
