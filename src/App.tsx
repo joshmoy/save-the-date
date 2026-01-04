@@ -29,7 +29,7 @@ function App() {
         left="0"
         right="0"
         bottom="0"
-        bg="linear-gradient(to bottom, rgba(255, 248, 240, 0.95), rgba(255, 248, 240, 0.92), rgba(255, 248, 240, 0.95))"
+        bg="linear-gradient(to bottom, rgba(255, 248, 240, 0.82), rgba(255, 248, 240, 0.78), rgba(255, 248, 240, 0.82))"
       />
 
       {/* Elegant background pattern */}
@@ -49,8 +49,8 @@ function App() {
         position="absolute"
         top="0"
         left="0"
-        w="200px"
-        h="200px"
+        w={{ base: "150px", md: "200px" }}
+        h={{ base: "150px", md: "200px" }}
         initial={{ opacity: 0, rotate: -20 }}
         animate={{ opacity: 1, rotate: 0 }}
         transition={{ duration: 1.5, delay: 0.5 }}
@@ -58,8 +58,8 @@ function App() {
         <Image
           src="https://pixabay.com/get/gf78af5586be2c5a6561a56a6c7a640963eaec113abe23b59c2bcfd9f687f54cc571f8bbfdcf8be31455791f0bb8f92ef.svg"
           alt="flowers, circle, frame, boundary, floral frame, flower border, rose by PhuongLucky on Pixabay"
-          width="200px"
-          height="200px"
+          w="full"
+          h="full"
           opacity={0.4}
           transform="scale(-1, 1)"
         />
@@ -67,10 +67,10 @@ function App() {
 
       <MotionBox
         position="absolute"
-        bottom="0"
+        bottom={{base: "10", md: '0'}}
         right="0"
-        w="200px"
-        h="200px"
+        w={{ base: "150px", md: "200px" }}
+        h={{ base: "150px", md: "200px" }}
         initial={{ opacity: 0, rotate: 20 }}
         animate={{ opacity: 1, rotate: 0 }}
         transition={{ duration: 1.5, delay: 0.7 }}
@@ -78,8 +78,8 @@ function App() {
         <Image
           src="https://pixabay.com/get/gf78af5586be2c5a6561a56a6c7a640963eaec113abe23b59c2bcfd9f687f54cc571f8bbfdcf8be31455791f0bb8f92ef.svg"
           alt="flowers, circle, frame, boundary, floral frame, flower border, rose by PhuongLucky on Pixabay"
-          width="200px"
-          height="200px"
+          w="full"
+          h="full"
           opacity={0.4}
           transform="rotate(180deg)"
         />
