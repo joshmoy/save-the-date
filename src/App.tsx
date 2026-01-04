@@ -67,7 +67,7 @@ function App() {
 
       <MotionBox
         position="absolute"
-        bottom={{base: "10", md: '0'}}
+        bottom="0"
         right="0"
         w={{ base: "150px", md: "200px" }}
         h={{ base: "150px", md: "200px" }}
