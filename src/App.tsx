@@ -32,6 +32,17 @@ function App() {
         bg="linear-gradient(to bottom, rgba(255, 248, 240, 0.82), rgba(255, 248, 240, 0.78), rgba(255, 248, 240, 0.82))"
       />
 
+      {/* Vignette effect */}
+      <Box
+        position="absolute"
+        top="0"
+        left="0"
+        right="0"
+        bottom="0"
+        bg="radial-gradient(circle at center, transparent 0%, transparent 50%, rgba(62, 39, 35, 0.15) 100%)"
+        pointerEvents="none"
+      />
+
       {/* Elegant background pattern */}
       <Box
         position="absolute"
@@ -49,8 +60,8 @@ function App() {
         position="absolute"
         top="0"
         left="0"
-        w={{ base: "150px", md: "200px" }}
-        h={{ base: "150px", md: "200px" }}
+        w={{ base: "100px", md: "200px" }}
+        h={{ base: "100px", md: "200px" }}
         initial={{ opacity: 0, rotate: -20 }}
         animate={{ opacity: 1, rotate: 0 }}
         transition={{ duration: 1.5, delay: 0.5 }}
@@ -69,8 +80,8 @@ function App() {
         position="absolute"
         bottom="0"
         right="0"
-        w={{ base: "150px", md: "200px" }}
-        h={{ base: "150px", md: "200px" }}
+        w={{ base: "100px", md: "200px" }}
+        h={{ base: "100px", md: "200px" }}
         initial={{ opacity: 0, rotate: 20 }}
         animate={{ opacity: 1, rotate: 0 }}
         transition={{ duration: 1.5, delay: 0.7 }}
@@ -117,6 +128,7 @@ function App() {
                 fontWeight="400"
                 mb={2}
                 lineHeight='normal'
+                textShadow="0 0 30px rgba(171, 39, 79, 0.3), 0 0 60px rgba(199, 67, 117, 0.2)"
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 transition={{
@@ -128,16 +140,21 @@ function App() {
                 Adeola & Joshua
               </MotionHeading>
 
-              <MotionBox
-                h="2px"
-                w="150px"
-                bg="roseWine"
-                mx="auto"
+              <MotionFlex
+                align="center"
+                justify="center"
+                gap={3}
                 mb={4}
-                initial={{ width: 0 }}
-                animate={{ width: "150px" }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 transition={{ duration: 1, delay: 0.8 }}
-              />
+              >
+                <Box w="40px" h="1px" bg="roseWine" />
+                <Box w="4px" h="4px" bg="roseWine" borderRadius="full" transform="rotate(45deg)" />
+                <Box w="6px" h="6px" bg="cherryRose" borderRadius="full" />
+                <Box w="4px" h="4px" bg="roseWine" borderRadius="full" transform="rotate(45deg)" />
+                <Box w="40px" h="1px" bg="roseWine" />
+              </MotionFlex>
 
               <MotionText
                 fontFamily="subheading"
@@ -216,12 +233,13 @@ function App() {
             transition={{ duration: 1, delay: 1.8 }}
           >
             <MotionBox display="inline-block" position="relative" px={{ base: 6, md: 12 }} py={6}>
-              <Box
-                h="1px"
-                w="100%"
-                bg="linear-gradient(to right, transparent, #CC8899, transparent)"
-                mb={4}
-              />
+              <Flex align="center" justify="center" gap={2} mb={4}>
+                <Box flex="1" h="1px" bg="linear-gradient(to right, transparent, #CC8899)" />
+                <Box w="3px" h="3px" bg="oldRose" borderRadius="full" />
+                <Box w="5px" h="5px" bg="roseWine" borderRadius="full" />
+                <Box w="3px" h="3px" bg="oldRose" borderRadius="full" />
+                <Box flex="1" h="1px" bg="linear-gradient(to left, transparent, #CC8899)" />
+              </Flex>
 
               <Heading
                 fontFamily="subheading"
@@ -238,12 +256,13 @@ function App() {
                 We can't wait to celebrate with you!
               </Text>
 
-              <Box
-                h="1px"
-                w="100%"
-                bg="linear-gradient(to right, transparent, #CC8899, transparent)"
-                mt={4}
-              />
+              <Flex align="center" justify="center" gap={2} mt={4}>
+                <Box flex="1" h="1px" bg="linear-gradient(to right, transparent, #CC8899)" />
+                <Box w="3px" h="3px" bg="oldRose" borderRadius="full" />
+                <Box w="5px" h="5px" bg="roseWine" borderRadius="full" />
+                <Box w="3px" h="3px" bg="oldRose" borderRadius="full" />
+                <Box flex="1" h="1px" bg="linear-gradient(to left, transparent, #CC8899)" />
+              </Flex>
             </MotionBox>
           </MotionBox>
         </Flex>
