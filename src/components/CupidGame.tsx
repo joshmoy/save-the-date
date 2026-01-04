@@ -1,6 +1,6 @@
 import { Box, Flex, Text, Button, Heading } from "@chakra-ui/react"
 import { motion } from "framer-motion"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Heart, X } from "lucide-react"
 
 const MotionBox = motion.create(Box)
@@ -9,6 +9,7 @@ interface FallingHeart {
   id: number
   x: number
   speed: number
+  counted?: boolean
 }
 
 interface CupidGameProps {
@@ -21,6 +22,7 @@ export default function CupidGame({ onClose }: CupidGameProps) {
   const [score, setScore] = useState(0)
   const [gameOver, setGameOver] = useState(false)
   const [missed, setMissed] = useState(0)
+  const countedHearts = useRef<Set<number>>(new Set())
 
   // Move cupid
   const moveCupid = useCallback((direction: 'left' | 'right') => {
@@ -63,22 +65,26 @@ export default function CupidGame({ onClose }: CupidGameProps) {
           ...heart,
           speed: heart.speed + 0.5
         })).filter(heart => {
-          // Check if heart reached bottom
-          if (heart.speed > 100) {
-            setMissed(m => {
-              const newMissed = m + 1
-              if (newMissed >= 5) setGameOver(true)
-              return newMissed
-            })
-            return false
-          }
-          
-          // Check collision with cupid
+          // Check collision with cupid first (before checking if missed)
           if (heart.speed > 85 && heart.speed < 95 &&
               Math.abs(heart.x - cupidPosition) < 8) {
             setScore(s => s + 1)
             return false
           }
+          
+          // Check if heart reached bottom - only count if not already in the set
+          if (heart.speed >= 100) {
+            if (!countedHearts.current.has(heart.id)) {
+              countedHearts.current.add(heart.id)
+              setMissed(m => {
+                const newMissed = m + 1
+                if (newMissed >= 5) setGameOver(true)
+                return newMissed
+              })
+            }
+            return false
+          }
+          
           return true
         })
         return updated
@@ -93,6 +99,7 @@ export default function CupidGame({ onClose }: CupidGameProps) {
     setHearts([])
     setGameOver(false)
     setCupidPosition(50)
+    countedHearts.current.clear()
   }
 
   return (
