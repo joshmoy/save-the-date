@@ -45,7 +45,10 @@ function App() {
         left="0"
         right="0"
         bottom="0"
-        bg="radial-gradient(circle at center, transparent 0%, transparent 50%, rgba(62, 39, 35, 0.15) 100%)"
+        bg={{
+          base: "radial-gradient(circle at center, transparent 0%, transparent 60%, rgba(62, 39, 35, 0.08) 100%)",
+          md: "radial-gradient(circle at center, transparent 0%, transparent 50%, rgba(62, 39, 35, 0.15) 100%)"
+        }}
         pointerEvents="none"
       />
 

@@ -23,6 +23,8 @@ export default function CupidGame({ onClose }: CupidGameProps) {
   const [gameOver, setGameOver] = useState(false)
   const [missed, setMissed] = useState(0)
   const countedHearts = useRef<Set<number>>(new Set())
+  const touchStartX = useRef<number>(0)
+  const gameAreaRef = useRef<HTMLDivElement>(null)
 
   // Move cupid
   const moveCupid = useCallback((direction: 'left' | 'right') => {
@@ -31,6 +33,21 @@ export default function CupidGame({ onClose }: CupidGameProps) {
       return Math.min(90, prev + 5)
     })
   }, [])
+
+  // Handle touch drag
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (gameOver || !gameAreaRef.current) return
+    const touch = e.touches[0]
+    touchStartX.current = touch.clientX
+  }, [gameOver])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (gameOver || !gameAreaRef.current) return
+    const touch = e.touches[0]
+    const gameAreaRect = gameAreaRef.current.getBoundingClientRect()
+    const relativeX = ((touch.clientX - gameAreaRect.left) / gameAreaRect.width) * 100
+    setCupidPosition(Math.max(10, Math.min(90, relativeX)))
+  }, [gameOver])
 
   // Handle keyboard controls
   useEffect(() => {
@@ -154,15 +171,24 @@ export default function CupidGame({ onClose }: CupidGameProps) {
             </Text>
           </Flex>
           <Text fontFamily="body" fontSize="sm" color="textSecondary" mt={2}>
-            Use ← → arrows or tap buttons
+            <Text as="span" display={{ base: "inline", md: "none" }}>
+              Drag cupid or use buttons
+            </Text>
+            <Text as="span" display={{ base: "none", md: "inline" }}>
+              Use ← → arrow keys
+            </Text>
           </Text>
         </Flex>
 
         {/* Game area */}
         <Box
+          ref={gameAreaRef}
           position="relative"
           h="calc(100% - 140px)"
           bg="ivory"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          cursor="pointer"
         >
           {/* Falling hearts */}
           {hearts.map(heart => (
@@ -235,6 +261,7 @@ export default function CupidGame({ onClose }: CupidGameProps) {
             size="lg"
             flex="1"
             disabled={gameOver}
+            display={{ base: "flex", md: "none" }}
           >
             ← Left
           </Button>
@@ -246,9 +273,20 @@ export default function CupidGame({ onClose }: CupidGameProps) {
             size="lg"
             flex="1"
             disabled={gameOver}
+            display={{ base: "flex", md: "none" }}
           >
             Right →
           </Button>
+          <Text 
+            fontFamily="body" 
+            fontSize="sm" 
+            color="textSecondary" 
+            display={{ base: "none", md: "block" }}
+            textAlign="center"
+            w="full"
+          >
+            Use ← → arrow keys to move cupid
+          </Text>
         </Flex>
       </Box>
     </Box>
