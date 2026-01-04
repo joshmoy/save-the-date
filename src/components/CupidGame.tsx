@@ -25,6 +25,7 @@ export default function CupidGame({ onClose }: CupidGameProps) {
   const countedHearts = useRef<Set<number>>(new Set())
   const touchStartX = useRef<number>(0)
   const gameAreaRef = useRef<HTMLDivElement>(null)
+  const lastTouchUpdate = useRef<number>(0)
 
   // Move cupid
   const moveCupid = useCallback((direction: 'left' | 'right') => {
@@ -43,6 +44,12 @@ export default function CupidGame({ onClose }: CupidGameProps) {
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (gameOver || !gameAreaRef.current) return
+    
+    // Throttle touch updates to 16ms (~60fps) to prevent stuttering
+    const now = Date.now()
+    if (now - lastTouchUpdate.current < 16) return
+    lastTouchUpdate.current = now
+    
     const touch = e.touches[0]
     const gameAreaRect = gameAreaRef.current.getBoundingClientRect()
     const relativeX = ((touch.clientX - gameAreaRect.left) / gameAreaRect.width) * 100
