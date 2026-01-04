@@ -1,5 +1,7 @@
-import { Box, Container, Flex, Heading, Text, Image } from "@chakra-ui/react"
+import { Box, Container, Flex, Heading, Text, Image, Button } from "@chakra-ui/react"
 import { motion } from "framer-motion"
+import { useState } from "react"
+import CupidGame from "./components/CupidGame"
 
 const MotionBox = motion.create(Box)
 const MotionFlex = motion.create(Flex)
@@ -7,7 +9,11 @@ const MotionHeading = motion.create(Heading)
 const MotionText = motion.create(Text)
 
 function App() {
+  const [showGame, setShowGame] = useState(false)
+
   return (
+    <>
+      {showGame && <CupidGame onClose={() => setShowGame(false)} />}
     <Box w="100vw" minH="100vh" overflow="hidden" position="relative">
       {/* Background image */}
       <Box
@@ -252,11 +258,25 @@ function App() {
                 Formal Invitation to Follow
               </Heading>
 
-              <Text fontFamily="body" fontSize="md" color="textSecondary" fontWeight="400">
+              <Text fontFamily="body" fontSize="md" color="textSecondary" fontWeight="400" mb={4}>
                 We can't wait to celebrate with you!
               </Text>
 
-              <Flex align="center" justify="center" gap={2} mt={4}>
+              <Button
+                onClick={() => setShowGame(true)}
+                bg="burgundy"
+                color="white"
+                _hover={{ bg: "cherryRose" }}
+                size="sm"
+                fontFamily="body"
+                fontWeight="600"
+                px={6}
+                mb={4}
+              >
+                Play a Cupid Game
+              </Button>
+
+              <Flex align="center" justify="center" gap={2} mt={2}>
                 <Box flex="1" h="1px" bg="linear-gradient(to right, transparent, #CC8899)" />
                 <Box w="3px" h="3px" bg="oldRose" borderRadius="full" />
                 <Box w="5px" h="5px" bg="roseWine" borderRadius="full" />
@@ -298,6 +318,7 @@ function App() {
         ))}
       </Container>
     </Box>
+    </>
   );
 }
 
