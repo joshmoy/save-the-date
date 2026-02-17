@@ -1,4 +1,4 @@
-import { Box, Container, Flex, Heading, Text, Image, Button } from "@chakra-ui/react";
+import { Box, Container, Flex, Heading, Text, Button } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
@@ -61,47 +61,6 @@ function HomePage() {
           bgImage="radial-gradient(circle, #800020 1px, transparent 1px)"
           bgSize="30px 30px"
         />
-
-        {/* Decorative corner flourishes */}
-        <MotionBox
-          position="absolute"
-          top="0"
-          left="0"
-          w={{ base: "100px", md: "200px" }}
-          h={{ base: "100px", md: "200px" }}
-          initial={{ opacity: 0, rotate: -20 }}
-          animate={{ opacity: 1, rotate: 0 }}
-          transition={{ duration: 1.5, delay: 0.5 }}
-        >
-          <Image
-            src="https://pixabay.com/get/gf78af5586be2c5a6561a56a6c7a640963eaec113abe23b59c2bcfd9f687f54cc571f8bbfdcf8be31455791f0bb8f92ef.svg"
-            alt="flowers, circle, frame, boundary, floral frame, flower border, rose by PhuongLucky on Pixabay"
-            w="full"
-            h="full"
-            opacity={0.4}
-            transform="scale(-1, 1)"
-          />
-        </MotionBox>
-
-        <MotionBox
-          position="absolute"
-          bottom="0"
-          right="0"
-          w={{ base: "100px", md: "200px" }}
-          h={{ base: "100px", md: "200px" }}
-          initial={{ opacity: 0, rotate: 20 }}
-          animate={{ opacity: 1, rotate: 0 }}
-          transition={{ duration: 1.5, delay: 0.7 }}
-        >
-          <Image
-            src="https://pixabay.com/get/gf78af5586be2c5a6561a56a6c7a640963eaec113abe23b59c2bcfd9f687f54cc571f8bbfdcf8be31455791f0bb8f92ef.svg"
-            alt="flowers, circle, frame, boundary, floral frame, flower border, rose by PhuongLucky on Pixabay"
-            w="full"
-            h="full"
-            opacity={0.4}
-            transform="rotate(180deg)"
-          />
-        </MotionBox>
 
         {/* Main content */}
         <Container

@@ -1,49 +1,61 @@
 import { Box, Flex, Text, Image, Button, IconButton } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, ChevronRight } from "lucide-react";
+import { X } from "lucide-react";
 import { updates } from "../data/updates";
 
 const MotionBox = motion.create(Box);
-const MotionImage = motion.create(Image);
 
 const STORY_DURATION = 5000; // 5 seconds per story
 
 export default function UpdatesPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const navigate = useNavigate();
-  const timerRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number | null>(null);
   const [paused, setPaused] = useState(false);
 
-  // Reset timer when index changes
-  useEffect(() => {
-    if (paused) return;
+  const timerRef = useRef<number | null>(null);
 
-    startTimeRef.current = Date.now();
-    timerRef.current = window.setTimeout(() => {
-      handleNext();
-    }, STORY_DURATION);
+  const handleNext = useCallback(() => {
+    // Clear any running timer immediately when manually advancing
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
 
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [currentIndex, paused]);
-
-  const handleNext = () => {
     if (currentIndex < updates.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
       navigate("/"); // Go back home after last story
     }
-  };
+  }, [currentIndex, navigate]);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
+    // Clear any running timer immediately when manually going back
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
     if (currentIndex > 0) {
       setCurrentIndex((prev) => prev - 1);
     }
-  };
+  }, [currentIndex]);
+
+  // Timer logic
+  useEffect(() => {
+    if (paused) return;
+
+    timerRef.current = window.setTimeout(() => {
+      handleNext();
+    }, STORY_DURATION);
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [currentIndex, paused, handleNext]);
 
   const handlePause = () => setPaused(true);
   const handleResume = () => setPaused(false);
@@ -64,24 +76,9 @@ export default function UpdatesPage() {
       onTouchEnd={handleResume}
     >
       {/* Progress Bars */}
-      <Flex
-        position="absolute"
-        top="4"
-        left="0"
-        right="0"
-        px="4"
-        gap="2"
-        zIndex="10"
-      >
+      <Flex position="absolute" top="4" left="0" right="0" px="4" gap="2" zIndex="10">
         {updates.map((_, index) => (
-          <Box
-            key={index}
-            flex="1"
-            h="1"
-            bg="whiteAlpha.400"
-            borderRadius="full"
-            overflow="hidden"
-          >
+          <Box key={index} flex="1" h="1" bg="whiteAlpha.400" borderRadius="full" overflow="hidden">
             <MotionBox
               h="full"
               bg="white"
@@ -91,10 +88,10 @@ export default function UpdatesPage() {
                   index < currentIndex
                     ? "100%"
                     : index === currentIndex && !paused
-                    ? "100%"
-                    : index === currentIndex && paused
-                    ? "var(--progress-width, 0%)" // Keep current progress if paused (simplified for now)
-                    : "0%",
+                      ? "100%"
+                      : index === currentIndex && paused
+                        ? "var(--progress-width, 0%)" // Keep current progress if paused (simplified for now)
+                        : "0%",
               }}
               transition={{
                 duration: index === currentIndex ? STORY_DURATION / 1000 : 0,
@@ -157,6 +154,8 @@ export default function UpdatesPage() {
             direction="column"
             bg="linear-gradient(to top, rgba(0,0,0,0.8), transparent)"
             pb="12"
+            zIndex="20"
+            pointerEvents="none"
           >
             <Text fontSize="sm" opacity={0.8} mb="2">
               {new Date(currentUpdate.date).toLocaleDateString()}
@@ -164,12 +163,11 @@ export default function UpdatesPage() {
             <Text fontSize="3xl" fontWeight="bold" mb="2">
               {currentUpdate.title}
             </Text>
-            <Text fontSize="lg" mb="6" noOfLines={3}>
+            <Text fontSize="lg" mb="6" maxLines={3}>
               {currentUpdate.summary}
             </Text>
 
             <Button
-              rightIcon={<ChevronRight />}
               colorScheme="whiteAlpha"
               variant="solid"
               color="black"
@@ -179,6 +177,8 @@ export default function UpdatesPage() {
                 navigate(`/updates/${currentUpdate.id}`);
               }}
               alignSelf="start"
+              pointerEvents="auto"
+              px={4}
             >
               View Details
             </Button>
