@@ -15,49 +15,65 @@ export default function UpdatesPage() {
   const [paused, setPaused] = useState(false);
 
   const timerRef = useRef<number | null>(null);
+  const currentIndexRef = useRef(0);
+
+  useEffect(() => {
+    currentIndexRef.current = currentIndex;
+  }, [currentIndex]);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current != null) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
 
   const handleNext = useCallback(() => {
-    // Clear any running timer immediately when manually advancing
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
+    // End current story timer immediately
+    clearTimer();
 
-    if (currentIndex < updates.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
+    const nextIndex = currentIndexRef.current + 1;
+    if (nextIndex >= updates.length) {
       navigate("/"); // Go back home after last story
+      return;
     }
-  }, [currentIndex, navigate]);
+    setCurrentIndex(nextIndex);
+  }, [clearTimer, navigate]);
 
   const handlePrev = useCallback(() => {
-    // Clear any running timer immediately when manually going back
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
+    // End current story timer immediately
+    clearTimer();
 
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
-    }
-  }, [currentIndex]);
+    const prevIndex = currentIndexRef.current - 1;
+    setCurrentIndex(Math.max(prevIndex, 0));
+  }, [clearTimer]);
 
   // Timer logic
   useEffect(() => {
     if (paused) return;
 
-    timerRef.current = window.setTimeout(() => {
+    // Ensure only one timer exists
+    clearTimer();
+
+    // Tie this timer to the story index it was created for.
+    const storyIndex = currentIndex;
+    const timerId = window.setTimeout(() => {
+      // If user navigated before this fired, ignore this old timer.
+      if (currentIndexRef.current !== storyIndex) return;
       handleNext();
     }, STORY_DURATION);
+    timerRef.current = timerId;
 
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
+      clearTimeout(timerId);
+      if (timerRef.current === timerId) timerRef.current = null;
     };
-  }, [currentIndex, paused, handleNext]);
+  }, [clearTimer, currentIndex, paused, handleNext]);
 
-  const handlePause = () => setPaused(true);
+  const handlePause = () => {
+    clearTimer();
+    setPaused(true);
+  };
   const handleResume = () => setPaused(false);
 
   const currentUpdate = updates[currentIndex];
@@ -79,25 +95,23 @@ export default function UpdatesPage() {
       <Flex position="absolute" top="4" left="0" right="0" px="4" gap="2" zIndex="10">
         {updates.map((_, index) => (
           <Box key={index} flex="1" h="1" bg="whiteAlpha.400" borderRadius="full" overflow="hidden">
-            <MotionBox
-              h="full"
-              bg="white"
-              initial={{ width: index < currentIndex ? "100%" : "0%" }}
-              animate={{
-                width:
-                  index < currentIndex
-                    ? "100%"
-                    : index === currentIndex && !paused
-                      ? "100%"
-                      : index === currentIndex && paused
-                        ? "var(--progress-width, 0%)" // Keep current progress if paused (simplified for now)
-                        : "0%",
-              }}
-              transition={{
-                duration: index === currentIndex ? STORY_DURATION / 1000 : 0,
-                ease: "linear",
-              }}
-            />
+            {index < currentIndex ? (
+              // Completed stories: static full bar
+              <Box h="full" w="full" bg="white" />
+            ) : index === currentIndex ? (
+              // Active story: animated bar (unmounts when story changes)
+              <MotionBox
+                key={`progress-${currentIndex}`}
+                h="full"
+                bg="white"
+                initial={{ width: "0%" }}
+                animate={paused ? undefined : { width: "100%" }}
+                transition={paused ? { duration: 0 } : { duration: STORY_DURATION / 1000, ease: "linear" }}
+              />
+            ) : (
+              // Upcoming stories: empty bar
+              <Box h="full" w="0%" bg="white" />
+            )}
           </Box>
         ))}
       </Flex>
