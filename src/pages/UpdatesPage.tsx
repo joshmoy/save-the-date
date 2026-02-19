@@ -1,11 +1,10 @@
 import { Box, Flex, Text, Image, Button, IconButton } from "@chakra-ui/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
 import { updates } from "../data/updates";
-
-const MotionBox = motion.create(Box);
+import { MotionBox } from "../components/MotionBox";
 
 const STORY_DURATION = 5000; // 5 seconds per story
 
@@ -188,7 +187,7 @@ export default function UpdatesPage() {
               bg="white"
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(`/updates/${currentUpdate.id}`);
+                navigate(currentUpdate.pageRoute);
               }}
               alignSelf="start"
               pointerEvents="auto"

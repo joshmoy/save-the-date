@@ -68,7 +68,7 @@ function HomePage() {
           display="flex"
           alignItems="center"
           position="relative"
-          zIndex={1}
+          mx="auto"
           w="full"
         >
           {/* Hero section */}
