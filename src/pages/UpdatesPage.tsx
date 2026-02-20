@@ -80,7 +80,7 @@ export default function UpdatesPage() {
   return (
     <Box
       w="100vw"
-      h="100vh"
+      h="100dvh"
       bg="black"
       color="white"
       position="relative"

@@ -12,7 +12,7 @@ function HomePage() {
 
   return (
     <>
-      <Box w="100vw" minH="100vh" overflow="hidden" position="relative">
+      <Box w="100vw" h="100dvh" overflow="hidden" position="relative">
         {/* Background image */}
         <Box
           position="absolute"

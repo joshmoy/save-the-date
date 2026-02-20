@@ -61,11 +61,11 @@ const VenueSelectedPage = () => {
             >
               The wedding ceremony will be held at CAC Olurunsogo, Mushin, Lagos.
             </Text>
-            <Box>
+            <Box h={{base: "200px", md: "450px"}}>
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3963.9404564228516!2d3.346440073181101!3d6.529204893463452!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103b8dc5076647b3%3A0x4aab69808d4104d1!2sCAC%20Olorunsogo%20Assembly!5e0!3m2!1sen!2suk!4v1771425946479!5m2!1sen!2suk"
-                width="600"
-                height="450"
+                width="100%"
+                height="100%"
                 style={{ border: 0 }}
                 allowFullScreen
                 loading="lazy"
@@ -83,11 +83,11 @@ const VenueSelectedPage = () => {
             >
               The reception will be held at Sheba Center, Maryland, Lagos.
             </Text>
-            <Box>
+            <Box h={{base: "200px", md: "450px"}}>
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3963.527357987265!2d3.360846172458258!3d6.58116959959122!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103b927286444557%3A0xc422d41b44a3c5f6!2sSheba%20Centre!5e0!3m2!1sen!2suk!4v1771425744899!5m2!1sen!2suk"
-                width="600"
-                height="450"
+                width="100%"
+                height="100%"
                 style={{ border: 0 }}
                 allowFullScreen
                 loading="lazy"

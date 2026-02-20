@@ -1,4 +1,13 @@
-import { Box, Button, Container, Flex, Text, type BoxProps, type ContainerProps } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Container,
+  Flex,
+  Text,
+  Link,
+  type BoxProps,
+  type ContainerProps,
+} from "@chakra-ui/react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -6,10 +15,7 @@ export type StickyNavBarProps = Omit<BoxProps, "children"> & {
   containerProps?: Omit<ContainerProps, "children">;
 };
 
-export function StickyNavBar({
-  containerProps,
-  ...boxProps
-}: StickyNavBarProps) {
+export function StickyNavBar({ containerProps, ...boxProps }: StickyNavBarProps) {
   const navigate = useNavigate();
 
   return (
@@ -35,14 +41,15 @@ export function StickyNavBar({
             <ArrowLeft size={20} /> Back to Updates
           </Button>
 
-          <Text fontFamily="heading" fontSize="2xl" color="burgundy">
-            Adeola & Joshua
-          </Text>
+          <Link href="/" _hover={{ textDecoration: "none" }} _focus={{ outline: "none" }}>
+            <Text fontFamily="heading" fontSize="2xl" color="burgundy">
+              Adeola & Joshua
+            </Text>
+          </Link>
 
-          <Box w="60px" display={{ base: "none", md: "block" }}/>
+          <Box w="60px" display={{ base: "none", md: "block" }} />
         </Flex>
       </Container>
     </Box>
   );
 }
-
