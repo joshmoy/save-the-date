@@ -59,7 +59,7 @@ export const updates: Update[] = [
       "https://res.cloudinary.com/difnldi4c/image/upload/v1771507844/nina-mercado-CnrDuY0tFrg-unsplash_bwnkii.jpg",
     summary: "Gifting for the wedding!",
     details:
-      "We know how much you love us, and we want to help you make gifting easier (in case you're shy). We will be provide the magic button to send your gifts in a bit.",
+      "We know how much you love us, and we want to help you make gifting easier (in case you're shy). Reach out and we will provide our account details",
     date: "2026-02-01",
     pageRoute: "/updates/gifting",
   },
