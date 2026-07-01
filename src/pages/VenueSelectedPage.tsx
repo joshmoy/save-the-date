@@ -84,15 +84,15 @@ const VenueSelectedPage = () => {
               The reception will be held at Nelo's Place, Ikeja, Lagos.
             </Text>
             <Box h={{base: "200px", md: "450px"}}>
-              <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3963.482774058206!2d3.355898475292045!3d6.586753522424433!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103b9215440f7661%3A0xd7d5642cbc510856!2sNelo&#39;s%20Place%20Events%20Center!5e0!3m2!1sen!2suk!4v1782901592465!5m2!1sen!2suk" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3963.482774058206!2d3.355898475292045!3d6.586753522424433!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103b9215440f7661%3A0xd7d5642cbc510856!2sNelo&#39;s%20Place%20Events%20Center!5e0!3m2!1sen!2suk!4v1782901592465!5m2!1sen!2suk"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
                 allowFullScreen
                 loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade">
-              </iframe>
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
             </Box>
             <Separator my={10} />
             <TagPills tags={["Wedding", "Updates", "2026", "Venue"]} mb={10} />
