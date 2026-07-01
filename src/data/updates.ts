@@ -17,7 +17,7 @@ export const updates: Update[] = [
       "https://res.cloudinary.com/difnldi4c/image/upload/v1771507942/ibrahim-boran-m8YjB0noWiY-unsplash_ftqzdj.jpg",
     summary: "We have officially booked our dream venue.",
     details:
-      "Dream venue you say? After visiting different locations and hearing different prices, we fell in love with the Sheba Center located in Maryland, Lagos. It has the perfect mix of indoor space and outdoor charm (adequate parking) that we were looking for.",
+      "Dream venue you say? After visiting different locations and hearing different prices, we fell in love with Nelo's Place located in Ikeja, Lagos. It has the perfect mix of indoor space and outdoor charm (adequate parking) that we were looking for.",
     date: "2026-02-01",
     pageRoute: "/updates/venue-selected",
   },
