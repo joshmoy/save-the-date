@@ -1,73 +1,70 @@
-# React + TypeScript + Vite
+# Save The Date
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Next.js app for Adeola and Joshua's wedding site.
 
-Currently, two official plugins are available:
+## Local Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Copy `.env.example` to `.env.local` and fill in your Railway Postgres connection string:
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```txt
+DATABASE_URL=
+AUTH_COOKIE_SECRET=
+MAILEROO_API_KEY=
+MAILEROO_FROM_EMAIL=
+MAILEROO_FROM_NAME=
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Install dependencies and run the app:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+npm install
+npm run dev
 ```
+
+Run database migrations against the configured Railway Postgres database:
+
+```sh
+npm run db:migrate
+```
+
+The migrations create:
+
+- `hall_passes` for unique QR-backed hall passes
+- `redeem_hall_pass(pass_token, scanner_name)` for atomic first-scan redemption
+
+## Auth
+
+The admin and bouncer flows use database-backed users with bcrypt password hashes:
+
+- `AUTH_COOKIE_SECRET` signs the HTTP-only session cookie
+- `app_users` stores user emails, bcrypt password hashes, and roles
+
+Generate a long random cookie secret before deploying.
+
+Create or update users with:
+
+```sh
+npm run user:create
+```
+
+The script prompts for an email, password, and role. Use `admin` for full admin access
+or `security_admin` for scanner/security access. You can also pass everything inline:
+
+```sh
+npm run user:create -- admin@example.com "strong-password" admin
+npm run user:create -- security@example.com "strong-password" security_admin
+```
+
+## Hall pass dependencies
+
+The hall pass flow uses:
+
+- Railway Postgres for persistent hall pass state
+- `pg` for server-side database access from Next.js routes
+- `qrcode` for QR code generation
+- `pdf-lib` for server-generated PDF ticket attachments
+- Maileroo Email API for optional PDF ticket delivery
+- `html5-qrcode` for camera-based QR scanning
+
+Keep real Railway credentials in `.env.local`; do not commit them. `DATABASE_URL` is server-only and should never be exposed with a `NEXT_PUBLIC_` prefix.
+`MAILEROO_FROM_EMAIL` must be an address on a verified Maileroo domain.
