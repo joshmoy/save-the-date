@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Box,
   Button,
@@ -9,14 +11,14 @@ import {
   type ContainerProps,
 } from "@chakra-ui/react";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
 export type StickyNavBarProps = Omit<BoxProps, "children"> & {
   containerProps?: Omit<ContainerProps, "children">;
 };
 
 export function StickyNavBar({ containerProps, ...boxProps }: StickyNavBarProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <Box
@@ -34,7 +36,7 @@ export function StickyNavBar({ containerProps, ...boxProps }: StickyNavBarProps)
           <Button
             variant="ghost"
             color="gray.600"
-            onClick={() => navigate("/updates")}
+            onClick={() => router.push("/updates")}
             size="sm"
             px={4}
           >

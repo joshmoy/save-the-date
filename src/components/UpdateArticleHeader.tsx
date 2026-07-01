@@ -1,5 +1,6 @@
 import { Avatar, Box, Container, Flex, Heading, Text, type ContainerProps } from "@chakra-ui/react";
 import type { ReactNode } from "react";
+import { formatDate } from "../lib/formatDate";
 
 export type UpdateArticleHeaderProps = {
   title: ReactNode;
@@ -22,12 +23,7 @@ export function UpdateArticleHeader({
   avatarSrc = "/7V2A8743.jpg",
   readTimeLabel = "2 min read",
 }: UpdateArticleHeaderProps) {
-  const parsedDate = date instanceof Date ? date : new Date(date);
-  const dateLabel = parsedDate.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  const dateLabel = formatDate(date);
 
   return (
     <Container pt={{ base: 8, md: 12 }} pb={6} px={{ base: "5%", md: 0 }} {...containerProps}>
@@ -66,4 +62,3 @@ export function UpdateArticleHeader({
     </Container>
   );
 }
-

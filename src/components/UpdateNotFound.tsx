@@ -1,5 +1,7 @@
+"use client";
+
 import { Button, Container, Heading, type ButtonProps, type ContainerProps, type HeadingProps } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
 export type UpdateNotFoundProps = {
   heading?: string;
@@ -18,12 +20,12 @@ export function UpdateNotFound({
   headingProps,
   buttonProps,
 }: UpdateNotFoundProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <Container centerContent p={10} {...containerProps}>
       <Heading {...headingProps}>{heading}</Heading>
-      <Button mt={4} onClick={() => navigate(backTo)} {...buttonProps}>
+      <Button mt={4} onClick={() => router.push(backTo)} {...buttonProps}>
         {backLabel}
       </Button>
     </Container>
