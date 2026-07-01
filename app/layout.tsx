@@ -6,8 +6,9 @@ export const metadata: Metadata = {
   title: "Adeola & Joshua 2026",
   description: "Save the date for Adeola and Joshua's wedding.",
   icons: {
-    icon: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: [{ url: "/favicon.ico", sizes: "any" }],
+    shortcut: [{ url: "/favicon.ico" }],
+    apple: [{ url: "/favicon.ico" }],
   },
 };
 
