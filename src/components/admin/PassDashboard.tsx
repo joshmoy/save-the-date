@@ -85,7 +85,7 @@ function preventEnterSubmit(event: KeyboardEvent) {
 
 function parseBulkGuestNames(value: string) {
   return value
-    .split(/[\n,]+/)
+    .split(",")
     .map((name) => name.trim())
     .filter(Boolean);
 }
@@ -992,14 +992,13 @@ export function PassDashboard({
 
                     <Field.Root>
                       <Field.Label>Guest names</Field.Label>
-                      <Textarea
+                      <Input
                         value={bulkGuestNames}
                         onChange={(event) => setBulkGuestNames(event.target.value)}
-                        placeholder={"Bob\nTola\nSarah"}
-                        rows={6}
+                        placeholder="Bob, Tola, Sarah"
                       />
                       <Field.HelperText>
-                        Optional. Add one name per line, or paste comma-separated names.
+                        Optional. Separate names with commas.
                       </Field.HelperText>
                     </Field.Root>
 

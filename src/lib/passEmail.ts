@@ -37,7 +37,12 @@ function formatGuestName(pass: HallPass) {
 }
 
 function buildGuestNameLines(passes: HallPass[]) {
-  return passes.map((pass) => `This ticket pass is generated for ${formatGuestName(pass)}.`).join("\n");
+  if (passes.length === 1) {
+    return `This ticket pass is generated for ${formatGuestName(passes[0])}.`;
+  }
+
+  const names = passes.map((pass) => formatGuestName(pass)).join(", ");
+  return `This ticket pass is generated for ${names}.`;
 }
 
 function buildSubject(passes: HallPass[], batchLabel?: string) {
@@ -65,9 +70,7 @@ function buildHtmlMessage(message: string, passes: HallPass[]) {
     "\n",
     "<br />",
   );
-  const guestLines = passes
-    .map((pass) => `<li>${escapeHtml(`This ticket pass is generated for ${formatGuestName(pass)}.`)}</li>`)
-    .join("");
+  const guestLines = buildGuestNameLines(passes);
   const listItems = passes
     .map(
       (pass) =>
@@ -75,7 +78,7 @@ function buildHtmlMessage(message: string, passes: HallPass[]) {
     )
     .join("");
 
-  return `<p>${intro}</p><ul>${guestLines}</ul><p>Attached tickets:</p><ul>${listItems}</ul>`;
+  return `<p>${intro}</p><p>${escapeHtml(guestLines)}</p><p>Attached tickets:</p><ul>${listItems}</ul>`;
 }
 
 function chunkPasses<T>(items: T[], size: number) {
