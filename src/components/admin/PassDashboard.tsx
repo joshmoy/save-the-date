@@ -718,17 +718,26 @@ export function PassDashboard({
 
   async function handleInvalidatePass() {
     if (!passToInvalidate) return;
-    setError("");
     setIsInvalidating(true);
 
     const response = await fetch(`/api/passes/${passToInvalidate.id}/invalidate`, {
       method: "POST",
     });
+    const data = (await response.json().catch(() => null)) as { pass?: HallPass; error?: string } | null;
 
     setIsInvalidating(false);
 
     if (!response.ok) {
-      setError("Could not invalidate this pass. Please try again.");
+      toaster.create({
+        type: "error",
+        title: "Invalidation failed",
+        description: data?.error ?? "Could not invalidate this QR code.",
+      });
+      return;
+    }
+
+    const pass = data?.pass;
+    if (!pass) {
       toaster.create({
         type: "error",
         title: "Invalidation failed",
@@ -737,15 +746,13 @@ export function PassDashboard({
       return;
     }
 
-    const data = (await response.json()) as { pass: HallPass };
+    setPasses((current) => current.map((item) => (item.id === pass.id ? pass : item)));
 
-    setPasses((current) => current.map((item) => (item.id === data.pass.id ? data.pass : item)));
-
-    if (selectedPass?.pass.id === data.pass.id) {
-      const qrDataUrl = await createQrDataUrl(data.pass.token);
+    if (selectedPass?.pass.id === pass.id) {
+      const qrDataUrl = await createQrDataUrl(pass.token);
       setSelectedPass({
-        pass: data.pass,
-        qrValue: data.pass.token,
+        pass,
+        qrValue: pass.token,
         qrDataUrl,
       });
     }
@@ -754,32 +761,35 @@ export function PassDashboard({
     toaster.create({
       type: "success",
       title: "QR code invalidated",
-      description: `${data.pass.token} will now scan as invalid.`,
+      description: `${pass.token} will now scan as invalid.`,
     });
   }
 
   async function handleInvalidateAllPasses() {
-    setError("");
     setIsInvalidatingAll(true);
 
     const response = await fetch("/api/passes/invalidate-all", {
       method: "POST",
     });
+    const data = (await response.json().catch(() => null)) as {
+      invalidatedCount?: number;
+      passes?: HallPass[];
+      error?: string;
+    } | null;
 
     setIsInvalidatingAll(false);
 
     if (!response.ok) {
-      setError("Could not invalidate all passes. Please try again.");
       toaster.create({
         type: "error",
         title: "Invalidation failed",
-        description: "Could not invalidate all QR codes.",
+        description: data?.error ?? "Could not invalidate all QR codes.",
       });
       return;
     }
 
-    const data = (await response.json()) as { invalidatedCount: number; passes: HallPass[] };
-    const updatedById = new Map(data.passes.map((pass) => [pass.id, pass]));
+    const updatedPasses = data?.passes ?? [];
+    const updatedById = new Map(updatedPasses.map((pass) => [pass.id, pass]));
 
     setPasses((current) => current.map((pass) => updatedById.get(pass.id) ?? pass));
 
@@ -798,9 +808,9 @@ export function PassDashboard({
       type: "success",
       title: "All QR codes invalidated",
       description:
-        data.invalidatedCount === 0
+        data?.invalidatedCount === 0
           ? "No active passes needed invalidation."
-          : `${data.invalidatedCount} pass${data.invalidatedCount === 1 ? "" : "es"} will now scan as invalid.`,
+          : `${data?.invalidatedCount} pass${data?.invalidatedCount === 1 ? "" : "es"} will now scan as invalid.`,
     });
   }
 

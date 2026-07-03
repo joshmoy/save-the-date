@@ -252,7 +252,7 @@ export async function invalidateAllHallPasses(invalidatedBy: AuthSession) {
     `
       update hall_passes
       set invalidated_at = coalesce(invalidated_at, now()),
-          invalidated_by = coalesce(invalidated_by, $2)
+          invalidated_by = coalesce(invalidated_by, $1)
       where invalidated_at is null
       returning id, ticket_number, token, guest_name, invite_from, created_by, created_at, used_at, used_by, invalidated_at, invalidated_by, email_recipient, email_status, email_sent_at, email_error
     `,

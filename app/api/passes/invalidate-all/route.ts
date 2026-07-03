@@ -9,10 +9,15 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const passes = await invalidateAllHallPasses(session);
+  try {
+    const passes = await invalidateAllHallPasses(session);
 
-  return NextResponse.json({
-    invalidatedCount: passes.length,
-    passes,
-  });
+    return NextResponse.json({
+      invalidatedCount: passes.length,
+      passes,
+    });
+  } catch (error) {
+    console.error("Failed to invalidate all hall passes:", error);
+    return NextResponse.json({ error: "Could not invalidate all passes." }, { status: 500 });
+  }
 }
