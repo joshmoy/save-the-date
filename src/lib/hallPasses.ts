@@ -134,7 +134,7 @@ export async function createHallPasses(
 
     if (configuredLimit !== null) {
       const issuedResult = await client.query<{ issued_count: number }>(
-        "select count(*)::int as issued_count from hall_passes",
+        "select count(*)::int as issued_count from hall_passes where invalidated_at is null",
       );
       const issuedCount = issuedResult.rows[0]?.issued_count ?? 0;
 
@@ -186,10 +186,13 @@ export async function getTicketAvailability() {
   const result = await query<TicketAvailability>(`
     select
       ts.ticket_limit,
-      count(hp.id)::int as issued_count,
+      count(hp.id) filter (where hp.invalidated_at is null)::int as issued_count,
       case
         when ts.ticket_limit is null then null
-        else greatest(ts.ticket_limit - count(hp.id)::int, 0)
+        else greatest(
+          ts.ticket_limit - count(hp.id) filter (where hp.invalidated_at is null),
+          0
+        )
       end as remaining_count
     from ticket_settings ts
     left join hall_passes hp on true
@@ -245,6 +248,21 @@ export async function invalidateHallPass(passId: string, invalidatedBy: AuthSess
   );
 
   return result.rows[0] ?? null;
+}
+
+export async function invalidateAllHallPasses(invalidatedBy: AuthSession) {
+  const result = await query<HallPass>(
+    `
+      update hall_passes
+      set invalidated_at = coalesce(invalidated_at, now()),
+          invalidated_by = coalesce(invalidated_by, $1)
+      where invalidated_at is null
+      returning id, ticket_number, token, guest_name, invite_from, created_by, created_at, used_at, used_by, invalidated_at, invalidated_by, email_recipient, email_status, email_sent_at, email_error
+    `,
+    [invalidatedBy.email],
+  );
+
+  return result.rows;
 }
 
 export async function getHallPassById(passId: string) {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { canAccessRole, getCurrentSession } from "../../../../../src/lib/auth";
-import { invalidateHallPass } from "../../../../../src/lib/hallPasses";
+import { getTicketAvailability, invalidateHallPass } from "../../../../../src/lib/hallPasses";
 
 export async function POST(
   _request: Request,
@@ -23,5 +23,7 @@ export async function POST(
     return NextResponse.json({ error: "Pass not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ pass });
+  const ticketAvailability = await getTicketAvailability();
+
+  return NextResponse.json({ pass, ticketAvailability });
 }
