@@ -21,8 +21,8 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import QRCode from "qrcode";
-import { Ban, Download, Eye, Mail, Plus, Printer, ShieldCheck, Users } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { Ban, Download, Eye, Mail, Pencil, Plus, Printer, ShieldCheck, Users, X } from "lucide-react";
+import { useState, type KeyboardEvent } from "react";
 import type { HallPass, TicketAvailability } from "../../lib/hallPasses";
 import { formatDateTime } from "../../lib/formatDate";
 import { toaster } from "../ui/toaster";
@@ -51,7 +51,6 @@ const statusOptions = createListCollection({
     { label: "All statuses", value: "all" },
     { label: "Unused", value: "unused" },
     { label: "Used", value: "used" },
-    { label: "Invalidated", value: "invalidated" },
   ],
 });
 
@@ -71,11 +70,18 @@ const inviteFromOptions = createListCollection({
   ],
 });
 
-type StatusFilter = "all" | "unused" | "used" | "invalidated";
+type StatusFilter = "all" | "unused" | "used";
+type PassListTab = "active" | "invalidated";
 type GenerationMode = "single" | "bulk";
 type DeliveryMode = "generate" | "email";
 
 const MAX_BATCH_SIZE = 100;
+
+function preventEnterSubmit(event: KeyboardEvent) {
+  if (event.key === "Enter" && (event.target as HTMLElement).tagName !== "TEXTAREA") {
+    event.preventDefault();
+  }
+}
 
 function parseBulkGuestNames(value: string) {
   return value
@@ -453,6 +459,8 @@ export function PassDashboard({
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [passListTab, setPassListTab] = useState<PassListTab>("active");
+  const [isEditingTicketLimit, setIsEditingTicketLimit] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInvalidating, setIsInvalidating] = useState(false);
@@ -483,8 +491,7 @@ export function PassDashboard({
     !isInvalidRecipientEmail &&
     (generationMode === "single" || requestedPassCount > 0);
 
-  async function handleCreatePass(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleCreatePass() {
     setError("");
     setSelectedPass(null);
     setIsSubmitting(true);
@@ -590,8 +597,7 @@ export function PassDashboard({
     });
   }
 
-  async function handleSaveTicketLimit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleSaveTicketLimit() {
     setError("");
     setIsSavingTicketLimit(true);
 
@@ -630,6 +636,7 @@ export function PassDashboard({
     const data = (await response.json()) as { ticketAvailability: TicketAvailability };
     setTicketAvailability(data.ticketAvailability);
     setTicketLimitInput(data.ticketAvailability.ticket_limit?.toString() ?? "");
+    setIsEditingTicketLimit(false);
     toaster.create({
       type: "success",
       title: "Ticket limit updated",
@@ -841,7 +848,11 @@ export function PassDashboard({
     return { label: "Unused", color: "green" };
   }
 
-  const filteredPasses = passes.filter((pass) => {
+  const tabPasses = passes.filter((pass) =>
+    passListTab === "active" ? !pass.invalidated_at : Boolean(pass.invalidated_at),
+  );
+
+  const filteredPasses = tabPasses.filter((pass) => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
     const searchableText = [
       pass.guest_name,
@@ -858,15 +869,17 @@ export function PassDashboard({
 
     const matchesQuery = normalizedQuery ? searchableText.includes(normalizedQuery) : true;
     const matchesStatus =
+      passListTab === "invalidated" ||
       statusFilter === "all" ||
-      (statusFilter === "invalidated" && Boolean(pass.invalidated_at)) ||
-      (statusFilter === "used" && Boolean(pass.used_at) && !pass.invalidated_at) ||
-      (statusFilter === "unused" && !pass.used_at && !pass.invalidated_at);
+      (statusFilter === "used" && Boolean(pass.used_at)) ||
+      (statusFilter === "unused" && !pass.used_at);
 
     return matchesQuery && matchesStatus;
   });
 
   const invalidatableCount = passes.filter((pass) => !pass.invalidated_at).length;
+  const activePassCount = passes.filter((pass) => !pass.invalidated_at).length;
+  const invalidatedPassCount = passes.length - activePassCount;
 
   return (
     <Box>
@@ -897,8 +910,7 @@ export function PassDashboard({
             p={6}
             w={{ base: "full", lg: "380px" }}
           >
-            <form onSubmit={handleCreatePass}>
-              <Stack gap={4}>
+            <Stack gap={4} onKeyDown={preventEnterSubmit}>
                 <Box>
                   <Heading fontFamily="subheading" color="textPrimary" fontSize="2xl">
                     Generate Pass
@@ -1119,7 +1131,14 @@ export function PassDashboard({
                   </Text>
                 ) : null}
 
-                <Button type="submit" bg="burgundy" color="white" loading={isSubmitting} disabled={!canSubmit}>
+                <Button
+                  type="button"
+                  bg="burgundy"
+                  color="white"
+                  loading={isSubmitting}
+                  disabled={!canSubmit}
+                  onClick={() => void handleCreatePass()}
+                >
                   <Plus size={18} />
                   {isTicketLimitReached
                     ? "Limit Reached"
@@ -1134,35 +1153,81 @@ export function PassDashboard({
                         : "Generate QR"}
                 </Button>
               </Stack>
-            </form>
 
             <Box mt={6} pt={6} borderTopWidth="1px" borderColor="gray.200">
-              <form onSubmit={handleSaveTicketLimit}>
-                <Stack gap={3}>
-                  <Box>
-                    <Heading fontFamily="subheading" color="textPrimary" fontSize="xl">
-                      Ticket Limit
-                    </Heading>
-                    <Text color="gray.600" fontSize="sm">
-                      Leave blank for unlimited QR creation.
-                    </Text>
-                  </Box>
-                  <Field.Root>
-                    <Field.Label>Total tickets available</Field.Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      step={1}
-                      value={ticketLimitInput}
-                      onChange={(event) => setTicketLimitInput(event.target.value)}
-                      placeholder="Unlimited"
-                    />
-                  </Field.Root>
-                  <Button type="submit" variant="outline" loading={isSavingTicketLimit}>
-                    Save Limit
-                  </Button>
-                </Stack>
-              </form>
+              <Stack gap={3}>
+                <Box>
+                  <Heading fontFamily="subheading" color="textPrimary" fontSize="xl">
+                    Ticket Limit
+                  </Heading>
+                  <Text color="gray.600" fontSize="sm">
+                    Leave blank for unlimited QR creation.
+                  </Text>
+                </Box>
+
+                {!isEditingTicketLimit ? (
+                  <>
+                    <Box borderWidth="1px" borderColor="gray.200" borderRadius="sm" p={4}>
+                      <Text fontSize="sm" color="gray.500">
+                        Total tickets available
+                      </Text>
+                      <Text fontWeight="700" fontSize="lg" color="textPrimary">
+                        {ticketAvailability.ticket_limit === null
+                          ? "Unlimited"
+                          : ticketAvailability.ticket_limit}
+                      </Text>
+                    </Box>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      alignSelf="start"
+                      onClick={() => {
+                        setTicketLimitInput(ticketAvailability.ticket_limit?.toString() ?? "");
+                        setIsEditingTicketLimit(true);
+                      }}
+                    >
+                      <Pencil size={16} />
+                      Edit
+                    </Button>
+                  </>
+                ) : (
+                  <Stack gap={3} onKeyDown={preventEnterSubmit}>
+                    <Field.Root>
+                      <Field.Label>Total tickets available</Field.Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={ticketLimitInput}
+                        onChange={(event) => setTicketLimitInput(event.target.value)}
+                        placeholder="Unlimited"
+                      />
+                    </Field.Root>
+                    <Flex gap={2}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        loading={isSavingTicketLimit}
+                        onClick={() => void handleSaveTicketLimit()}
+                      >
+                        Save Limit
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        disabled={isSavingTicketLimit}
+                        onClick={() => {
+                          setTicketLimitInput(ticketAvailability.ticket_limit?.toString() ?? "");
+                          setIsEditingTicketLimit(false);
+                        }}
+                      >
+                        <X size={16} />
+                        Cancel
+                      </Button>
+                    </Flex>
+                  </Stack>
+                )}
+              </Stack>
             </Box>
           </Box>
 
@@ -1181,6 +1246,25 @@ export function PassDashboard({
 
         <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="sm" mt={6}>
           <Stack gap={4} p={5}>
+            <Field.Root>
+              <Field.Label>Pass list</Field.Label>
+              <SegmentGroup.Root
+                value={passListTab}
+                onValueChange={(details) => setPassListTab((details.value ?? "active") as PassListTab)}
+                w={{ base: "full", md: "320px" }}
+              >
+                <SegmentGroup.Indicator />
+                <SegmentGroup.Item value="active" flex="1">
+                  <SegmentGroup.ItemText>Active ({activePassCount})</SegmentGroup.ItemText>
+                  <SegmentGroup.ItemHiddenInput />
+                </SegmentGroup.Item>
+                <SegmentGroup.Item value="invalidated" flex="1">
+                  <SegmentGroup.ItemText>Invalidated ({invalidatedPassCount})</SegmentGroup.ItemText>
+                  <SegmentGroup.ItemHiddenInput />
+                </SegmentGroup.Item>
+              </SegmentGroup.Root>
+            </Field.Root>
+
             <Flex gap={3} direction={{ base: "column", md: "row" }}>
               <Field.Root flex="1">
                 <Field.Label>Search passes</Field.Label>
@@ -1191,52 +1275,57 @@ export function PassDashboard({
                 />
               </Field.Root>
 
-              <Field.Root w={{ base: "full", md: "220px" }}>
-                <Field.Label>Status</Field.Label>
-                <Select.Root
-                  collection={statusOptions}
-                  value={[statusFilter]}
-                  onValueChange={(details) => setStatusFilter((details.value[0] ?? "all") as StatusFilter)}
-                >
-                  <Select.HiddenSelect />
-                  <Select.Control>
-                    <Select.Trigger>
-                      <Select.ValueText placeholder="All statuses" />
-                    </Select.Trigger>
-                    <Select.IndicatorGroup>
-                      <Select.Indicator />
-                    </Select.IndicatorGroup>
-                  </Select.Control>
-                  <Portal>
-                    <Select.Positioner>
-                      <Select.Content>
-                        {statusOptions.items.map((item) => (
-                          <Select.Item item={item} key={item.value}>
-                            {item.label}
-                            <Select.ItemIndicator />
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select.Positioner>
-                  </Portal>
-                </Select.Root>
-              </Field.Root>
+              {passListTab === "active" ? (
+                <Field.Root w={{ base: "full", md: "220px" }}>
+                  <Field.Label>Status</Field.Label>
+                  <Select.Root
+                    collection={statusOptions}
+                    value={[statusFilter]}
+                    onValueChange={(details) => setStatusFilter((details.value[0] ?? "all") as StatusFilter)}
+                  >
+                    <Select.HiddenSelect />
+                    <Select.Control>
+                      <Select.Trigger>
+                        <Select.ValueText placeholder="All statuses" />
+                      </Select.Trigger>
+                      <Select.IndicatorGroup>
+                        <Select.Indicator />
+                      </Select.IndicatorGroup>
+                    </Select.Control>
+                    <Portal>
+                      <Select.Positioner>
+                        <Select.Content>
+                          {statusOptions.items.map((item) => (
+                            <Select.Item item={item} key={item.value}>
+                              {item.label}
+                              <Select.ItemIndicator />
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select.Positioner>
+                    </Portal>
+                  </Select.Root>
+                </Field.Root>
+              ) : null}
             </Flex>
 
             <Flex align="center" justify="space-between" gap={3} wrap="wrap">
               <Text color="gray.600" fontSize="sm">
-                Showing {filteredPasses.length} of {passes.length} passes.
+                Showing {filteredPasses.length} of {tabPasses.length}{" "}
+                {passListTab === "active" ? "active" : "invalidated"} passes.
               </Text>
-              <Button
-                size="sm"
-                variant="outline"
-                colorPalette="red"
-                disabled={invalidatableCount === 0}
-                onClick={() => setShowInvalidateAllModal(true)}
-              >
-                <Ban size={14} />
-                Invalidate All
-              </Button>
+              {passListTab === "active" ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  colorPalette="red"
+                  disabled={invalidatableCount === 0}
+                  onClick={() => setShowInvalidateAllModal(true)}
+                >
+                  <Ban size={14} />
+                  Invalidate All
+                </Button>
+              ) : null}
             </Flex>
           </Stack>
 
@@ -1295,16 +1384,17 @@ export function PassDashboard({
                             <Mail size={14} />
                             Email
                           </Button>
-                          <Button
-                            size="xs"
-                            variant="outline"
-                            colorPalette="red"
-                            disabled={Boolean(pass.invalidated_at)}
-                            onClick={() => setPassToInvalidate(pass)}
-                          >
-                            <Ban size={14} />
-                            Invalidate
-                          </Button>
+                          {passListTab === "active" ? (
+                            <Button
+                              size="xs"
+                              variant="outline"
+                              colorPalette="red"
+                              onClick={() => setPassToInvalidate(pass)}
+                            >
+                              <Ban size={14} />
+                              Invalidate
+                            </Button>
+                          ) : null}
                         </Flex>
                       </Table.Cell>
                     </Table.Row>
@@ -1436,7 +1526,7 @@ export function PassDashboard({
                 <Dialog.Title>Email ticket PDF</Dialog.Title>
               </Dialog.Header>
               <Dialog.Body>
-                <Stack gap={4}>
+                <Stack gap={4} onKeyDown={preventEnterSubmit}>
                   <Box borderWidth="1px" borderColor="gray.200" borderRadius="sm" p={3}>
                     <Text fontSize="sm" color="gray.500">
                       Ticket
@@ -1476,6 +1566,7 @@ export function PassDashboard({
                   Cancel
                 </Button>
                 <Button
+                  type="button"
                   bg="burgundy"
                   color="white"
                   loading={isResendingEmail}
