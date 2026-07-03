@@ -723,7 +723,11 @@ export function PassDashboard({
     const response = await fetch(`/api/passes/${passToInvalidate.id}/invalidate`, {
       method: "POST",
     });
-    const data = (await response.json().catch(() => null)) as { pass?: HallPass; error?: string } | null;
+    const data = (await response.json().catch(() => null)) as {
+      pass?: HallPass;
+      ticketAvailability?: TicketAvailability;
+      error?: string;
+    } | null;
 
     setIsInvalidating(false);
 
@@ -747,6 +751,11 @@ export function PassDashboard({
     }
 
     setPasses((current) => current.map((item) => (item.id === pass.id ? pass : item)));
+
+    if (data.ticketAvailability) {
+      setTicketAvailability(data.ticketAvailability);
+      setTicketLimitInput(data.ticketAvailability.ticket_limit?.toString() ?? "");
+    }
 
     if (selectedPass?.pass.id === pass.id) {
       const qrDataUrl = await createQrDataUrl(pass.token);
@@ -774,6 +783,7 @@ export function PassDashboard({
     const data = (await response.json().catch(() => null)) as {
       invalidatedCount?: number;
       passes?: HallPass[];
+      ticketAvailability?: TicketAvailability;
       error?: string;
     } | null;
 
@@ -792,6 +802,11 @@ export function PassDashboard({
     const updatedById = new Map(updatedPasses.map((pass) => [pass.id, pass]));
 
     setPasses((current) => current.map((pass) => updatedById.get(pass.id) ?? pass));
+
+    if (data?.ticketAvailability) {
+      setTicketAvailability(data.ticketAvailability);
+      setTicketLimitInput(data.ticketAvailability.ticket_limit?.toString() ?? "");
+    }
 
     if (selectedPass && updatedById.has(selectedPass.pass.id)) {
       const updatedPass = updatedById.get(selectedPass.pass.id)!;
