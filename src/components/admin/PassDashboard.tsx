@@ -456,6 +456,8 @@ export function PassDashboard({
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInvalidating, setIsInvalidating] = useState(false);
+  const [isInvalidatingAll, setIsInvalidatingAll] = useState(false);
+  const [showInvalidateAllModal, setShowInvalidateAllModal] = useState(false);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [isSavingTicketLimit, setIsSavingTicketLimit] = useState(false);
 
@@ -756,6 +758,52 @@ export function PassDashboard({
     });
   }
 
+  async function handleInvalidateAllPasses() {
+    setError("");
+    setIsInvalidatingAll(true);
+
+    const response = await fetch("/api/passes/invalidate-all", {
+      method: "POST",
+    });
+
+    setIsInvalidatingAll(false);
+
+    if (!response.ok) {
+      setError("Could not invalidate all passes. Please try again.");
+      toaster.create({
+        type: "error",
+        title: "Invalidation failed",
+        description: "Could not invalidate all QR codes.",
+      });
+      return;
+    }
+
+    const data = (await response.json()) as { invalidatedCount: number; passes: HallPass[] };
+    const updatedById = new Map(data.passes.map((pass) => [pass.id, pass]));
+
+    setPasses((current) => current.map((pass) => updatedById.get(pass.id) ?? pass));
+
+    if (selectedPass && updatedById.has(selectedPass.pass.id)) {
+      const updatedPass = updatedById.get(selectedPass.pass.id)!;
+      const qrDataUrl = await createQrDataUrl(updatedPass.token);
+      setSelectedPass({
+        pass: updatedPass,
+        qrValue: updatedPass.token,
+        qrDataUrl,
+      });
+    }
+
+    setShowInvalidateAllModal(false);
+    toaster.create({
+      type: "success",
+      title: "All QR codes invalidated",
+      description:
+        data.invalidatedCount === 0
+          ? "No active passes needed invalidation."
+          : `${data.invalidatedCount} pass${data.invalidatedCount === 1 ? "" : "es"} will now scan as invalid.`,
+    });
+  }
+
   function getPassStatus(pass: HallPass) {
     if (pass.invalidated_at) {
       return { label: "Invalidated", color: "red" };
@@ -792,6 +840,8 @@ export function PassDashboard({
 
     return matchesQuery && matchesStatus;
   });
+
+  const invalidatableCount = passes.filter((pass) => !pass.invalidated_at).length;
 
   return (
     <Box>
@@ -1148,9 +1198,21 @@ export function PassDashboard({
               </Field.Root>
             </Flex>
 
-            <Text color="gray.600" fontSize="sm">
-              Showing {filteredPasses.length} of {passes.length} passes.
-            </Text>
+            <Flex align="center" justify="space-between" gap={3} wrap="wrap">
+              <Text color="gray.600" fontSize="sm">
+                Showing {filteredPasses.length} of {passes.length} passes.
+              </Text>
+              <Button
+                size="sm"
+                variant="outline"
+                colorPalette="red"
+                disabled={invalidatableCount === 0}
+                onClick={() => setShowInvalidateAllModal(true)}
+              >
+                <Ban size={14} />
+                Invalidate All
+              </Button>
+            </Flex>
           </Stack>
 
           <Box overflowX="auto">
@@ -1271,6 +1333,60 @@ export function PassDashboard({
                 <Button colorPalette="red" loading={isInvalidating} onClick={() => void handleInvalidatePass()}>
                   <Ban size={16} />
                   Invalidate
+                </Button>
+              </Dialog.Footer>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
+
+      <Dialog.Root
+        open={showInvalidateAllModal}
+        onOpenChange={(details) => {
+          if (!details.open && !isInvalidatingAll) {
+            setShowInvalidateAllModal(false);
+          }
+        }}
+        placement="center"
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content maxW="460px">
+              <Dialog.Header>
+                <Dialog.Title>Invalidate all tickets?</Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body>
+                <Stack gap={3}>
+                  <Text color="gray.700">
+                    This will invalidate every active hall pass immediately. All affected QR codes will stop working
+                    and future scans will return invalid.
+                  </Text>
+                  <Box borderWidth="1px" borderColor="red.200" bg="red.50" borderRadius="sm" p={3}>
+                    <Text fontSize="sm" color="red.800" fontWeight="700">
+                      {invalidatableCount} active pass{invalidatableCount === 1 ? "" : "es"} will be invalidated.
+                    </Text>
+                    <Text fontSize="sm" color="red.700" mt={2}>
+                      Already invalidated passes will not be changed.
+                    </Text>
+                  </Box>
+                </Stack>
+              </Dialog.Body>
+              <Dialog.Footer>
+                <Button
+                  variant="outline"
+                  disabled={isInvalidatingAll}
+                  onClick={() => setShowInvalidateAllModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  colorPalette="red"
+                  loading={isInvalidatingAll}
+                  onClick={() => void handleInvalidateAllPasses()}
+                >
+                  <Ban size={16} />
+                  Invalidate All
                 </Button>
               </Dialog.Footer>
             </Dialog.Content>

@@ -247,6 +247,21 @@ export async function invalidateHallPass(passId: string, invalidatedBy: AuthSess
   return result.rows[0] ?? null;
 }
 
+export async function invalidateAllHallPasses(invalidatedBy: AuthSession) {
+  const result = await query<HallPass>(
+    `
+      update hall_passes
+      set invalidated_at = coalesce(invalidated_at, now()),
+          invalidated_by = coalesce(invalidated_by, $2)
+      where invalidated_at is null
+      returning id, ticket_number, token, guest_name, invite_from, created_by, created_at, used_at, used_by, invalidated_at, invalidated_by, email_recipient, email_status, email_sent_at, email_error
+    `,
+    [invalidatedBy.email],
+  );
+
+  return result.rows;
+}
+
 export async function getHallPassById(passId: string) {
   const result = await query<HallPass>(
     `
