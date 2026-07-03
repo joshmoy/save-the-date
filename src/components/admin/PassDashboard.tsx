@@ -481,6 +481,7 @@ export function PassDashboard({
   const isOverTicketLimit =
     ticketAvailability.remaining_count !== null && requestedPassCount > ticketAvailability.remaining_count;
   const shouldEmailPasses = deliveryMode === "email";
+  const isMissingInviteFrom = !inviteFrom.trim();
   const isInvalidRecipientEmail = shouldEmailPasses && !isLikelyEmail(recipientEmail);
   const canSubmit =
     !isSubmitting &&
@@ -488,6 +489,7 @@ export function PassDashboard({
     !isInvalidBulkCount &&
     !isOverBatchLimit &&
     !isOverTicketLimit &&
+    !isMissingInviteFrom &&
     !isInvalidRecipientEmail &&
     (generationMode === "single" || requestedPassCount > 0);
 
@@ -520,6 +522,12 @@ export function PassDashboard({
       return;
     }
 
+    if (isMissingInviteFrom) {
+      setIsSubmitting(false);
+      setError("Select who the invite is from.");
+      return;
+    }
+
     const response = await fetch("/api/passes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -529,7 +537,7 @@ export function PassDashboard({
           generationMode === "bulk"
             ? Array.from({ length: requestedPassCount }, (_, index) => parsedBulkGuestNames[index] ?? "")
             : undefined,
-        inviteFrom: inviteFrom || null,
+        inviteFrom,
         delivery: {
           sendEmail: shouldEmailPasses,
           recipientEmail,
@@ -1031,14 +1039,14 @@ export function PassDashboard({
                   </Stack>
                 )}
 
-                <Field.Root>
+                <Field.Root invalid={isMissingInviteFrom}>
                   <Field.Label>Invite from</Field.Label>
                   <Select.Root
                     collection={inviteFromOptions}
                     value={inviteFrom ? [inviteFrom] : []}
                     onValueChange={(details) => setInviteFrom(details.value[0] ?? "")}
                   >
-                    <Select.HiddenSelect />
+                    <Select.HiddenSelect required />
                     <Select.Control>
                       <Select.Trigger>
                         <Select.ValueText placeholder="Select stakeholder" />
@@ -1060,6 +1068,9 @@ export function PassDashboard({
                       </Select.Positioner>
                     </Portal>
                   </Select.Root>
+                  {isMissingInviteFrom ? (
+                    <Field.ErrorText>Select who the invite is from.</Field.ErrorText>
+                  ) : null}
                 </Field.Root>
 
                 <Box borderWidth="1px" borderColor="gray.200" borderRadius="sm" p={4}>

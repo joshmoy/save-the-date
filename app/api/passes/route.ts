@@ -7,7 +7,7 @@ import {
   updatePassEmailDelivery,
 } from "../../../src/lib/hallPasses";
 import { isLikelyEmail } from "../../../src/lib/maileroo";
-import { sendPassPdfEmail } from "../../../src/lib/passEmail";
+import { sendPassPdfEmailsBatched } from "../../../src/lib/passEmail";
 
 const MAX_BATCH_SIZE = 100;
 
@@ -51,6 +51,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Enter a valid recipient email address." }, { status: 400 });
   }
 
+  const inviteFrom = body?.inviteFrom?.trim() ?? "";
+
+  if (!inviteFrom) {
+    return NextResponse.json({ error: "Select who the invite is from." }, { status: 400 });
+  }
+
   const guestNames =
     Array.isArray(body?.guestNames) && body.guestNames.length > 0
       ? body.guestNames.map((guestName) => (typeof guestName === "string" ? guestName.trim() : ""))
@@ -70,7 +76,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const passes = await createHallPasses(normalizedGuestNames, body?.inviteFrom ?? null, session);
+  const passes = await createHallPasses(normalizedGuestNames, inviteFrom, session);
 
   if (passes.length === 0) {
     const ticketAvailability = await getTicketAvailability();
@@ -97,41 +103,44 @@ export async function POST(request: Request) {
     | undefined;
 
   if (shouldSendEmail) {
-    try {
-      await sendPassPdfEmail({
-        passes,
-        recipientEmail,
-        message: emailMessage,
+    const emailResult = await sendPassPdfEmailsBatched({
+      passes,
+      recipientEmail,
+      message: emailMessage,
+    });
+    const updatedById = new Map(passes.map((pass) => [pass.id, pass]));
+
+    if (emailResult.sentPassIds.length > 0) {
+      const sentPasses = await updatePassEmailDelivery(emailResult.sentPassIds, {
+        recipient: recipientEmail,
+        status: "sent",
       });
-      deliveredPasses = await updatePassEmailDelivery(
-        passes.map((item) => item.id),
-        {
-          recipient: recipientEmail,
-          status: "sent",
-        },
-      );
-      emailDelivery = {
-        attempted: true,
-        success: true,
-        recipientEmail,
-      };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Email delivery failed.";
-      deliveredPasses = await updatePassEmailDelivery(
-        passes.map((item) => item.id),
-        {
-          recipient: recipientEmail,
-          status: "failed",
-          error: message,
-        },
-      );
-      emailDelivery = {
-        attempted: true,
-        success: false,
-        recipientEmail,
-        error: message,
-      };
+
+      for (const pass of sentPasses) {
+        updatedById.set(pass.id, pass);
+      }
     }
+
+    if (emailResult.failedPassIds.length > 0) {
+      const failedError = emailResult.errors.join(" ");
+      const failedPasses = await updatePassEmailDelivery(emailResult.failedPassIds, {
+        recipient: recipientEmail,
+        status: "failed",
+        error: failedError,
+      });
+
+      for (const pass of failedPasses) {
+        updatedById.set(pass.id, pass);
+      }
+    }
+
+    deliveredPasses = passes.map((pass) => updatedById.get(pass.id)!);
+    emailDelivery = {
+      attempted: true,
+      success: emailResult.failedPassIds.length === 0,
+      recipientEmail,
+      error: emailResult.errors.length > 0 ? emailResult.errors.join(" ") : undefined,
+    };
   }
 
   const pass = deliveredPasses[0];
