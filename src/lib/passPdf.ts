@@ -114,7 +114,7 @@ export async function createPassPdfBuffer(pass: HallPass) {
   const invitationBytes = await loadInvitationBytes();
   const imgPanelH = PAGE_H - 76;
   const imgH = imgPanelH;
-  const imgW = Math.round(imgH * (620 / 930));
+  const imgW = Math.round(imgH * (720 / 1019));
   const imgX = 40;
   const imgY = 38;
 

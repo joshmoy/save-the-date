@@ -210,7 +210,7 @@ async function createPassImageDataUrl(selectedPass: GeneratedPass) {
 
   // Left panel: invitation image
   const imgH = canvas.height - 120;
-  const imgW = Math.round(imgH * (620 / 930));
+  const imgW = Math.round(imgH * (720 / 1019));
   const imgX = 64;
   const imgY = 60;
 
