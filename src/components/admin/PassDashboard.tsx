@@ -159,10 +159,32 @@ function getPassStatusLabel(pass: HallPass) {
   return "Ready";
 }
 
+function drawImageCover(
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const scale = Math.max(width / image.width, height / image.height);
+  const drawWidth = image.width * scale;
+  const drawHeight = image.height * scale;
+  const offsetX = x + (width - drawWidth) / 2;
+  const offsetY = y + (height - drawHeight) / 2;
+
+  context.save();
+  context.beginPath();
+  context.rect(x, y, width, height);
+  context.clip();
+  context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+  context.restore();
+}
+
 async function createPassImageDataUrl(selectedPass: GeneratedPass) {
   const canvas = document.createElement("canvas");
-  canvas.width = 800;
-  canvas.height = 1100;
+  canvas.width = 1360;
+  canvas.height = 640;
 
   const context = canvas.getContext("2d");
 
@@ -171,6 +193,7 @@ async function createPassImageDataUrl(selectedPass: GeneratedPass) {
   }
 
   const qrImage = await loadImage(selectedPass.qrDataUrl);
+  const invitationImage = await loadImage("/invitation.jpg").catch(() => null);
   const statusLabel = getPassStatusLabel(selectedPass.pass);
   const guestName = selectedPass.pass.guest_name ?? "Guest";
 
@@ -178,50 +201,101 @@ async function createPassImageDataUrl(selectedPass: GeneratedPass) {
   context.fillRect(0, 0, canvas.width, canvas.height);
 
   context.strokeStyle = "#D4A57A";
-  context.lineWidth = 10;
-  context.strokeRect(42, 42, canvas.width - 84, canvas.height - 84);
+  context.lineWidth = 6;
+  context.strokeRect(26, 26, canvas.width - 52, canvas.height - 52);
 
   context.strokeStyle = "#CC8899";
-  context.lineWidth = 2;
-  context.strokeRect(68, 68, canvas.width - 136, canvas.height - 136);
+  context.lineWidth = 1.5;
+  context.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
+
+  // Left panel: invitation image
+  const imgH = canvas.height - 120;
+  const imgW = Math.round(imgH * (620 / 930));
+  const imgX = 64;
+  const imgY = 60;
+
+  if (invitationImage) {
+    drawImageCover(context, invitationImage, imgX, imgY, imgW, imgH);
+    context.strokeStyle = "#D4A57A";
+    context.lineWidth = 3;
+    context.strokeRect(imgX, imgY, imgW, imgH);
+  } else {
+    context.fillStyle = "#800020";
+    context.fillRect(imgX, imgY, imgW, imgH);
+  }
+
+  // Right panel: QR
+  const qrSize = 300;
+  const qrX = canvas.width - 64 - qrSize;
+  const qrY = (canvas.height - qrSize) / 2 - 10;
+  const qrCenter = qrX + qrSize / 2;
+
+  // Middle panel geometry
+  const detailsLeft = imgX + imgW + 40;
+  const detailsRight = qrX - 40;
+  const detailsCenter = (detailsLeft + detailsRight) / 2;
+  const detailsWidth = detailsRight - detailsLeft;
+
+  context.strokeStyle = "#E7D8CE";
+  context.lineWidth = 1.5;
+  context.beginPath();
+  context.moveTo(qrX - 20, 90);
+  context.lineTo(qrX - 20, canvas.height - 90);
+  context.stroke();
 
   context.textAlign = "center";
+
   context.fillStyle = "#C74375";
-  context.font = "700 28px serif";
-  context.fillText("ADEOLA & JOSHUA", canvas.width / 2, 150);
+  context.font = "700 24px serif";
+  context.fillText("ADEOLA & JOSHUA", detailsCenter, 150);
 
   context.fillStyle = "#800020";
-  context.font = "400 68px serif";
-  context.fillText("Hall Pass", canvas.width / 2, 235);
+  context.font = "400 58px serif";
+  context.fillText("Hall Pass", detailsCenter, 220);
 
   context.fillStyle = selectedPass.pass.invalidated_at ? "#B42318" : "#3E2723";
-  context.font = "700 24px sans-serif";
+  context.font = "700 22px sans-serif";
   context.fillText(
-    `${formatTicketNumber(selectedPass.pass.ticket_number).toUpperCase()} - ${statusLabel.toUpperCase()}`,
-    canvas.width / 2,
-    285,
+    `${formatTicketNumber(selectedPass.pass.ticket_number).toUpperCase()} · ${statusLabel.toUpperCase()}`,
+    detailsCenter,
+    262,
   );
 
-  context.drawImage(qrImage, 190, 340, 420, 420);
+  context.strokeStyle = "#D4A57A";
+  context.lineWidth = 1.5;
+  context.beginPath();
+  context.moveTo(detailsCenter - 80, 285);
+  context.lineTo(detailsCenter + 80, 285);
+  context.stroke();
 
   context.fillStyle = "#3E2723";
-  context.font = "700 32px monospace";
-  context.fillText(selectedPass.pass.token, canvas.width / 2, 825);
-
   context.font = "700 42px serif";
-  fitCanvasText(context, guestName, canvas.width / 2, 900, 620);
+  fitCanvasText(context, guestName, detailsCenter, 360, detailsWidth);
 
   context.fillStyle = "#6D4C41";
-  context.font = "400 24px serif";
-  context.fillText("Present this code at entry.", canvas.width / 2, 965);
+  context.font = "italic 400 24px serif";
+  context.fillText("Saturday 1st August 2026", detailsCenter, 405);
+
+  context.fillStyle = "#3E2723";
+  context.font = "700 30px monospace";
+  fitCanvasText(context, selectedPass.pass.token, detailsCenter, 470, detailsWidth);
+
+  context.fillStyle = "#6D4C41";
+  context.font = "400 20px serif";
+  context.fillText("Present this code at entry.", detailsCenter, 512);
+
+  context.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+  context.fillStyle = "#6D4C41";
+  context.font = "700 18px sans-serif";
+  context.fillText("SCAN TO VERIFY", qrCenter, qrY - 18);
 
   if (selectedPass.pass.invalidated_at) {
     context.save();
     context.translate(canvas.width / 2, canvas.height / 2);
-    context.rotate(-Math.PI / 7);
+    context.rotate(-Math.PI / 9);
     context.globalAlpha = 0.16;
     context.fillStyle = "#B42318";
-    context.font = "900 96px sans-serif";
+    context.font = "900 120px sans-serif";
     context.fillText("INVALIDATED", 0, 0);
     context.restore();
   }
@@ -337,34 +411,86 @@ function HallPassPreview({
   }
 
   return (
-    <Flex gap={6} align="center" direction={{ base: "column", md: "row" }}>
-      <Box borderWidth="2px" borderColor="roseGold" p={5} textAlign="center" minW="260px">
-        <Text textStyle="accent" color="roseWine">
-          Adeola & Joshua
-        </Text>
-        <Heading fontFamily="subheading" color="burgundy" fontSize="2xl" mb={3}>
-          Hall Pass
-        </Heading>
-        <Text color="deepBrown" fontSize="sm" fontWeight="700" mb={3}>
-          {formatTicketNumber(selectedPass.pass.ticket_number)}
-        </Text>
-        <Image src={selectedPass.qrDataUrl} alt="Generated hall pass QR code" mx="auto" />
-        <Text
-          mt={3}
-          fontFamily="mono"
-          color="deepBrown"
-          fontSize="sm"
-          fontWeight="700"
-          letterSpacing="wider"
-        >
-          {selectedPass.pass.token}
-        </Text>
-        <Text mt={2} color="textPrimary" fontWeight="600">
-          {selectedPass.pass.guest_name ?? "Guest"}
-        </Text>
+    <Stack gap={6}>
+      <Box
+        borderWidth="1px"
+        borderColor="roseGold"
+        borderRadius="md"
+        overflow="hidden"
+        bg="cream"
+        position="relative"
+      >
+        <Flex direction={{ base: "column", md: "row" }} align="stretch">
+          <Box
+            w={{ base: "100%", md: "210px" }}
+            h={{ base: "240px", md: "auto" }}
+            flexShrink={0}
+            bg="burgundy"
+          >
+            <Image
+              src="/invitation.jpg"
+              alt="Adeola & Joshua save the date"
+              w="100%"
+              h="100%"
+              objectFit="cover"
+            />
+          </Box>
+
+          <Flex
+            flex="1"
+            direction="column"
+            align="center"
+            justify="center"
+            textAlign="center"
+            gap={1}
+            px={5}
+            py={6}
+          >
+            <Text textStyle="accent" color="roseWine">
+              Adeola & Joshua
+            </Text>
+            <Heading fontFamily="subheading" color="burgundy" fontSize="3xl" lineHeight="1">
+              Hall Pass
+            </Heading>
+            <Text color={isInvalidated ? "red.600" : "deepBrown"} fontSize="xs" fontWeight="700" letterSpacing="wide">
+              {formatTicketNumber(selectedPass.pass.ticket_number).toUpperCase()} ·{" "}
+              {(isInvalidated ? "Invalidated" : selectedPass.pass.used_at ? "Used" : "Ready").toUpperCase()}
+            </Text>
+            <Box w="70px" h="1px" bg="roseGold" my={2} />
+            <Text fontFamily="subheading" fontWeight="700" fontSize="2xl" color="textPrimary" lineClamp={1}>
+              {selectedPass.pass.guest_name ?? "Guest"}
+            </Text>
+            <Text fontStyle="italic" color="textSecondary" fontSize="sm">
+              Saturday 1st August 2026
+            </Text>
+            <Text mt={2} fontFamily="mono" color="deepBrown" fontSize="sm" fontWeight="700" letterSpacing="wider">
+              {selectedPass.pass.token}
+            </Text>
+            <Text color="textSecondary" fontSize="xs">
+              Present this code at entry.
+            </Text>
+          </Flex>
+
+          <Flex
+            direction="column"
+            align="center"
+            justify="center"
+            gap={2}
+            px={5}
+            py={6}
+            borderTopWidth={{ base: "1px", md: "0" }}
+            borderLeftWidth={{ base: "0", md: "1px" }}
+            borderColor="gray.200"
+          >
+            <Image src={selectedPass.qrDataUrl} alt="Generated hall pass QR code" boxSize="150px" />
+            <Text color="textSecondary" fontSize="2xs" fontWeight="700" letterSpacing="widest">
+              SCAN TO VERIFY
+            </Text>
+          </Flex>
+        </Flex>
       </Box>
 
-      <Stack gap={2} flex="1">
+      <Stack gap={2}>
         <Badge colorPalette={isInvalidated ? "red" : selectedPass.pass.used_at ? "gray" : "green"} alignSelf="start">
           {isInvalidated ? "Invalidated" : selectedPass.pass.used_at ? "Used" : "Ready"}
         </Badge>
@@ -424,7 +550,7 @@ function HallPassPreview({
           </Button>
         </Flex>
       </Stack>
-    </Flex>
+    </Stack>
   );
 }
 
