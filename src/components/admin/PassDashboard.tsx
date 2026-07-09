@@ -916,58 +916,8 @@ export function PassDashboard({
   }
 
   async function handleInvalidateAllPasses() {
-    setIsInvalidatingAll(true);
-
-    const response = await fetch("/api/passes/invalidate-all", {
-      method: "POST",
-    });
-    const data = (await response.json().catch(() => null)) as {
-      invalidatedCount?: number;
-      passes?: HallPass[];
-      ticketAvailability?: TicketAvailability;
-      error?: string;
-    } | null;
-
-    setIsInvalidatingAll(false);
-
-    if (!response.ok) {
-      toaster.create({
-        type: "error",
-        title: "Invalidation failed",
-        description: data?.error ?? "Could not invalidate all QR codes.",
-      });
-      return;
-    }
-
-    const updatedPasses = data?.passes ?? [];
-    const updatedById = new Map(updatedPasses.map((pass) => [pass.id, pass]));
-
-    setPasses((current) => current.map((pass) => updatedById.get(pass.id) ?? pass));
-
-    if (data?.ticketAvailability) {
-      setTicketAvailability(data.ticketAvailability);
-      setTicketLimitInput(data.ticketAvailability.ticket_limit?.toString() ?? "");
-    }
-
-    if (selectedPass && updatedById.has(selectedPass.pass.id)) {
-      const updatedPass = updatedById.get(selectedPass.pass.id)!;
-      const qrDataUrl = await createQrDataUrl(updatedPass.token);
-      setSelectedPass({
-        pass: updatedPass,
-        qrValue: updatedPass.token,
-        qrDataUrl,
-      });
-    }
-
+    // Intentionally a no-op: bulk invalidation is disabled.
     setShowInvalidateAllModal(false);
-    toaster.create({
-      type: "success",
-      title: "All QR codes invalidated",
-      description:
-        data?.invalidatedCount === 0
-          ? "No active passes needed invalidation."
-          : `${data?.invalidatedCount} pass${data?.invalidatedCount === 1 ? "" : "es"} will now scan as invalid.`,
-    });
   }
 
   function getPassStatus(pass: HallPass) {
@@ -1456,8 +1406,8 @@ export function PassDashboard({
                   size="sm"
                   variant="outline"
                   colorPalette="red"
-                  disabled={invalidatableCount === 0}
-                  onClick={() => setShowInvalidateAllModal(true)}
+                  disabled
+                  title="Bulk invalidation is currently disabled"
                 >
                   <Ban size={14} />
                   Invalidate All
