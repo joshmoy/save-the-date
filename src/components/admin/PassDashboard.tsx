@@ -577,7 +577,7 @@ export function PassDashboard({
   const [passToEmail, setPassToEmail] = useState<HallPass | null>(null);
   const [resendEmail, setResendEmail] = useState("");
   const [resendMessage, setResendMessage] = useState(
-    "Please find the attached hall pass ticket PDF. Present the QR code at entry.",
+    "Thank you for being a part of our love journey! Please find attached the hall pass PDF.",
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -702,7 +702,7 @@ export function PassDashboard({
     setGenerationMode("bulk");
     setDeliveryMode("email");
     setRecipientEmail("");
-    setEmailMessage("Please find the attached hall pass ticket PDF. Present the QR code at entry.");
+    setEmailMessage("Thank you for being a part of our love journey! Please find attached the hall pass PDF.");
     setInviteFrom("");
     toaster.create({
       type: data.emailDelivery?.success === false ? "warning" : "success",
