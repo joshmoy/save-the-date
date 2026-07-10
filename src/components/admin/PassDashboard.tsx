@@ -56,15 +56,11 @@ const statusOptions = createListCollection({
 
 const inviteFromOptions = createListCollection({
   items: [
-    { label: "Adeola's dad", value: "dad" },
-    { label: "Adeola's mum", value: "mum" },
     { label: "Adeola", value: "Ade" },
     { label: "Joshua", value: "Joshua" },
+    { label: "Adeola's dad", value: "dad" },
+    { label: "Adeola's mum", value: "mum" },
     { label: "Anu", value: "Anu" },
-    { label: "Mummy Moyin", value: "Mummy Moyin" },
-    { label: "Daddy D", value: "Daddy D" },
-    { label: "Sir T", value: "Sir T" },
-    { label: "Bro Bayo", value: "Bro Bayo" },
     { label: "Ayo", value: "Ayo" },
     { label: "David", value: "David" },
   ],
