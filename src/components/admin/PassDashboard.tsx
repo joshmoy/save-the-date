@@ -564,8 +564,8 @@ export function PassDashboard({
   const [guestName, setGuestName] = useState("");
   const [bulkGuestNames, setBulkGuestNames] = useState("");
   const [bulkPassCount, setBulkPassCount] = useState("5");
-  const [generationMode, setGenerationMode] = useState<GenerationMode>("single");
-  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("generate");
+  const [generationMode, setGenerationMode] = useState<GenerationMode>("bulk");
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("email");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [emailMessage, setEmailMessage] = useState(
     "Thank you for being a part of our love journey! Please find attached the hall pass PDF.",
@@ -703,8 +703,8 @@ export function PassDashboard({
     setGuestName("");
     setBulkGuestNames("");
     setBulkPassCount("5");
-    setGenerationMode("single");
-    setDeliveryMode("generate");
+    setGenerationMode("bulk");
+    setDeliveryMode("email");
     setRecipientEmail("");
     setEmailMessage("Please find the attached hall pass ticket PDF. Present the QR code at entry.");
     setInviteFrom("");
