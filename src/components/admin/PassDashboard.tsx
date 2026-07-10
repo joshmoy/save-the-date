@@ -56,9 +56,9 @@ const statusOptions = createListCollection({
 
 const inviteFromOptions = createListCollection({
   items: [
-    { label: "Ade's dad", value: "Ade's dad" },
-    { label: "Ade's mum", value: "Ade's mum" },
-    { label: "Ade", value: "Ade" },
+    { label: "Adeola's dad", value: "dad" },
+    { label: "Adeola's mum", value: "mum" },
+    { label: "Adeola", value: "Ade" },
     { label: "Joshua", value: "Joshua" },
     { label: "Anu", value: "Anu" },
     { label: "Mummy Moyin", value: "Mummy Moyin" },
@@ -568,7 +568,7 @@ export function PassDashboard({
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("generate");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [emailMessage, setEmailMessage] = useState(
-    "Please find the attached hall pass ticket PDF. Present the QR code at entry.",
+    "Thank you for being a part of our love journey! Please find attached the hall pass PDF.",
   );
   const [inviteFrom, setInviteFrom] = useState("");
   const [ticketLimitInput, setTicketLimitInput] = useState(
