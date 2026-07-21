@@ -21,9 +21,14 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import QRCode from "qrcode";
-import { Ban, Download, Eye, Mail, Pencil, Plus, Printer, ShieldCheck, Users, X } from "lucide-react";
-import { useState, type KeyboardEvent } from "react";
-import type { HallPass, TicketAvailability } from "../../lib/hallPasses";
+import { Ban, ChevronLeft, ChevronRight, Download, Eye, Mail, Pencil, Plus, Printer, ShieldCheck, Users, X } from "lucide-react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import type {
+  HallPass,
+  HallPassListResult,
+  TicketAvailability,
+} from "../../lib/hallPasses";
+import { HALL_PASS_PAGE_SIZES, type HallPassPageSize } from "../../lib/hallPassPaging";
 import { formatDateTime } from "../../lib/formatDate";
 import { toaster } from "../ui/toaster";
 
@@ -52,6 +57,13 @@ const statusOptions = createListCollection({
     { label: "Unused", value: "unused" },
     { label: "Used", value: "used" },
   ],
+});
+
+const pageSizeOptions = createListCollection({
+  items: HALL_PASS_PAGE_SIZES.map((size) => ({
+    label: `${size} per page`,
+    value: String(size),
+  })),
 });
 
 const inviteFromOptions = createListCollection({
@@ -553,9 +565,18 @@ function HallPassPreview({
 export function PassDashboard({
   initialPasses,
   initialTicketAvailability,
+  initialPagination,
 }: {
   initialPasses: HallPass[];
   initialTicketAvailability: TicketAvailability;
+  initialPagination: {
+    page: number;
+    limit: HallPassPageSize;
+    total: number;
+    totalPages: number;
+    activeCount: number;
+    invalidatedCount: number;
+  };
 }) {
   const [guestName, setGuestName] = useState("");
   const [bulkGuestNames, setBulkGuestNames] = useState("");
@@ -580,16 +601,25 @@ export function PassDashboard({
     "Thank you for being a part of our love journey! Please find attached the hall pass PDF.",
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [passListTab, setPassListTab] = useState<PassListTab>("active");
+  const [page, setPage] = useState(initialPagination.page);
+  const [pageSize, setPageSize] = useState<HallPassPageSize>(initialPagination.limit);
+  const [totalPasses, setTotalPasses] = useState(initialPagination.total);
+  const [totalPages, setTotalPages] = useState(initialPagination.totalPages);
+  const [activePassCount, setActivePassCount] = useState(initialPagination.activeCount);
+  const [invalidatedPassCount, setInvalidatedPassCount] = useState(initialPagination.invalidatedCount);
+  const [isLoadingPasses, setIsLoadingPasses] = useState(false);
   const [isEditingTicketLimit, setIsEditingTicketLimit] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInvalidating, setIsInvalidating] = useState(false);
-  const [isInvalidatingAll, setIsInvalidatingAll] = useState(false);
+  const [isInvalidatingAll] = useState(false);
   const [showInvalidateAllModal, setShowInvalidateAllModal] = useState(false);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [isSavingTicketLimit, setIsSavingTicketLimit] = useState(false);
+  const hasLoadedOnce = useRef(false);
 
   const isTicketLimitReached = ticketAvailability.remaining_count === 0;
   const parsedBulkGuestNames = parseBulkGuestNames(bulkGuestNames);
@@ -614,6 +644,83 @@ export function PassDashboard({
     !isMissingInviteFrom &&
     !isInvalidRecipientEmail &&
     (generationMode === "single" || requestedPassCount > 0);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      const nextSearch = searchQuery.trim();
+      setDebouncedSearch((current) => {
+        if (current !== nextSearch) {
+          setPage(1);
+        }
+        return nextSearch;
+      });
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  async function loadPasses(options?: { page?: number; limit?: HallPassPageSize; silent?: boolean }) {
+    const nextPage = options?.page ?? page;
+    const nextLimit = options?.limit ?? pageSize;
+
+    if (!options?.silent) {
+      setIsLoadingPasses(true);
+    }
+
+    try {
+      const params = new URLSearchParams({
+        page: String(nextPage),
+        limit: String(nextLimit),
+        tab: passListTab,
+        status: passListTab === "active" ? statusFilter : "all",
+      });
+
+      if (debouncedSearch) {
+        params.set("search", debouncedSearch);
+      }
+
+      const response = await fetch(`/api/passes?${params.toString()}`);
+      const data = (await response.json().catch(() => null)) as
+        | (HallPassListResult & { ticketAvailability?: TicketAvailability; error?: string })
+        | null;
+
+      if (!response.ok || !data) {
+        toaster.create({
+          type: "error",
+          title: "Could not load passes",
+          description: data?.error ?? "Please try again.",
+        });
+        return;
+      }
+
+      setPasses(data.passes);
+      setPage(data.page);
+      setPageSize(data.limit);
+      setTotalPasses(data.total);
+      setTotalPages(data.totalPages);
+      setActivePassCount(data.activeCount);
+      setInvalidatedPassCount(data.invalidatedCount);
+
+      if (data.ticketAvailability) {
+        setTicketAvailability(data.ticketAvailability);
+      }
+    } finally {
+      if (!options?.silent) {
+        setIsLoadingPasses(false);
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (!hasLoadedOnce.current) {
+      hasLoadedOnce.current = true;
+      return;
+    }
+
+    void loadPasses({ page, limit: pageSize });
+    // Intentionally refetch when pagination/filter inputs change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize, passListTab, statusFilter, debouncedSearch]);
 
   async function handleCreatePass() {
     setError("");
@@ -694,7 +801,6 @@ export function PassDashboard({
     const createdPasses = data.passes ?? [data.pass];
 
     setSelectedPass({ ...data, qrDataUrl });
-    setPasses((current) => [...createdPasses, ...current]);
     setTicketAvailability(data.ticketAvailability);
     setGuestName("");
     setBulkGuestNames("");
@@ -704,6 +810,12 @@ export function PassDashboard({
     setRecipientEmail("");
     setEmailMessage("Thank you for being a part of our love journey! Please find attached the hall pass PDF.");
     setInviteFrom("");
+    setPassListTab("active");
+    setStatusFilter("all");
+    setSearchQuery("");
+    setDebouncedSearch("");
+    setPage(1);
+    await loadPasses({ page: 1, limit: pageSize, silent: true });
     toaster.create({
       type: data.emailDelivery?.success === false ? "warning" : "success",
       title:
@@ -887,7 +999,7 @@ export function PassDashboard({
       return;
     }
 
-    setPasses((current) => current.map((item) => (item.id === pass.id ? pass : item)));
+    setPasses((current) => current.filter((item) => item.id !== pass.id));
 
     if (data.ticketAvailability) {
       setTicketAvailability(data.ticketAvailability);
@@ -903,12 +1015,16 @@ export function PassDashboard({
       });
     }
 
+    setActivePassCount((current) => Math.max(0, current - 1));
+    setInvalidatedPassCount((current) => current + 1);
+    setTotalPasses((current) => Math.max(0, current - 1));
     setPassToInvalidate(null);
     toaster.create({
       type: "success",
       title: "QR code invalidated",
       description: `${pass.token} will now scan as invalid.`,
     });
+    await loadPasses({ silent: true });
   }
 
   async function handleInvalidateAllPasses() {
@@ -928,38 +1044,8 @@ export function PassDashboard({
     return { label: "Unused", color: "green" };
   }
 
-  const tabPasses = passes.filter((pass) =>
-    passListTab === "active" ? !pass.invalidated_at : Boolean(pass.invalidated_at),
-  );
-
-  const filteredPasses = tabPasses.filter((pass) => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
-    const searchableText = [
-      pass.guest_name,
-      pass.token,
-      pass.ticket_number?.toString(),
-      pass.invite_from,
-      pass.email_recipient,
-      pass.email_status,
-      pass.created_by,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-
-    const matchesQuery = normalizedQuery ? searchableText.includes(normalizedQuery) : true;
-    const matchesStatus =
-      passListTab === "invalidated" ||
-      statusFilter === "all" ||
-      (statusFilter === "used" && Boolean(pass.used_at)) ||
-      (statusFilter === "unused" && !pass.used_at);
-
-    return matchesQuery && matchesStatus;
-  });
-
-  const invalidatableCount = passes.filter((pass) => !pass.invalidated_at).length;
-  const activePassCount = passes.filter((pass) => !pass.invalidated_at).length;
-  const invalidatedPassCount = passes.length - activePassCount;
+  const rangeStart = totalPasses === 0 ? 0 : (page - 1) * pageSize + 1;
+  const rangeEnd = Math.min(page * pageSize, totalPasses);
 
   return (
     <Box>
@@ -1333,7 +1419,10 @@ export function PassDashboard({
               <Field.Label>Pass list</Field.Label>
               <SegmentGroup.Root
                 value={passListTab}
-                onValueChange={(details) => setPassListTab((details.value ?? "active") as PassListTab)}
+                onValueChange={(details) => {
+                  setPassListTab((details.value ?? "active") as PassListTab);
+                  setPage(1);
+                }}
                 w={{ base: "full", md: "320px" }}
               >
                 <SegmentGroup.Indicator />
@@ -1348,8 +1437,8 @@ export function PassDashboard({
               </SegmentGroup.Root>
             </Field.Root>
 
-            <Flex gap={3} direction={{ base: "column", md: "row" }}>
-              <Field.Root flex="1">
+            <Flex gap={3} direction={{ base: "column", md: "row" }} wrap="wrap">
+              <Field.Root flex="1" minW={{ md: "240px" }}>
                 <Field.Label>Search passes</Field.Label>
                 <Input
                   value={searchQuery}
@@ -1359,12 +1448,15 @@ export function PassDashboard({
               </Field.Root>
 
               {passListTab === "active" ? (
-                <Field.Root w={{ base: "full", md: "220px" }}>
+                <Field.Root w={{ base: "full", md: "180px" }}>
                   <Field.Label>Status</Field.Label>
                   <Select.Root
                     collection={statusOptions}
                     value={[statusFilter]}
-                    onValueChange={(details) => setStatusFilter((details.value[0] ?? "all") as StatusFilter)}
+                    onValueChange={(details) => {
+                      setStatusFilter((details.value[0] ?? "all") as StatusFilter);
+                      setPage(1);
+                    }}
                   >
                     <Select.HiddenSelect />
                     <Select.Control>
@@ -1390,12 +1482,54 @@ export function PassDashboard({
                   </Select.Root>
                 </Field.Root>
               ) : null}
+
+              <Field.Root w={{ base: "full", md: "160px" }}>
+                <Field.Label>Rows per page</Field.Label>
+                <Select.Root
+                  collection={pageSizeOptions}
+                  value={[String(pageSize)]}
+                  onValueChange={(details) => {
+                    const nextSize = Number(details.value[0] ?? pageSize);
+                    setPageSize(
+                      (HALL_PASS_PAGE_SIZES as readonly number[]).includes(nextSize)
+                        ? (nextSize as HallPassPageSize)
+                        : 50,
+                    );
+                    setPage(1);
+                  }}
+                >
+                  <Select.HiddenSelect />
+                  <Select.Control>
+                    <Select.Trigger>
+                      <Select.ValueText placeholder="50 per page" />
+                    </Select.Trigger>
+                    <Select.IndicatorGroup>
+                      <Select.Indicator />
+                    </Select.IndicatorGroup>
+                  </Select.Control>
+                  <Portal>
+                    <Select.Positioner>
+                      <Select.Content>
+                        {pageSizeOptions.items.map((item) => (
+                          <Select.Item item={item} key={item.value}>
+                            {item.label}
+                            <Select.ItemIndicator />
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Positioner>
+                  </Portal>
+                </Select.Root>
+              </Field.Root>
             </Flex>
 
             <Flex align="center" justify="space-between" gap={3} wrap="wrap">
               <Text color="gray.600" fontSize="sm">
-                Showing {filteredPasses.length} of {tabPasses.length}{" "}
-                {passListTab === "active" ? "active" : "invalidated"} passes.
+                {isLoadingPasses
+                  ? "Loading passes..."
+                  : totalPasses === 0
+                    ? `No ${passListTab} passes found.`
+                    : `Showing ${rangeStart}-${rangeEnd} of ${totalPasses} ${passListTab} passes.`}
               </Text>
               {passListTab === "active" ? (
                 <Button
@@ -1412,7 +1546,7 @@ export function PassDashboard({
             </Flex>
           </Stack>
 
-          <Box overflowX="auto">
+          <Box overflowX="auto" opacity={isLoadingPasses ? 0.6 : 1}>
             <Table.Root size="sm">
               <Table.Header>
                 <Table.Row>
@@ -1428,7 +1562,7 @@ export function PassDashboard({
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {filteredPasses.map((pass) => {
+                {passes.map((pass) => {
                   const status = getPassStatus(pass);
                   const emailStatus = getEmailStatus(pass);
 
@@ -1486,6 +1620,32 @@ export function PassDashboard({
               </Table.Body>
             </Table.Root>
           </Box>
+
+          <Flex align="center" justify="space-between" gap={3} wrap="wrap" px={5} py={4} borderTopWidth="1px" borderColor="gray.100">
+            <Text color="gray.600" fontSize="sm">
+              Page {page} of {totalPages}
+            </Text>
+            <Flex gap={2}>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page <= 1 || isLoadingPasses}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+              >
+                <ChevronLeft size={16} />
+                Previous
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page >= totalPages || isLoadingPasses}
+                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              >
+                Next
+                <ChevronRight size={16} />
+              </Button>
+            </Flex>
+          </Flex>
         </Box>
       </Container>
 
@@ -1562,7 +1722,7 @@ export function PassDashboard({
                   </Text>
                   <Box borderWidth="1px" borderColor="red.200" bg="red.50" borderRadius="sm" p={3}>
                     <Text fontSize="sm" color="red.800" fontWeight="700">
-                      {invalidatableCount} active pass{invalidatableCount === 1 ? "" : "es"} will be invalidated.
+                      {activePassCount} active pass{activePassCount === 1 ? "" : "es"} will be invalidated.
                     </Text>
                     <Text fontSize="sm" color="red.700" mt={2}>
                       Already invalidated passes will not be changed.

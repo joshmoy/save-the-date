@@ -11,19 +11,28 @@ import { sendPassPdfEmailsBatched } from "../../../src/lib/passEmail";
 
 const MAX_BATCH_SIZE = 100;
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await getCurrentSession();
 
   if (!session || !canAccessRole(session, ["super_admin"])) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const [passes, ticketAvailability] = await Promise.all([
-    listHallPasses(),
+  const { searchParams } = new URL(request.url);
+  const page = Number(searchParams.get("page") ?? "1");
+  const limit = Number(searchParams.get("limit") ?? "50");
+  const tab = searchParams.get("tab") === "invalidated" ? "invalidated" : "active";
+  const statusParam = searchParams.get("status");
+  const status =
+    statusParam === "unused" || statusParam === "used" ? statusParam : "all";
+  const search = searchParams.get("search")?.trim() ?? "";
+
+  const [passList, ticketAvailability] = await Promise.all([
+    listHallPasses({ page, limit, tab, status, search }),
     getTicketAvailability(),
   ]);
 
-  return NextResponse.json({ passes, ticketAvailability });
+  return NextResponse.json({ ...passList, ticketAvailability });
 }
 
 export async function POST(request: Request) {

@@ -11,15 +11,26 @@ export default async function AdminPassesPage() {
     redirect("/admin/login");
   }
 
-  const [passes, ticketAvailability] = await Promise.all([
-    listHallPasses(),
+  const [passList, ticketAvailability] = await Promise.all([
+    listHallPasses({ page: 1, limit: 50, tab: "active" }),
     getTicketAvailability(),
   ]);
 
   return (
     <div style={{ minHeight: "100vh", background: "#F7FAFC" }}>
       <AuthHeader session={session} />
-      <PassDashboard initialPasses={passes} initialTicketAvailability={ticketAvailability} />
+      <PassDashboard
+        initialPasses={passList.passes}
+        initialTicketAvailability={ticketAvailability}
+        initialPagination={{
+          page: passList.page,
+          limit: passList.limit,
+          total: passList.total,
+          totalPages: passList.totalPages,
+          activeCount: passList.activeCount,
+          invalidatedCount: passList.invalidatedCount,
+        }}
+      />
     </div>
   );
 }
