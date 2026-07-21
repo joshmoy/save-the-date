@@ -1,6 +1,16 @@
 import crypto from "node:crypto";
 import { getDb, query } from "./db";
 import type { AuthSession } from "./auth";
+import {
+  normalizeHallPassPageSize,
+  type HallPassListParams,
+  type HallPassListTab,
+  type HallPassPageSize,
+  type HallPassStatusFilter,
+} from "./hallPassPaging";
+
+export type { HallPassListParams, HallPassListTab, HallPassPageSize, HallPassStatusFilter };
+export { HALL_PASS_PAGE_SIZES } from "./hallPassPaging";
 
 export type HallPass = {
   id: string;
@@ -224,15 +234,104 @@ export async function updateTicketLimit(ticketLimit: number | null, updatedBy: A
   return getTicketAvailability();
 }
 
-export async function listHallPasses() {
-  const result = await query<HallPass>(`
-    select id, ticket_number, token, guest_name, invite_from, created_by, created_at, used_at, used_by, invalidated_at, invalidated_by, email_recipient, email_status, email_sent_at, email_error
-    from hall_passes
-    order by created_at desc
-    limit 50
-  `);
+export type HallPassListResult = {
+  passes: HallPass[];
+  total: number;
+  page: number;
+  limit: HallPassPageSize;
+  totalPages: number;
+  activeCount: number;
+  invalidatedCount: number;
+};
 
-  return result.rows;
+function buildHallPassFilters(params: {
+  tab: HallPassListTab;
+  status: HallPassStatusFilter;
+  search: string;
+}) {
+  const values: unknown[] = [];
+  const conditions: string[] = [];
+
+  if (params.tab === "active") {
+    conditions.push("invalidated_at is null");
+
+    if (params.status === "unused") {
+      conditions.push("used_at is null");
+    } else if (params.status === "used") {
+      conditions.push("used_at is not null");
+    }
+  } else {
+    conditions.push("invalidated_at is not null");
+  }
+
+  if (params.search) {
+    values.push(`%${params.search}%`);
+    const index = values.length;
+    conditions.push(`(
+      coalesce(guest_name, '') ilike $${index}
+      or token ilike $${index}
+      or coalesce(invite_from, '') ilike $${index}
+      or coalesce(email_recipient, '') ilike $${index}
+      or coalesce(created_by, '') ilike $${index}
+      or ticket_number::text ilike $${index}
+    )`);
+  }
+
+  return {
+    whereClause: conditions.length > 0 ? `where ${conditions.join(" and ")}` : "",
+    values,
+  };
+}
+
+export async function listHallPasses(params: HallPassListParams = {}): Promise<HallPassListResult> {
+  const limit = normalizeHallPassPageSize(params.limit);
+  const page = Math.max(1, Math.floor(params.page ?? 1));
+  const tab = params.tab === "invalidated" ? "invalidated" : "active";
+  const status = params.status === "unused" || params.status === "used" ? params.status : "all";
+  const search = params.search?.trim() ?? "";
+  const offset = (page - 1) * limit;
+  const { whereClause, values } = buildHallPassFilters({ tab, status, search });
+
+  const [passesResult, totalResult, countsResult] = await Promise.all([
+    query<HallPass>(
+      `
+        select id, ticket_number, token, guest_name, invite_from, created_by, created_at, used_at, used_by, invalidated_at, invalidated_by, email_recipient, email_status, email_sent_at, email_error
+        from hall_passes
+        ${whereClause}
+        order by created_at desc
+        limit $${values.length + 1}
+        offset $${values.length + 2}
+      `,
+      [...values, limit, offset],
+    ),
+    query<{ total: number }>(
+      `
+        select count(*)::int as total
+        from hall_passes
+        ${whereClause}
+      `,
+      values,
+    ),
+    query<{ active_count: number; invalidated_count: number }>(`
+      select
+        count(*) filter (where invalidated_at is null)::int as active_count,
+        count(*) filter (where invalidated_at is not null)::int as invalidated_count
+      from hall_passes
+    `),
+  ]);
+
+  const total = totalResult.rows[0]?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
+  return {
+    passes: passesResult.rows,
+    total,
+    page: Math.min(page, totalPages),
+    limit,
+    totalPages,
+    activeCount: countsResult.rows[0]?.active_count ?? 0,
+    invalidatedCount: countsResult.rows[0]?.invalidated_count ?? 0,
+  };
 }
 
 export async function invalidateHallPass(passId: string, invalidatedBy: AuthSession) {
