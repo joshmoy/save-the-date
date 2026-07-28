@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { AuthHeader } from "../../../src/components/auth/AuthHeader";
 import { PassDashboard } from "../../../src/components/admin/PassDashboard";
 import { canAccessRole, getCurrentSession } from "../../../src/lib/auth";
-import { getTicketAvailability, listHallPasses } from "../../../src/lib/hallPasses";
+import { getInviteFromStats, getTicketAvailability, listHallPasses } from "../../../src/lib/hallPasses";
 
 export default async function AdminPassesPage() {
   const session = await getCurrentSession();
@@ -11,9 +11,10 @@ export default async function AdminPassesPage() {
     redirect("/admin/login");
   }
 
-  const [passList, ticketAvailability] = await Promise.all([
+  const [passList, ticketAvailability, inviteFromStats] = await Promise.all([
     listHallPasses({ page: 1, limit: 50, tab: "active" }),
     getTicketAvailability(),
+    getInviteFromStats(),
   ]);
 
   return (
@@ -22,6 +23,7 @@ export default async function AdminPassesPage() {
       <PassDashboard
         initialPasses={passList.passes}
         initialTicketAvailability={ticketAvailability}
+        initialInviteFromStats={inviteFromStats}
         initialPagination={{
           page: passList.page,
           limit: passList.limit,

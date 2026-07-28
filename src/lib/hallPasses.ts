@@ -244,6 +244,11 @@ export type HallPassListResult = {
   invalidatedCount: number;
 };
 
+export type InviteFromStat = {
+  inviteFrom: string;
+  count: number;
+};
+
 function buildHallPassFilters(params: {
   tab: HallPassListTab;
   status: HallPassStatusFilter;
@@ -267,20 +272,30 @@ function buildHallPassFilters(params: {
   if (params.search) {
     values.push(`%${params.search}%`);
     const index = values.length;
-    conditions.push(`(
-      coalesce(guest_name, '') ilike $${index}
-      or token ilike $${index}
-      or coalesce(invite_from, '') ilike $${index}
-      or coalesce(email_recipient, '') ilike $${index}
-      or coalesce(created_by, '') ilike $${index}
-      or ticket_number::text ilike $${index}
-    )`);
+    conditions.push(`coalesce(guest_name, '') ilike $${index}`);
   }
 
   return {
     whereClause: conditions.length > 0 ? `where ${conditions.join(" and ")}` : "",
     values,
   };
+}
+
+export async function getInviteFromStats(): Promise<InviteFromStat[]> {
+  const result = await query<{ invite_from: string; count: number }>(`
+    select
+      coalesce(nullif(trim(invite_from), ''), 'Unassigned') as invite_from,
+      count(*)::int as count
+    from hall_passes
+    where invalidated_at is null
+    group by coalesce(nullif(trim(invite_from), ''), 'Unassigned')
+    order by count desc, invite_from asc
+  `);
+
+  return result.rows.map((row) => ({
+    inviteFrom: row.invite_from,
+    count: row.count,
+  }));
 }
 
 export async function listHallPasses(params: HallPassListParams = {}): Promise<HallPassListResult> {
