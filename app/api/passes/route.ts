@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { canAccessRole, getCurrentSession } from "../../../src/lib/auth";
 import {
   createHallPasses,
+  getInviteFromStats,
   getTicketAvailability,
   listHallPasses,
   updatePassEmailDelivery,
@@ -27,12 +28,13 @@ export async function GET(request: Request) {
     statusParam === "unused" || statusParam === "used" ? statusParam : "all";
   const search = searchParams.get("search")?.trim() ?? "";
 
-  const [passList, ticketAvailability] = await Promise.all([
+  const [passList, ticketAvailability, inviteFromStats] = await Promise.all([
     listHallPasses({ page, limit, tab, status, search }),
     getTicketAvailability(),
+    getInviteFromStats(),
   ]);
 
-  return NextResponse.json({ ...passList, ticketAvailability });
+  return NextResponse.json({ ...passList, ticketAvailability, inviteFromStats });
 }
 
 export async function POST(request: Request) {

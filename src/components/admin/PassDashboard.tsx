@@ -26,6 +26,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import type {
   HallPass,
   HallPassListResult,
+  InviteFromStat,
   TicketAvailability,
 } from "../../lib/hallPasses";
 import { HALL_PASS_PAGE_SIZES, type HallPassPageSize } from "../../lib/hallPassPaging";
@@ -77,6 +78,14 @@ const inviteFromOptions = createListCollection({
     { label: "David", value: "David" },
   ],
 });
+
+const inviteFromLabelByValue = new Map(
+  inviteFromOptions.items.map((item) => [item.value, item.label] as const),
+);
+
+function formatInviteFromLabel(inviteFrom: string) {
+  return inviteFromLabelByValue.get(inviteFrom) ?? inviteFrom;
+}
 
 type StatusFilter = "all" | "unused" | "used";
 type PassListTab = "active" | "invalidated";
@@ -565,10 +574,12 @@ function HallPassPreview({
 export function PassDashboard({
   initialPasses,
   initialTicketAvailability,
+  initialInviteFromStats,
   initialPagination,
 }: {
   initialPasses: HallPass[];
   initialTicketAvailability: TicketAvailability;
+  initialInviteFromStats: InviteFromStat[];
   initialPagination: {
     page: number;
     limit: HallPassPageSize;
@@ -593,6 +604,7 @@ export function PassDashboard({
   );
   const [passes, setPasses] = useState(initialPasses);
   const [ticketAvailability, setTicketAvailability] = useState(initialTicketAvailability);
+  const [inviteFromStats, setInviteFromStats] = useState(initialInviteFromStats);
   const [selectedPass, setSelectedPass] = useState<GeneratedPass | null>(null);
   const [passToInvalidate, setPassToInvalidate] = useState<HallPass | null>(null);
   const [passToEmail, setPassToEmail] = useState<HallPass | null>(null);
@@ -681,7 +693,11 @@ export function PassDashboard({
 
       const response = await fetch(`/api/passes?${params.toString()}`);
       const data = (await response.json().catch(() => null)) as
-        | (HallPassListResult & { ticketAvailability?: TicketAvailability; error?: string })
+        | (HallPassListResult & {
+            ticketAvailability?: TicketAvailability;
+            inviteFromStats?: InviteFromStat[];
+            error?: string;
+          })
         | null;
 
       if (!response.ok || !data) {
@@ -700,6 +716,10 @@ export function PassDashboard({
       setTotalPages(data.totalPages);
       setActivePassCount(data.activeCount);
       setInvalidatedPassCount(data.invalidatedCount);
+
+      if (data.inviteFromStats) {
+        setInviteFromStats(data.inviteFromStats);
+      }
 
       if (data.ticketAvailability) {
         setTicketAvailability(data.ticketAvailability);
@@ -1413,6 +1433,48 @@ export function PassDashboard({
           </Box>
         </Flex>
 
+        <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="sm" mt={6} p={5}>
+          <Stack gap={3}>
+            <Box>
+              <Heading fontFamily="subheading" color="textPrimary" fontSize="xl">
+                Invite from
+              </Heading>
+              <Text color="gray.600" fontSize="sm">
+                Active guest invites attributed to each person.
+              </Text>
+            </Box>
+            {inviteFromStats.length === 0 ? (
+              <Text color="gray.600" fontSize="sm">
+                No active invites yet.
+              </Text>
+            ) : (
+              <Flex gap={3} wrap="wrap">
+                {inviteFromStats.map((stat) => (
+                  <Box
+                    key={stat.inviteFrom}
+                    minW="120px"
+                    flex="1"
+                    maxW="180px"
+                    borderWidth="1px"
+                    borderColor="gray.200"
+                    borderRadius="sm"
+                    bg="gray.50"
+                    px={4}
+                    py={3}
+                  >
+                    <Text color="gray.600" fontSize="sm" fontWeight="600" lineClamp={1}>
+                      {formatInviteFromLabel(stat.inviteFrom)}
+                    </Text>
+                    <Text color="burgundy" fontSize="2xl" fontWeight="700" lineHeight="1.2" mt={1}>
+                      {stat.count}
+                    </Text>
+                  </Box>
+                ))}
+              </Flex>
+            )}
+          </Stack>
+        </Box>
+
         <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="sm" mt={6}>
           <Stack gap={4} p={5}>
             <Field.Root>
@@ -1439,11 +1501,11 @@ export function PassDashboard({
 
             <Flex gap={3} direction={{ base: "column", md: "row" }} wrap="wrap">
               <Field.Root flex="1" minW={{ md: "240px" }}>
-                <Field.Label>Search passes</Field.Label>
+                <Field.Label>Search guest name</Field.Label>
                 <Input
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Guest, ticket number, token, stakeholder, or creator"
+                  placeholder="Search by guest name"
                 />
               </Field.Root>
 
@@ -1557,7 +1619,6 @@ export function PassDashboard({
                   <Table.ColumnHeader>Status</Table.ColumnHeader>
                   <Table.ColumnHeader>Email</Table.ColumnHeader>
                   <Table.ColumnHeader>Created</Table.ColumnHeader>
-                  <Table.ColumnHeader>Created By</Table.ColumnHeader>
                   <Table.ColumnHeader textAlign="right">Actions</Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
@@ -1590,7 +1651,6 @@ export function PassDashboard({
                         </Stack>
                       </Table.Cell>
                       <Table.Cell>{formatDateTime(pass.created_at)}</Table.Cell>
-                      <Table.Cell>{pass.created_by ?? "-"}</Table.Cell>
                       <Table.Cell textAlign="right">
                         <Flex gap={2} justify="end">
                           <Button size="xs" variant="outline" onClick={() => void handleViewPass(pass)}>
