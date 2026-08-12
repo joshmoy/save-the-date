@@ -90,7 +90,7 @@ async function optimizeImage(inputPath, outputPath, force) {
         quality,
         progressive: true,
         mozjpeg: true,
-        chromaSubsampling: "4:4:4",
+        chromaSubsampling: "4:2:0",
       })
       .toFile(outputPath);
 
