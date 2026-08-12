@@ -53,16 +53,19 @@ Upload browser-ready MP4 videos directly through the Cloudflare R2 dashboard usi
 prefixes:
 
 ```txt
-wedding/media/engagement/videos/
-wedding/media/traditional-marriage/videos/
-wedding/media/church-wedding/videos/
-wedding/media/wedding-reception/videos/
+media/engagement/videos/
+media/traditional-marriage/videos/
+media/church-wedding/videos/
+media/wedding-reception/videos/
 ```
 
 Configure `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, and
 `R2_PUBLIC_URL`. The public URL should be an R2 custom domain or public bucket URL. After uploading
 videos in R2, use **Sync public gallery** on `/admin/media/images`; this invalidates the otherwise
 permanent media cache so the next `/media` page load lists the new files.
+
+MP4 and MOV objects are listed. MP4 with H.264 video and AAC audio is recommended because MOV
+playback support depends on the visitor's browser and the codecs inside the file.
 
 Run database migrations against the configured Railway Postgres database:
 

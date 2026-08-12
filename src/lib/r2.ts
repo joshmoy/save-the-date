@@ -33,7 +33,7 @@ export function createR2Client(config: NonNullable<ReturnType<typeof getR2Config
 }
 
 export function getR2VideoPrefix(slug: MediaCategorySlug) {
-  return `wedding/media/${slug}/videos/`;
+  return `media/${slug}/videos/`;
 }
 
 export function sanitizeVideoFilename(filename: string) {
@@ -85,7 +85,7 @@ async function listCategoryVideos(
     );
 
     for (const object of response.Contents ?? []) {
-      if (!object.Key || !object.Key.toLowerCase().endsWith(".mp4") || object.Size === 0) continue;
+      if (!object.Key || !/\.(mp4|mov)$/i.test(object.Key) || object.Size === 0) continue;
 
       const filename = object.Key.slice(prefix.length);
       if (!filename || filename.includes("/")) continue;
