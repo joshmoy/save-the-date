@@ -15,5 +15,7 @@ export type MediaCollection = {
   slug: string;
   title: string;
   description: string;
+  hasVideos: boolean;
   items: MediaItem[];
+  videos: MediaItem[];
 };

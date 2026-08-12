@@ -123,7 +123,9 @@ async function loadCloudinaryMediaCollections(): Promise<MediaCollection[]> {
       slug: category.slug,
       title: category.title,
       description: category.description,
+      hasVideos: category.hasVideos,
       items: [],
+      videos: [],
     }));
   }
 
@@ -134,7 +136,9 @@ async function loadCloudinaryMediaCollections(): Promise<MediaCollection[]> {
           slug: category.slug,
           title: category.title,
           description: category.description,
+          hasVideos: category.hasVideos,
           items: await searchFolder(category, config),
+          videos: [],
         };
       } catch (error) {
         console.error(`Unable to load Cloudinary folder for ${category.title}:`, error);
@@ -142,7 +146,9 @@ async function loadCloudinaryMediaCollections(): Promise<MediaCollection[]> {
           slug: category.slug,
           title: category.title,
           description: category.description,
+          hasVideos: category.hasVideos,
           items: [],
+          videos: [],
         };
       }
     }),

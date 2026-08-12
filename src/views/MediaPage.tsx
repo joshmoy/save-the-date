@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, ImageIcon, X } from "lucide-react";
+import { Eye, ImageIcon, Play, Video, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { MediaCollection, MediaItem } from "../data/media";
 import styles from "./MediaPage.module.css";
@@ -63,7 +63,7 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
           </h1>
           <div className={styles.heroMeta}>
             <span>2025–2026</span>
-            <span>Wedding photographs</span>
+            <span>Wedding photos & films</span>
             <span>{collections.length} collections</span>
           </div>
           <p className={styles.heroDescription}>
@@ -93,12 +93,14 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
                 </h2>
                 <p className={styles.collectionDescription}>{collection.description}</p>
               </div>
-              {collection.items.length > 0 ? (
+              {collection.items.length + collection.videos.length > 0 ? (
                 <span className={styles.collectionCount}>
-                  {collection.items.length} photo{collection.items.length === 1 ? "" : "s"}
+                  {collection.items.length + collection.videos.length} item
+                  {collection.items.length + collection.videos.length === 1 ? "" : "s"}
                 </span>
               ) : null}
             </div>
+            <h3 className={styles.subsectionTitle}>Photos</h3>
             {collection.items.length > 0 ? (
               <div className={styles.rail}>
                 {collection.items.map((item) => (
@@ -140,6 +142,46 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
                 </div>
               </div>
             )}
+            {collection.hasVideos ? (
+              <>
+                <h3 className={styles.subsectionTitle}>Videos</h3>
+                {collection.videos.length > 0 ? (
+                  <div className={styles.rail}>
+                    {collection.videos.map((item) => (
+                      <button
+                        className={`${styles.card} ${styles.videoCard}`}
+                        type="button"
+                        key={item.id}
+                        onClick={() => setSelected(item)}
+                        aria-label={`Play ${item.title}`}
+                      >
+                        <span className={styles.videoBackdrop}>
+                          <Video size={44} strokeWidth={1.2} aria-hidden="true" />
+                        </span>
+                        <span className={styles.cardShade} />
+                        <span className={styles.playBadge}>
+                          <Play size={16} fill="currentColor" aria-hidden="true" />
+                        </span>
+                        <span className={styles.cardContent}>
+                          <span className={styles.cardType}>{collection.title} · Video</span>
+                          <span className={styles.cardTitle}>{item.title}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.emptyCollection}>
+                    <span className={styles.emptyIcon}>
+                      <Video size={22} aria-hidden="true" />
+                    </span>
+                    <div>
+                      <p>Videos coming soon</p>
+                      <span>This collection will appear here as films are added.</span>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : null}
           </section>
         ))}
 
@@ -170,14 +212,27 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
               <X size={20} aria-hidden="true" />
             </button>
             <div className={styles.modalMedia}>
-              <Image
-                className={styles.modalImage}
-                src={selected.src}
-                alt={selected.title}
-                fill
-                sizes="(max-width: 720px) 100vw, 70vw"
-                unoptimized
-              />
+              {selected.type === "video" ? (
+                <video
+                  className={styles.video}
+                  src={selected.src}
+                  controls
+                  autoPlay
+                  playsInline
+                  preload="metadata"
+                >
+                  Your browser does not support HTML video.
+                </video>
+              ) : (
+                <Image
+                  className={styles.modalImage}
+                  src={selected.src}
+                  alt={selected.title}
+                  fill
+                  sizes="(max-width: 720px) 100vw, 70vw"
+                  unoptimized
+                />
+              )}
             </div>
             <div className={styles.modalInfo}>
               <span className={styles.cardType}>

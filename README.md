@@ -49,6 +49,21 @@ Administrators can instead process and upload a local folder entirely in the bro
 uploads it directly to the selected `wedding/media/<category>/photos` Cloudinary folder; the API
 secret is only used by the server to authorize the upload.
 
+Upload browser-ready MP4 videos directly through the Cloudflare R2 dashboard using these object
+prefixes:
+
+```txt
+wedding/media/engagement/videos/
+wedding/media/traditional-marriage/videos/
+wedding/media/church-wedding/videos/
+wedding/media/wedding-reception/videos/
+```
+
+Configure `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, and
+`R2_PUBLIC_URL`. The public URL should be an R2 custom domain or public bucket URL. After uploading
+videos in R2, use **Sync public gallery** on `/admin/media/images`; this invalidates the otherwise
+permanent media cache so the next `/media` page load lists the new files.
+
 Run database migrations against the configured Railway Postgres database:
 
 ```sh

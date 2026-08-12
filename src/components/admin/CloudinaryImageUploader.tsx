@@ -10,7 +10,14 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { CheckCircle2, FolderOpen, ImageUp, ShieldCheck, TriangleAlert } from "lucide-react";
+import {
+  CheckCircle2,
+  FolderOpen,
+  ImageUp,
+  RefreshCw,
+  ShieldCheck,
+  TriangleAlert,
+} from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import {
   getCloudinaryImageFolder,
@@ -157,6 +164,8 @@ export function CloudinaryImageUploader() {
   const [category, setCategory] = useState<MediaCategorySlug>("traditional-marriage");
   const [items, setItems] = useState<UploadItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState("");
   const [pageError, setPageError] = useState("");
 
   const totals = useMemo(
@@ -191,6 +200,19 @@ export function CloudinaryImageUploader() {
         : "",
     );
     setItems(selected);
+  }
+
+  async function handleSync() {
+    setIsSyncing(true);
+    setSyncMessage("");
+    const response = await fetch("/api/media/revalidate", { method: "POST" });
+    setIsSyncing(false);
+
+    if (response.ok) {
+      setSyncMessage("The public gallery will load the latest Cloudinary and R2 files.");
+    } else {
+      setSyncMessage("Unable to refresh the public gallery cache.");
+    }
   }
 
   async function handleUpload() {
@@ -256,18 +278,38 @@ export function CloudinaryImageUploader() {
     <Box bg="gray.50" minH="calc(100vh - 73px)" py={{ base: 8, md: 12 }}>
       <Container maxW="1000px" mx="auto" px={6}>
         <Stack gap={8}>
-          <Box>
-            <Text textStyle="accent" color="roseWine" mb={2}>
-              Media administration
-            </Text>
-            <Heading fontFamily="subheading" color="burgundy" fontSize={{ base: "3xl", md: "4xl" }}>
-              Upload wedding photos
-            </Heading>
-            <Text color="gray.600" mt={2} maxW="680px">
-              Select a local folder once. Your browser creates web-ready copies and uploads them
-              directly to Cloudinary; the original files are never changed.
-            </Text>
-          </Box>
+          <Flex justify="space-between" align={{ base: "start", md: "center" }} gap={5} direction={{ base: "column", md: "row" }}>
+            <Box>
+              <Text textStyle="accent" color="roseWine" mb={2}>
+                Media administration
+              </Text>
+              <Heading fontFamily="subheading" color="burgundy" fontSize={{ base: "3xl", md: "4xl" }}>
+                Upload wedding photos
+              </Heading>
+              <Text color="gray.600" mt={2} maxW="680px">
+                Select a local folder once. Your browser creates web-ready copies and uploads them
+                directly to Cloudinary; the original files are never changed.
+              </Text>
+              {syncMessage ? (
+                <Text color="gray.600" fontSize="sm" mt={2}>
+                  {syncMessage}
+                </Text>
+              ) : null}
+            </Box>
+            <Button
+              type="button"
+              variant="outline"
+              color="burgundy"
+              borderColor="burgundy"
+              onClick={() => void handleSync()}
+              loading={isSyncing}
+              loadingText="Syncing"
+              flexShrink={0}
+            >
+              <RefreshCw size={17} />
+              Sync public gallery
+            </Button>
+          </Flex>
 
           <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" p={{ base: 5, md: 7 }}>
             <Stack gap={6}>

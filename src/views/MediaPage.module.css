@@ -197,6 +197,27 @@
   text-transform: uppercase;
 }
 
+.subsectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 3px 0 8px;
+  padding: 0 clamp(20px, 5vw, 72px);
+  color: rgba(255, 255, 255, 0.68);
+  font-family: Arial, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.subsectionTitle::before {
+  width: 13px;
+  height: 1px;
+  content: "";
+  background: #ab274f;
+}
+
 .rail {
   display: grid;
   grid-auto-columns: minmax(250px, 24vw);
@@ -281,6 +302,26 @@
 
 .card:hover .cardImage {
   transform: scale(1.04);
+}
+
+.videoCard {
+  background:
+    radial-gradient(circle at 72% 22%, rgba(199, 67, 117, 0.32), transparent 34%),
+    linear-gradient(135deg, #35131e, #120d0f 70%);
+}
+
+.videoBackdrop {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.18);
+  transition: color 220ms ease, transform 220ms ease;
+}
+
+.videoCard:hover .videoBackdrop {
+  color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.06);
 }
 
 .cardShade {
