@@ -53,10 +53,28 @@
   isolation: isolate;
 }
 
+.heroSlides {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  overflow: hidden;
+  background: #0b090a;
+}
+
+.heroSlide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+
+.heroSlideActive {
+  opacity: 1;
+}
+
 .heroImage {
   object-fit: cover;
   object-position: 50% 35%;
-  z-index: -3;
 }
 
 .heroShade {
@@ -154,6 +172,73 @@
 .heroButton:hover {
   background: #f7e7ce;
   transform: translateY(-2px);
+}
+
+.heroControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  margin-top: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 7px 9px 7px 12px;
+  background: rgba(11, 9, 10, 0.42);
+  backdrop-filter: blur(8px);
+}
+
+.heroDots {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.heroDot {
+  width: 7px;
+  height: 7px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.42);
+  cursor: pointer;
+  transition: width 180ms ease, background 180ms ease;
+}
+
+.heroDot:hover,
+.heroDot:focus-visible {
+  background: #f7e7ce;
+  outline: none;
+}
+
+.heroDot:focus-visible {
+  box-shadow: 0 0 0 2px #0b090a, 0 0 0 4px #d4a57a;
+}
+
+.heroDotActive {
+  width: 24px;
+  background: #d4a57a;
+}
+
+.heroPause {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 50%;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+  cursor: pointer;
+}
+
+.heroPause:hover {
+  background: #800020;
+}
+
+.heroPause:focus-visible {
+  outline: 2px solid #d4a57a;
+  outline-offset: 3px;
 }
 
 .collections {
@@ -620,6 +705,8 @@
 @media (prefers-reduced-motion: reduce) {
   .card,
   .cardImage,
+  .heroSlide,
+  .heroDot,
   .heroButton {
     transition: none;
   }
