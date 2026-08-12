@@ -115,7 +115,8 @@ export default function MediaPage({
   const fallbackFeatured = featuredCollection?.items[0];
   const heroItems =
     featuredImages.length > 0 ? featuredImages : fallbackFeatured ? [fallbackFeatured] : [];
-  const activeHero = heroItems[activeHeroIndex % Math.max(1, heroItems.length)];
+  const normalizedHeroIndex = activeHeroIndex % Math.max(1, heroItems.length);
+  const activeHero = heroItems[normalizedHeroIndex];
   const heroSlides: Array<{ id: string; src: string; heroSrc?: string; title: string }> =
     heroItems.length > 0
       ? heroItems
@@ -132,10 +133,6 @@ export default function MediaPage({
     : -1;
   const canViewPrevious = selectedIndex > 0;
   const canViewNext = Boolean(viewer && selectedIndex < viewer.sequence.length - 1);
-
-  useEffect(() => {
-    setActiveHeroIndex(0);
-  }, [featuredImages]);
 
   useEffect(() => {
     if (heroItems.length <= 1 || isHeroPaused) return;
@@ -196,7 +193,7 @@ export default function MediaPage({
           {heroSlides.map((slide, index) => (
             <div
               className={`${styles.heroSlide} ${
-                index === activeHeroIndex ? styles.heroSlideActive : ""
+                index === normalizedHeroIndex ? styles.heroSlideActive : ""
               }`}
               key={slide.id}
             >
@@ -244,13 +241,13 @@ export default function MediaPage({
                 {heroItems.map((item, index) => (
                   <button
                     className={`${styles.heroDot} ${
-                      index === activeHeroIndex ? styles.heroDotActive : ""
+                      index === normalizedHeroIndex ? styles.heroDotActive : ""
                     }`}
                     type="button"
                     key={item.id}
                     onClick={() => setActiveHeroIndex(index)}
                     aria-label={`Show featured image ${index + 1}: ${item.title}`}
-                    aria-current={index === activeHeroIndex ? "true" : undefined}
+                    aria-current={index === normalizedHeroIndex ? "true" : undefined}
                   />
                 ))}
               </div>
