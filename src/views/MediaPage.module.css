@@ -410,7 +410,25 @@
   background: #050404;
 }
 
+.modalMediaVideo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  max-height: min(82dvh, 760px);
+  overflow: hidden;
+}
+
 .modalImage {
+  object-fit: contain;
+}
+
+.video {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: min(82dvh, 760px);
   object-fit: contain;
 }
 
@@ -484,6 +502,15 @@
 
   .modalMedia {
     min-height: 52dvh;
+  }
+
+  .modalMediaVideo {
+    min-height: 0;
+    max-height: 72dvh;
+  }
+
+  .video {
+    max-height: 72dvh;
   }
 
   .modalInfo {
