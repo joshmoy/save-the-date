@@ -7,8 +7,6 @@ export const metadata: Metadata = {
   description: "Photos from Adeola and Joshua's journey and wedding celebrations.",
 };
 
-export const revalidate = 300;
-
 export default async function MediaRoute() {
   const collections = await getCloudinaryMediaCollections();
 
