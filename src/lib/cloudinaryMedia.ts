@@ -152,4 +152,5 @@ async function loadCloudinaryMediaCollections(): Promise<MediaCollection[]> {
 export const getCloudinaryMediaCollections = unstable_cache(
   loadCloudinaryMediaCollections,
   ["cloudinary-media-collections-v1"],
+  { tags: ["cloudinary-media"] },
 );
