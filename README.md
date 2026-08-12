@@ -43,6 +43,12 @@ To process the same folder at a different location, pass its path:
 npm run media:process-images -- "/path/to/Documents/wedding/trad"
 ```
 
+Administrators can instead process and upload a local folder entirely in the browser at
+`/admin/media/images`. Add `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
+`CLOUDINARY_API_SECRET` to the deployed environment. The browser resizes each supported image and
+uploads it directly to the selected `wedding/media/<category>/photos` Cloudinary folder; the API
+secret is only used by the server to authorize the upload.
+
 Run database migrations against the configured Railway Postgres database:
 
 ```sh

@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Button, Container, Flex, Link as ChakraLink, Text } from "@chakra-ui/react";
-import { LogOut, QrCode, ShieldCheck } from "lucide-react";
+import { ImageUp, LogOut, QrCode, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -34,12 +34,20 @@ export function AuthHeader({ session }: { session: AuthSession }) {
 
           <Flex align="center" gap={3} wrap="wrap">
             {session.role === "super_admin" ? (
-              <ChakraLink asChild color="gray.700" fontWeight="600">
-                <Link href="/admin/passes">
-                  <QrCode size={16} />
-                  Passes
-                </Link>
-              </ChakraLink>
+              <>
+                <ChakraLink asChild color="gray.700" fontWeight="600">
+                  <Link href="/admin/passes">
+                    <QrCode size={16} />
+                    Passes
+                  </Link>
+                </ChakraLink>
+                <ChakraLink asChild color="gray.700" fontWeight="600">
+                  <Link href="/admin/media/images">
+                    <ImageUp size={16} />
+                    Media
+                  </Link>
+                </ChakraLink>
+              </>
             ) : null}
             <ChakraLink asChild color="gray.700" fontWeight="600">
               <Link href="/scanner">
