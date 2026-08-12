@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Eye, ImageIcon, Play, Video, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, ImageIcon, Pause, Play, Video, X } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { MediaCollection, MediaItem } from "../data/media";
 import styles from "./MediaPage.module.css";
@@ -101,16 +101,53 @@ function Carousel({
   );
 }
 
-export default function MediaPage({ collections }: { collections: MediaCollection[] }) {
+export default function MediaPage({
+  collections,
+  featuredImages,
+}: {
+  collections: MediaCollection[];
+  featuredImages: MediaItem[];
+}) {
   const [viewer, setViewer] = useState<ViewerState | null>(null);
+  const [activeHeroIndex, setActiveHeroIndex] = useState(0);
+  const [isHeroPaused, setIsHeroPaused] = useState(false);
   const featuredCollection = collections.find((collection) => collection.items.length > 0);
-  const featured = featuredCollection?.items[0];
+  const fallbackFeatured = featuredCollection?.items[0];
+  const heroItems =
+    featuredImages.length > 0 ? featuredImages : fallbackFeatured ? [fallbackFeatured] : [];
+  const normalizedHeroIndex = activeHeroIndex % Math.max(1, heroItems.length);
+  const activeHero = heroItems[normalizedHeroIndex];
+  const heroSlides: Array<{ id: string; src: string; heroSrc?: string; title: string }> =
+    heroItems.length > 0
+      ? heroItems
+      : [
+          {
+            id: "default-hero",
+            src: "/7V2A8743.jpg",
+            title: "Adeola and Joshua",
+          },
+        ];
   const selected = viewer?.item;
   const selectedIndex = viewer
     ? viewer.sequence.findIndex((item) => item.id === viewer.item.id)
     : -1;
   const canViewPrevious = selectedIndex > 0;
   const canViewNext = Boolean(viewer && selectedIndex < viewer.sequence.length - 1);
+
+  useEffect(() => {
+    if (heroItems.length <= 1 || isHeroPaused) return;
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (reducedMotion.matches) return;
+
+    const timer = window.setInterval(() => {
+      if (!document.hidden) {
+        setActiveHeroIndex((current) => (current + 1) % heroItems.length);
+      }
+    }, 6500);
+
+    return () => window.clearInterval(timer);
+  }, [heroItems.length, isHeroPaused]);
 
   useEffect(() => {
     if (!viewer) return;
@@ -152,15 +189,26 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
       </nav>
 
       <section className={styles.hero} aria-labelledby="media-heading">
-        <Image
-          className={styles.heroImage}
-          src={featured?.src ?? "/7V2A8743.jpg"}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          unoptimized={Boolean(featured)}
-        />
+        <div className={styles.heroSlides} aria-hidden="true">
+          {heroSlides.map((slide, index) => (
+            <div
+              className={`${styles.heroSlide} ${
+                index === normalizedHeroIndex ? styles.heroSlideActive : ""
+              }`}
+              key={slide.id}
+            >
+              <Image
+                className={styles.heroImage}
+                src={slide.heroSrc ?? slide.src}
+                alt=""
+                fill
+                priority={index === 0}
+                sizes="100vw"
+                unoptimized={(slide.heroSrc ?? slide.src).startsWith("http")}
+              />
+            </div>
+          ))}
+        </div>
         <div className={styles.heroShade} />
         <div className={styles.heroContent}>
           <p className={styles.eyebrow}>Adeola & Joshua present</p>
@@ -177,17 +225,45 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
             Relive the moments, details, and celebrations that brought us here. A growing collection
             of our favorite memories, all in one place.
           </p>
-          {featured ? (
+          {activeHero ? (
             <button
               className={styles.heroButton}
               type="button"
-              onClick={() =>
-                setViewer({ item: featured, sequence: featuredCollection?.items ?? [featured] })
-              }
+              onClick={() => setViewer({ item: activeHero, sequence: heroItems })}
             >
               <Eye size={17} aria-hidden="true" />
               View featured photo
             </button>
+          ) : null}
+          {heroItems.length > 1 ? (
+            <div className={styles.heroControls} aria-label="Featured image controls">
+              <div className={styles.heroDots}>
+                {heroItems.map((item, index) => (
+                  <button
+                    className={`${styles.heroDot} ${
+                      index === normalizedHeroIndex ? styles.heroDotActive : ""
+                    }`}
+                    type="button"
+                    key={item.id}
+                    onClick={() => setActiveHeroIndex(index)}
+                    aria-label={`Show featured image ${index + 1}: ${item.title}`}
+                    aria-current={index === normalizedHeroIndex ? "true" : undefined}
+                  />
+                ))}
+              </div>
+              <button
+                className={styles.heroPause}
+                type="button"
+                onClick={() => setIsHeroPaused((current) => !current)}
+                aria-label={isHeroPaused ? "Resume featured images" : "Pause featured images"}
+              >
+                {isHeroPaused ? (
+                  <Play size={13} fill="currentColor" aria-hidden="true" />
+                ) : (
+                  <Pause size={13} fill="currentColor" aria-hidden="true" />
+                )}
+              </button>
+            </div>
           ) : null}
         </div>
       </section>

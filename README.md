@@ -49,6 +49,10 @@ Administrators can instead process and upload a local folder entirely in the bro
 uploads it directly to the selected `wedding/media/<category>/photos` Cloudinary folder; the API
 secret is only used by the server to authorize the upload.
 
+Add the Cloudinary tag `featured` to up to six images to include them in the `/media` hero
+crossfade. Featured images are ordered newest first. After changing tags, use **Sync public
+gallery** on `/admin/media/images` to invalidate the permanent media cache.
+
 Upload browser-ready MP4 videos directly through the Cloudflare R2 dashboard using these object
 prefixes:
 

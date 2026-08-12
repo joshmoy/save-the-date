@@ -11,6 +11,7 @@ type CloudinaryResource = {
   asset_id: string;
   public_id: string;
   secure_url: string;
+  asset_folder?: string;
   display_name?: string;
   filename?: string;
   format?: string;
@@ -48,7 +49,7 @@ function humanizeFilename(value: string) {
 
 function mapResource(
   resource: CloudinaryResource,
-  category: (typeof mediaCategories)[number],
+  category: { title: string; description: string },
 ): MediaItem {
   const fallbackName = resource.public_id.split("/").pop() ?? resource.public_id;
   const sourceName = resource.display_name || resource.filename || fallbackName;
@@ -115,6 +116,58 @@ async function searchFolder(
   return resources.map((resource) => mapResource(resource, category));
 }
 
+async function loadCloudinaryFeaturedImages(): Promise<MediaItem[]> {
+  const config = getCloudinaryConfig();
+  if (!config) return [];
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${encodeURIComponent(config.cloudName)}/resources/search`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${config.apiKey}:${config.apiSecret}`).toString("base64")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        expression: "resource_type:image AND tags=featured",
+        max_results: 6,
+        sort_by: [{ created_at: "desc" }],
+      }),
+    },
+  );
+  const result = (await response.json().catch(() => null)) as CloudinarySearchResponse | null;
+
+  if (!response.ok) {
+    console.error(
+      "Unable to load featured Cloudinary images:",
+      result?.error?.message || `Cloudinary returned ${response.status}.`,
+    );
+    return [];
+  }
+
+  return (result?.resources ?? []).map((resource) => {
+    const category = mediaCategories.find(
+      (item) => resource.asset_folder === getCloudinaryImageFolder(item.slug),
+    );
+
+    const item = mapResource(
+      resource,
+      category ?? {
+        title: "Featured",
+        description: "A favorite moment from our wedding journey.",
+      },
+    );
+
+    return {
+      ...item,
+      heroSrc: addTransformation(
+        resource.secure_url,
+        "f_auto,q_auto,c_fill,g_auto,w_2400,h_1400",
+      ),
+    };
+  });
+}
+
 async function loadCloudinaryMediaCollections(): Promise<MediaCollection[]> {
   const config = getCloudinaryConfig();
 
@@ -158,5 +211,11 @@ async function loadCloudinaryMediaCollections(): Promise<MediaCollection[]> {
 export const getCloudinaryMediaCollections = unstable_cache(
   loadCloudinaryMediaCollections,
   ["cloudinary-media-collections-v1"],
+  { tags: ["cloudinary-media"] },
+);
+
+export const getCloudinaryFeaturedImages = unstable_cache(
+  loadCloudinaryFeaturedImages,
+  ["cloudinary-featured-images-v1"],
   { tags: ["cloudinary-media"] },
 );

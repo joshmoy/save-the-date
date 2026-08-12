@@ -6,6 +6,7 @@ export type MediaItem = {
   date: string;
   type: "image" | "video";
   src: string;
+  heroSrc?: string;
   thumbnail?: string;
   poster?: string;
   aspect: "landscape" | "portrait";
