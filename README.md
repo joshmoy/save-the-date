@@ -21,6 +21,34 @@ npm install
 npm run dev
 ```
 
+## Image preparation
+
+Prepare the traditional-marriage photos for Cloudinary with:
+
+```sh
+npm run media:process-images
+```
+
+By default, the command reads `~/Documents/wedding/trad` recursively and writes optimized JPEG
+copies to `~/Documents/wedding/trad-optimized`. Originals are never modified. Existing output
+files are skipped; pass `--force` to regenerate them:
+
+```sh
+npm run media:process-images -- --force
+```
+
+To process the same folder at a different location, pass its path:
+
+```sh
+npm run media:process-images -- "/path/to/Documents/wedding/trad"
+```
+
+Administrators can instead process and upload a local folder entirely in the browser at
+`/admin/media/images`. Add `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
+`CLOUDINARY_API_SECRET` to the deployed environment. The browser resizes each supported image and
+uploads it directly to the selected `wedding/media/<category>/photos` Cloudinary folder; the API
+secret is only used by the server to authorize the upload.
+
 Run database migrations against the configured Railway Postgres database:
 
 ```sh

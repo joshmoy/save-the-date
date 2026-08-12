@@ -249,19 +249,34 @@ function HomePage() {
                   We can't wait to celebrate with you!
                 </Text>
 
-                <Button
-                  onClick={() => router.push("/updates")}
-                  bg="burgundy"
-                  color="white"
-                  _hover={{ bg: "cherryRose" }}
-                  size="sm"
-                  fontFamily="body"
-                  fontWeight="600"
-                  px={6}
-                  mb={4}
-                >
-                  View Updates
-                </Button>
+                <Flex justify="center" gap={3} mb={4} wrap="wrap">
+                  <Button
+                    onClick={() => router.push("/updates")}
+                    bg="burgundy"
+                    color="white"
+                    _hover={{ bg: "cherryRose" }}
+                    size="sm"
+                    fontFamily="body"
+                    fontWeight="600"
+                    px={6}
+                  >
+                    View Updates
+                  </Button>
+                  <Button
+                    onClick={() => router.push("/media")}
+                    bg="whiteAlpha.700"
+                    color="burgundy"
+                    borderWidth="1px"
+                    borderColor="burgundy"
+                    _hover={{ bg: "champagne" }}
+                    size="sm"
+                    fontFamily="body"
+                    fontWeight="600"
+                    px={6}
+                  >
+                    View Media
+                  </Button>
+                </Flex>
 
                 <Flex align="center" justify="center" gap={2} mt={2}>
                   <Box flex="1" h="1px" bg="linear-gradient(to right, transparent, #CC8899)" />
