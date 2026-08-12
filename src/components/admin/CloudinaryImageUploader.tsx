@@ -211,6 +211,8 @@ export function CloudinaryImageUploader() {
         throw new Error(signature.error ?? "Unable to authorize the Cloudinary upload.");
       }
 
+      let uploadedCount = 0;
+
       for (const item of items) {
         if (item.status === "complete") continue;
 
@@ -226,11 +228,21 @@ export function CloudinaryImageUploader() {
             updateItem(item.id, { progress });
           });
           updateItem(item.id, { status: "complete", progress: 100 });
+          uploadedCount += 1;
         } catch (error) {
           updateItem(item.id, {
             status: "error",
             error: error instanceof Error ? error.message : "Unable to process this image.",
           });
+        }
+      }
+
+      if (uploadedCount > 0) {
+        const revalidationResponse = await fetch("/api/media/revalidate", { method: "POST" });
+        if (!revalidationResponse.ok) {
+          setPageError(
+            "Images were uploaded, but the public gallery cache could not be refreshed. Redeploy the site to show them.",
+          );
         }
       }
     } catch (error) {
