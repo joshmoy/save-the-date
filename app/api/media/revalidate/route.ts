@@ -10,6 +10,7 @@ export async function POST() {
   }
 
   revalidateTag("cloudinary-media", { expire: 0 });
+  revalidateTag("r2-media", { expire: 0 });
   revalidatePath("/media");
 
   return NextResponse.json({ revalidated: true });
