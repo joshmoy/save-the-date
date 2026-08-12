@@ -211,7 +211,11 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
             >
               <X size={20} aria-hidden="true" />
             </button>
-            <div className={styles.modalMedia}>
+            <div
+              className={`${styles.modalMedia} ${
+                selected.type === "video" ? styles.modalMediaVideo : ""
+              }`}
+            >
               {selected.type === "video" ? (
                 <video
                   className={styles.video}
