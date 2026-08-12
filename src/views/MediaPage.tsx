@@ -2,30 +2,137 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, ImageIcon, Play, Video, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Eye, ImageIcon, Play, Video, X } from "lucide-react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { MediaCollection, MediaItem } from "../data/media";
 import styles from "./MediaPage.module.css";
 
-export default function MediaPage({ collections }: { collections: MediaCollection[] }) {
-  const [selected, setSelected] = useState<MediaItem | null>(null);
-  const featured = collections.find((collection) => collection.items.length > 0)?.items[0];
+type ViewerState = {
+  item: MediaItem;
+  sequence: MediaItem[];
+};
+
+function getAdjacentViewer(current: ViewerState | null, direction: -1 | 1) {
+  if (!current) return null;
+  const index = current.sequence.findIndex((item) => item.id === current.item.id);
+  const nextItem = current.sequence[index + direction];
+  return nextItem ? { ...current, item: nextItem } : current;
+}
+
+function Carousel({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  const railRef = useRef<HTMLDivElement>(null);
+  const [controls, setControls] = useState({
+    hasOverflow: false,
+    canPrevious: false,
+    canNext: false,
+  });
+
+  const updateControls = useCallback(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+    const maximumScroll = Math.max(0, rail.scrollWidth - rail.clientWidth);
+
+    setControls({
+      hasOverflow: maximumScroll > 2,
+      canPrevious: rail.scrollLeft > 2,
+      canNext: rail.scrollLeft < maximumScroll - 2,
+    });
+  }, []);
 
   useEffect(() => {
-    if (!selected) return;
+    const rail = railRef.current;
+    if (!rail) return;
+
+    updateControls();
+    const observer = new ResizeObserver(updateControls);
+    observer.observe(rail);
+    rail.addEventListener("scroll", updateControls, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      rail.removeEventListener("scroll", updateControls);
+    };
+  }, [updateControls]);
+
+  function move(direction: -1 | 1) {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    rail.scrollBy({
+      left: direction * Math.max(250, rail.clientWidth * 0.82),
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    });
+  }
+
+  return (
+    <div className={styles.carousel}>
+      <div className={styles.rail} ref={railRef}>
+        {children}
+      </div>
+      {controls.hasOverflow ? (
+        <>
+          <button
+            className={`${styles.carouselButton} ${styles.carouselPrevious}`}
+            type="button"
+            onClick={() => move(-1)}
+            disabled={!controls.canPrevious}
+            aria-label={`Show previous ${label}`}
+          >
+            <ChevronLeft size={24} aria-hidden="true" />
+          </button>
+          <button
+            className={`${styles.carouselButton} ${styles.carouselNext}`}
+            type="button"
+            onClick={() => move(1)}
+            disabled={!controls.canNext}
+            aria-label={`Show next ${label}`}
+          >
+            <ChevronRight size={24} aria-hidden="true" />
+          </button>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+export default function MediaPage({ collections }: { collections: MediaCollection[] }) {
+  const [viewer, setViewer] = useState<ViewerState | null>(null);
+  const featuredCollection = collections.find((collection) => collection.items.length > 0);
+  const featured = featuredCollection?.items[0];
+  const selected = viewer?.item;
+  const selectedIndex = viewer
+    ? viewer.sequence.findIndex((item) => item.id === viewer.item.id)
+    : -1;
+  const canViewPrevious = selectedIndex > 0;
+  const canViewNext = Boolean(viewer && selectedIndex < viewer.sequence.length - 1);
+
+  useEffect(() => {
+    if (!viewer) return;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setSelected(null);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setViewer(null);
+      if (event.key === "ArrowLeft") {
+        setViewer((current) => getAdjacentViewer(current, -1));
+      }
+      if (event.key === "ArrowRight") {
+        setViewer((current) => getAdjacentViewer(current, 1));
+      }
     };
-    window.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [selected]);
+  }, [viewer]);
 
   return (
     <main className={styles.page}>
@@ -71,7 +178,13 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
             of our favorite memories, all in one place.
           </p>
           {featured ? (
-            <button className={styles.heroButton} type="button" onClick={() => setSelected(featured)}>
+            <button
+              className={styles.heroButton}
+              type="button"
+              onClick={() =>
+                setViewer({ item: featured, sequence: featuredCollection?.items ?? [featured] })
+              }
+            >
               <Eye size={17} aria-hidden="true" />
               View featured photo
             </button>
@@ -102,13 +215,13 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
             </div>
             <h3 className={styles.subsectionTitle}>Photos</h3>
             {collection.items.length > 0 ? (
-              <div className={styles.rail}>
+              <Carousel label={`${collection.title} photos`}>
                 {collection.items.map((item) => (
                   <button
                     className={styles.card}
                     type="button"
                     key={item.id}
-                    onClick={() => setSelected(item)}
+                    onClick={() => setViewer({ item, sequence: collection.items })}
                     aria-label={`View ${item.title}`}
                   >
                     <Image
@@ -130,7 +243,7 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
                     </span>
                   </button>
                 ))}
-              </div>
+              </Carousel>
             ) : (
               <div className={styles.emptyCollection}>
                 <span className={styles.emptyIcon}>
@@ -146,13 +259,13 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
               <>
                 <h3 className={styles.subsectionTitle}>Videos</h3>
                 {collection.videos.length > 0 ? (
-                  <div className={styles.rail}>
+                  <Carousel label={`${collection.title} videos`}>
                     {collection.videos.map((item) => (
                       <button
                         className={`${styles.card} ${styles.videoCard}`}
                         type="button"
                         key={item.id}
-                        onClick={() => setSelected(item)}
+                        onClick={() => setViewer({ item, sequence: collection.videos })}
                         aria-label={`Play ${item.title}`}
                       >
                         <span className={styles.videoBackdrop}>
@@ -168,7 +281,7 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
                         </span>
                       </button>
                     ))}
-                  </div>
+                  </Carousel>
                 ) : (
                   <div className={styles.emptyCollection}>
                     <span className={styles.emptyIcon}>
@@ -198,14 +311,14 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
           aria-modal="true"
           aria-labelledby="media-modal-title"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setSelected(null);
+            if (event.target === event.currentTarget) setViewer(null);
           }}
         >
           <div className={styles.modalPanel}>
             <button
               className={styles.closeButton}
               type="button"
-              onClick={() => setSelected(null)}
+              onClick={() => setViewer(null)}
               aria-label="Close media viewer"
               autoFocus
             >
@@ -216,8 +329,29 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
                 selected.type === "video" ? styles.modalMediaVideo : ""
               }`}
             >
+              {canViewPrevious ? (
+                <button
+                  className={`${styles.modalNavigation} ${styles.modalPrevious}`}
+                  type="button"
+                  onClick={() => setViewer((current) => getAdjacentViewer(current, -1))}
+                  aria-label="View previous asset"
+                >
+                  <ChevronLeft size={28} aria-hidden="true" />
+                </button>
+              ) : null}
+              {canViewNext ? (
+                <button
+                  className={`${styles.modalNavigation} ${styles.modalNext}`}
+                  type="button"
+                  onClick={() => setViewer((current) => getAdjacentViewer(current, 1))}
+                  aria-label="View next asset"
+                >
+                  <ChevronRight size={28} aria-hidden="true" />
+                </button>
+              ) : null}
               {selected.type === "video" ? (
                 <video
+                  key={selected.id}
                   className={styles.video}
                   src={selected.src}
                   controls
@@ -229,6 +363,7 @@ export default function MediaPage({ collections }: { collections: MediaCollectio
                 </video>
               ) : (
                 <Image
+                  key={selected.id}
                   className={styles.modalImage}
                   src={selected.src}
                   alt={selected.title}
