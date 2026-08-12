@@ -260,23 +260,30 @@ export function CloudinaryImageUploader() {
           <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" p={{ base: 5, md: 7 }}>
             <Stack gap={6}>
               <Box>
-                <Text as="label" htmlFor="media-category" fontWeight="700" color="gray.800" display="block" mb={2}>
+                <label
+                  htmlFor="media-category"
+                  style={{
+                    color: "#2D3748",
+                    display: "block",
+                    fontWeight: 700,
+                    marginBottom: "8px",
+                  }}
+                >
                   Wedding category
-                </Text>
-                <Box
-                  as="select"
+                </label>
+                <select
                   id="media-category"
                   value={category}
                   onChange={(event) => setCategory(event.currentTarget.value as MediaCategorySlug)}
                   disabled={isUploading}
-                  w="full"
-                  borderWidth="1px"
-                  borderColor="gray.300"
-                  borderRadius="md"
-                  bg="white"
-                  px={3}
-                  py={3}
-                  color="gray.800"
+                  style={{
+                    background: "white",
+                    border: "1px solid #CBD5E0",
+                    borderRadius: "6px",
+                    color: "#2D3748",
+                    padding: "12px",
+                    width: "100%",
+                  }}
                 >
                   {mediaCategories
                     .filter((item) => item.hasPhotos)
@@ -285,7 +292,7 @@ export function CloudinaryImageUploader() {
                         {item.title}
                       </option>
                     ))}
-                </Box>
+                </select>
                 <Text fontSize="sm" color="gray.500" mt={2}>
                   Cloudinary folder: {getCloudinaryImageFolder(category)}
                 </Text>
