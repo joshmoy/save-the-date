@@ -218,15 +218,61 @@
   background: #ab274f;
 }
 
+.carousel {
+  position: relative;
+}
+
 .rail {
   display: grid;
   grid-auto-columns: minmax(250px, 24vw);
   grid-auto-flow: column;
   gap: 12px;
-  overflow-x: auto;
+  overflow-x: hidden;
   padding: 8px clamp(20px, 5vw, 72px) 26px;
-  scrollbar-width: none;
+  overscroll-behavior-x: none;
   scroll-snap-type: x proximity;
+}
+
+.carouselButton {
+  position: absolute;
+  top: calc(50% - 13px);
+  z-index: 5;
+  display: grid;
+  width: 46px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: rgba(13, 9, 11, 0.86);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.42);
+  color: #fff;
+  cursor: pointer;
+  transform: translateY(-50%);
+  backdrop-filter: blur(8px);
+  transition: background 160ms ease, opacity 160ms ease, transform 160ms ease;
+}
+
+.carouselButton:hover:not(:disabled) {
+  background: #800020;
+  transform: translateY(-50%) scale(1.06);
+}
+
+.carouselButton:focus-visible {
+  outline: 2px solid #d4a57a;
+  outline-offset: 3px;
+}
+
+.carouselButton:disabled {
+  opacity: 0.22;
+  cursor: default;
+}
+
+.carouselPrevious {
+  left: clamp(6px, 1.5vw, 22px);
+}
+
+.carouselNext {
+  right: clamp(6px, 1.5vw, 22px);
 }
 
 .emptyCollection {
@@ -264,10 +310,6 @@
 .emptyCollection div > span {
   color: rgba(255, 255, 255, 0.38);
   font-size: 0.72rem;
-}
-
-.rail::-webkit-scrollbar {
-  display: none;
 }
 
 .card {
@@ -419,6 +461,42 @@
   overflow: hidden;
 }
 
+.modalNavigation {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  display: grid;
+  width: 44px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 7px;
+  background: rgba(8, 6, 7, 0.68);
+  color: #fff;
+  cursor: pointer;
+  transform: translateY(-50%);
+  backdrop-filter: blur(7px);
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.modalNavigation:hover {
+  background: rgba(128, 0, 32, 0.92);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.modalNavigation:focus-visible {
+  outline: 2px solid #d4a57a;
+  outline-offset: 3px;
+}
+
+.modalPrevious {
+  left: 14px;
+}
+
+.modalNext {
+  right: 14px;
+}
+
 .modalImage {
   object-fit: contain;
 }
@@ -457,7 +535,7 @@
   position: absolute;
   top: 14px;
   right: 14px;
-  z-index: 2;
+  z-index: 4;
   display: grid;
   width: 40px;
   height: 40px;
@@ -494,6 +572,11 @@
     grid-auto-columns: minmax(236px, 76vw);
   }
 
+  .carouselButton {
+    width: 40px;
+    height: 48px;
+  }
+
   .modalPanel {
     max-height: 92dvh;
     overflow-y: auto;
@@ -511,6 +594,19 @@
 
   .video {
     max-height: 72dvh;
+  }
+
+  .modalNavigation {
+    width: 40px;
+    height: 50px;
+  }
+
+  .modalPrevious {
+    left: 8px;
+  }
+
+  .modalNext {
+    right: 8px;
   }
 
   .modalInfo {
