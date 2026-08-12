@@ -13,12 +13,11 @@ export default async function MediaRoute() {
     getCloudinaryMediaCollections(),
     getR2VideoCollections(),
   ]);
-  const videosBySlug = new Map(
-    videoCollections.map((collection) => [collection.slug, collection.videos]),
-  );
   const collections = imageCollections.map((collection) => ({
     ...collection,
-    videos: videosBySlug.get(collection.slug) ?? [],
+    videos:
+      videoCollections.find((videoCollection) => videoCollection.slug === collection.slug)
+        ?.videos ?? [],
   }));
 
   return <MediaPage collections={collections} />;
