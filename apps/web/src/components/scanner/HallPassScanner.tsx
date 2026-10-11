@@ -442,7 +442,7 @@ export function HallPassScanner() {
                     <Input
                       ref={prefixRef}
                       value={manualParts.prefix}
-                      onChange={handleStructuredChange("prefix", 2, firstCodeRef.current)}
+                      onChange={(event) => handleStructuredChange("prefix", 2, firstCodeRef.current)(event)}
                       placeholder="HP"
                       maxLength={10}
                       textAlign="center"
@@ -456,7 +456,7 @@ export function HallPassScanner() {
                     <Input
                       ref={firstCodeRef}
                       value={manualParts.first}
-                      onChange={handleStructuredChange("first", 4, secondCodeRef.current)}
+                      onChange={(event) => handleStructuredChange("first", 4, secondCodeRef.current)(event)}
                       placeholder="XXXX"
                       maxLength={12}
                       textAlign="center"
@@ -470,7 +470,7 @@ export function HallPassScanner() {
                     <Input
                       ref={secondCodeRef}
                       value={manualParts.second}
-                      onChange={handleStructuredChange("second", 4)}
+                      onChange={(event) => handleStructuredChange("second", 4)(event)}
                       placeholder="XXXX"
                       maxLength={12}
                       textAlign="center"

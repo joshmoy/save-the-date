@@ -1,48 +1,47 @@
 {
   "name": "save-the-date",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
-  "scripts": {
-    "dev": "next dev --webpack",
-    "dev-host": "next dev --webpack -H 0.0.0.0",
-    "build": "next build --webpack",
-    "lint": "eslint .",
-    "db:migrate": "node scripts/migrate.mjs",
-    "user:create": "node scripts/create-user.mjs",
-    "media:process-images": "node scripts/process-images.mjs",
-    "preview": "next start"
+  "packageManager": "pnpm@11.8.0",
+  "engines": {
+    "node": ">=22.23.0 <23"
   },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.1108.0",
-    "@chakra-ui/react": "^3.30.0",
-    "@emotion/cache": "^11.14.0",
-    "@emotion/react": "^11.14.0",
-    "bcryptjs": "^3.0.3",
-    "dotenv": "^17.4.2",
-    "framer-motion": "^12.23.26",
-    "html5-qrcode": "^2.3.8",
-    "lucide-react": "^0.562.0",
-    "next": "^16.2.6",
-    "pdf-lib": "^1.17.1",
-    "pg": "^8.21.0",
-    "qrcode": "^1.5.4",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "server-only": "^0.0.1",
-    "sharp": "^0.35.3"
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "pnpm --filter @save-the-date/web dev",
+    "dev:api": "pnpm --filter @save-the-date/api dev",
+    "dev:worker": "pnpm --filter @save-the-date/worker dev",
+    "build": "turbo run build",
+    "lint": "eslint .",
+    "typecheck": "turbo run typecheck",
+    "test": "tsx --test tests/*.test.ts",
+    "db:migrate": "tsx scripts/platform-migrate.ts",
+    "db:migrate:legacy": "node scripts/migrate.mjs",
+    "db:legacy-report": "tsx scripts/legacy-report.ts",
+    "user:create:legacy": "node scripts/create-user.mjs",
+    "media:process-images": "node scripts/process-images.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/node": "^24.10.1",
-    "@types/pg": "^8.20.0",
-    "@types/qrcode": "^1.5.6",
-    "@types/react": "^19.2.5",
-    "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "^16.5.0",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.46.4"
+    "typescript-eslint": "^8.46.4",
+    "turbo": "^2.6.0",
+    "tsx": "^4.20.0",
+    "@types/pg": "^8.20.0",
+    "@types/express": "^5.0.0",
+    "@save-the-date/persistence": "workspace:*",
+    "@save-the-date/config": "workspace:*",
+    "@save-the-date/adapters": "workspace:*",
+    "@save-the-date/contracts": "workspace:*",
+    "@save-the-date/domain": "workspace:*"
+  },
+  "dependencies": {
+    "pg": "^8.21.0",
+    "dotenv": "^17.4.2"
   }
 }
