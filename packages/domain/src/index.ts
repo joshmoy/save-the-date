@@ -28,3 +28,27 @@ export interface WeddingRepository {
  tenant(actor:Actor,weddingId:string):Promise<TenantContext>;
 }
 export interface UnitOfWork<T> { run<R>(fn:(transaction:T)=>Promise<R>):Promise<R> }
+
+// The application depends on operations, not a database engine or query API.
+export interface FoundationRepository extends IdentityRepository {
+ ping():Promise<void>;
+ resendVerification(email:string,tokenHash:string,link:string):Promise<void>;
+ register(email:string,passwordHash:string,tokenHash:string,link?:string):Promise<void>;
+ recover(email:string,tokenHash:string,link?:string):Promise<void>;
+ rateLimit(key:string,limit:number,seconds?:number):Promise<void>;
+ listWeddings(actor:Actor):Promise<unknown>;
+ tenant(actor:Actor,weddingId:string):Promise<TenantContext>;
+ createWedding(actor:Actor,input:import('@save-the-date/contracts').WeddingInput):Promise<unknown>;
+ readWedding(actor:Actor,id:string):Promise<unknown>;
+ patchWedding(actor:Actor,id:string,input:{expectedVersion:number;displayNames?:string;timezone?:string;primaryDate?:string|null;locale?:string;palette?:unknown;lifecycle?:string}):Promise<unknown>;
+ listEvents(actor:Actor,id:string):Promise<unknown>;
+ saveEvent(actor:Actor,id:string,event:import('@save-the-date/contracts').EventInput,eventId?:string,expectedVersion?:number):Promise<unknown>;
+ invite(actor:Actor,id:string,input:{email:string;role:Role;eventIds:string[];albumIds:string[]},hash:string,link:string):Promise<unknown>;
+ acceptInvite(actor:Actor,hash:string):Promise<unknown>;
+ members(actor:Actor,id:string):Promise<unknown>;
+ removeMember(actor:Actor,id:string,userId:string):Promise<void>;
+ revokeInvite(actor:Actor,id:string,inviteId:string):Promise<void>;
+ transfer(actor:Actor,id:string,userId:string):Promise<void>;
+ deleteWedding(actor:Actor,id:string):Promise<void>;
+ recoverWedding(actor:Actor,id:string):Promise<void>;
+}
