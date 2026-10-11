@@ -52,3 +52,17 @@ export interface FoundationRepository extends IdentityRepository {
  deleteWedding(actor:Actor,id:string):Promise<void>;
  recoverWedding(actor:Actor,id:string):Promise<void>;
 }
+export interface PublicationRepository {
+ site(actor:Actor,id:string):Promise<unknown>;
+ saveSite(actor:Actor,id:string,config:import('@save-the-date/contracts').SiteConfig,version:number):Promise<unknown>;
+ publish(actor:Actor,id:string,version:number,weddingVersion:number):Promise<unknown>;
+ rotateShared(actor:Actor,id:string,hash:string):Promise<void>;
+ exchangeShared(slug:string,hash:string,sessionHash:string):Promise<void>;
+ publicSite(slug:string,sessionHash?:string):Promise<unknown>;
+ publicPost(slug:string,path:string,sessionHash?:string):Promise<unknown>;
+ listPosts(actor:Actor,id:string):Promise<unknown>;
+ savePost(actor:Actor,id:string,post:import('@save-the-date/contracts').PostInput,version:number,postId?:string):Promise<unknown>;
+ publishPost(actor:Actor,id:string,postId:string,version:number,publish:boolean):Promise<unknown>;
+ deletePost(actor:Actor,id:string,postId:string,version:number):Promise<unknown>;
+}
+export function contrastRatio(a:string,b:string){const luminance=(hex:string)=>{const rgb=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(v=>v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4);return rgb[0]*0.2126+rgb[1]*0.7152+rgb[2]*0.0722;};const x=luminance(a),y=luminance(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);}

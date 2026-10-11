@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build --webpack",
-    "start": "next start",
+    "build": "next build --webpack && node scripts/prepare-standalone.mjs",
+    "start": "node .next/standalone/apps/web/server.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -26,7 +26,8 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "server-only": "^0.0.1",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.3",
+    "@save-the-date/contracts": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

@@ -6,6 +6,9 @@ import type { Actor, TenantContext, FoundationRepository } from '@save-the-date/
 import { DomainError, notFound, requireCapability, requireRecentAuthentication } from '@save-the-date/domain';
 import type { WeddingInput, EventInput, Role } from '@save-the-date/contracts';
 
+// SQL DATE is a calendar date, never a process-local JavaScript instant.
+pg.types.setTypeParser(1082,value=>value);
+
 export class PostgresStore implements FoundationRepository {
  readonly pool: pg.Pool;
  constructor(connectionString:string) { this.pool=new pg.Pool({connectionString,max:20}); }
@@ -93,3 +96,4 @@ export class PostgresStore implements FoundationRepository {
  async recoverWedding(actor:Actor,id:string){requireRecentAuthentication(actor);await this.transaction(async tx=>{const r=await tx.query('update std_weddings set deleted_at=null,recovery_until=null,version=version+1 where id=$1 and primary_owner_id=$2 and deleted_at is not null and recovery_until>now() returning id',[id,actor.userId]);if(!r.rowCount)throw notFound();await tx.query('delete from std_deletion_tombstones where wedding_id=$1 and erased_at is null',[id]);await this.audit(tx,id,actor.userId,'wedding.recovered',id);});}
 }
 export { PostgresJobs } from './jobs.js';
+export { PostgresPublication } from './publication.js';

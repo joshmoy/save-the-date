@@ -32,3 +32,14 @@ export const deleteSchema = z.object({ confirmation: z.literal('DELETE') }).stri
 export const reauthSchema = z.object({ password: registerSchema.shape.password }).strict();
 export const apiSchemas = {register:registerSchema, login:loginSchema, wedding:weddingSchema, event:eventSchema, invite:inviteSchema};
 export { z };
+
+export const sectionNames=['story','events','schedule','directions','dress','travel','faq','gifting','blog','gallery','rsvp'] as const;
+export const siteConfigSchema=z.object({schemaVersion:z.literal(1).default(1),theme:z.enum(['garden','modern']).default('garden'),visibility:z.enum(['shared','public']).default('shared'),fontPair:z.enum(['sans','classic']).default('sans'),heroAssetId:uuid.nullable().default(null),welcome:z.string().max(300).default('We would love to celebrate with you.'),story:z.string().max(10000).default(''),travel:z.string().max(5000).default(''),gifting:z.string().max(5000).default(''),registryUrl:z.url().refine(v=>v.startsWith('https://'),'Use an HTTPS link').nullable().default(null),faq:z.array(z.object({question:z.string().min(1).max(300),answer:z.string().min(1).max(2000)}).strict()).max(30).default([]),sections:z.array(z.enum(sectionNames)).max(11).refine(v=>new Set(v).size===v.length,'Sections must be unique').default([...sectionNames])}).strict();
+export type SiteConfig=z.infer<typeof siteConfigSchema>;
+export const siteSaveSchema=z.object({expectedVersion:z.number().int().nonnegative(),config:siteConfigSchema}).strict();
+export const publishSchema=z.object({expectedVersion:z.number().int().positive(),weddingVersion:z.number().int().positive()}).strict();
+export const richTextNode=z.object({type:z.enum(['paragraph','heading','list_item']),text:z.string().max(5000),bold:z.boolean().default(false),italic:z.boolean().default(false),href:z.url().refine(v=>v.startsWith('https://'),'Use an HTTPS link').nullable().default(null)}).strict();
+export const postSchema=z.object({schemaVersion:z.literal(1).default(1),title:z.string().trim().min(1).max(200),slug,excerpt:z.string().max(500).default(''),body:z.array(richTextNode).min(1).max(100),coverAssetId:uuid.nullable().default(null),attachments:z.array(z.object({assetId:uuid,caption:z.string().max(500),alt:z.string().min(1).max(500)}).strict()).max(20).default([]),visibility:z.enum(['inherit','invited']).default('inherit')}).strict();
+export type PostInput=z.infer<typeof postSchema>;
+export const postSaveSchema=z.object({expectedVersion:z.number().int().nonnegative(),post:postSchema}).strict();
+export const revisionSchema=z.object({expectedVersion:z.number().int().positive()}).strict();

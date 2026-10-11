@@ -21,8 +21,8 @@ after(async()=>{await store.close();});
 
 test('W01: verified creation, two separate weddings and concealed foreign tenant',async()=>{
  const unverified=await user('unverified',false);await assert.rejects(store.createWedding(unverified,weddingInput('unverified-'+prefix)),(e:DomainError)=>e.code==='VERIFY_EMAIL');
- const a=await store.createWedding(owner,weddingInput('a-'+prefix)),b=await store.createWedding(owner,weddingInput('b-'+prefix));weddingId=a.id;secondId=b.id;
- assert.equal(a.site_visibility,'shared');assert.equal((await store.listWeddings(owner)).length,2);
+ const a=await store.createWedding(owner,{...weddingInput('a-'+prefix),primaryDate:'2026-08-01'}),b=await store.createWedding(owner,weddingInput('b-'+prefix));weddingId=a.id;secondId=b.id;
+ assert.equal(a.site_visibility,'shared');assert.equal(a.primary_date,'2026-08-01');assert.equal((await store.listWeddings(owner)).length,2);
  await assert.rejects(store.readWedding(other,a.id),(e:DomainError)=>e.status===404);
  await assert.rejects(store.createWedding(other,weddingInput(a.slug)),(e:DomainError)=>e.status===409);
  for(const slug of ['api','UPPER','a','invalid--path'])assert.equal(weddingSchema.safeParse({...weddingInput('valid-path'),slug}).success,false);
@@ -63,6 +63,9 @@ test('W03/W04: lifecycle, removal and ownership/recovery protections',async()=>{
  await assert.rejects(store.transfer(owner,weddingId,planner.userId));await assert.rejects(store.deleteWedding(partner,weddingId));
  await store.transfer(owner,weddingId,partner.userId);assert.equal((await store.readWedding(partner,weddingId)).primary_owner_id,partner.userId);await assert.rejects(store.deleteWedding(owner,weddingId));
  await store.deleteWedding(partner,weddingId);await assert.rejects(store.readWedding(partner,weddingId));await assert.rejects(store.recoverWedding(other,weddingId));await store.recoverWedding(partner,weddingId);assert.equal((await store.readWedding(partner,weddingId)).slug,w.slug);
+});
+test('W04: deleted workspace leaves a restore tombstone and cancels outstanding work',async()=>{
+ const w=await store.createWedding(owner,weddingInput('deleted-'+prefix));await store.deleteWedding(owner,w.id);const t=await store.pool.query('select * from std_deletion_tombstones where wedding_id=$1',[w.id]);assert.equal(t.rowCount,1);assert.ok(t.rows[0].erase_after>t.rows[0].requested_at);await assert.rejects(store.tenant(owner,w.id));
 });
 test('identity recovery: one-use tokens and revocation of every prior session',async()=>{
  const u=await user('recovery'),reset=credential();await store.recover(u.email,hash(reset));await store.reset(hash(reset),await hashPassword('a new sufficiently long password'));

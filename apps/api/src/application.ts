@@ -1,11 +1,11 @@
 import { credential, credentialHash, hashPassword, checkPassword } from '@save-the-date/adapters';
-import { DomainError, type Actor, type FoundationRepository } from '@save-the-date/domain';
-import { registerSchema, loginSchema, tokenSchema, recoverSchema, resetSchema, weddingSchema, weddingPatchSchema, eventSchema, eventPatchSchema, inviteSchema, reauthSchema, transferSchema, deleteSchema, uuid } from '@save-the-date/contracts';
+import { DomainError, type Actor, type FoundationRepository, type PublicationRepository } from '@save-the-date/domain';
+import { registerSchema, loginSchema, tokenSchema, recoverSchema, resetSchema, weddingSchema, weddingPatchSchema, eventSchema, eventPatchSchema, inviteSchema, reauthSchema, transferSchema, deleteSchema, uuid, slug, siteSaveSchema, publishSchema, postSaveSchema, revisionSchema } from '@save-the-date/contracts';
 import type { Config } from '@save-the-date/config';
 import type { Request, Response } from 'express';
 
 export class Application {
- constructor(readonly store:FoundationRepository,readonly config:Config){}
+ constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository){}
  hash(token:string){return credentialHash(token,this.config.TOKEN_HASH_KEYS);}
  cookie(res:Response,token:string,clear=false){res.cookie('std_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:clear?0:7*24*3600*1000});}
  session(req:Request){return req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_session='))?.slice(12)??'';}
@@ -33,6 +33,12 @@ export class Application {
    if(action==='session'&&method==='GET')return {userId:actor.userId,email:actor.email,verified:actor.verified};
    if(action==='reauthenticate'&&method==='POST'){const v=reauthSchema.parse(body);await this.store.reauthenticate(actor,h=>checkPassword(v.password,h));return {message:'Identity confirmed for fifteen minutes'};}
   }
+  if(parts[0]==='public'&&parts[1]==='weddings'){
+   const weddingSlug=slug.parse(parts[2]);const cookieName='std_site_'+weddingSlug;const session=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith(cookieName+'='))?.slice(cookieName.length+1);
+   if(parts.length===3&&method==='GET')return this.publication.publicSite(weddingSlug,session?this.hash(session):undefined);
+   if(parts[3]==='access'&&method==='POST'){await this.store.rateLimit('site-access:'+this.hash(req.ip??'unknown'),10);const token=credential();await this.publication.exchangeShared(weddingSlug,this.hash(tokenSchema.parse(body).token),this.hash(token));res.cookie(cookieName,token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:7*24*3600*1000});return {message:'Website access granted. This is shared access, not identity verification'};}
+   if(parts[3]==='posts'&&parts.length===5&&method==='GET')return this.publication.publicPost(weddingSlug,slug.parse(parts[4]),session?this.hash(session):undefined);
+  }
   const actor=await this.actor(req);
   if(parts[0]==='invites'&&parts[1]==='accept'&&method==='POST')return this.store.acceptInvite(actor,this.hash(tokenSchema.parse(body).token));
   if(parts[0]==='weddings'){
@@ -41,6 +47,20 @@ export class Application {
    if(parts.length===2){if(method==='GET')return this.store.readWedding(actor,id);if(method==='PATCH')return this.store.patchWedding(actor,id,weddingPatchSchema.parse(body));if(method==='DELETE'){deleteSchema.parse(body);await this.store.deleteWedding(actor,id);return {message:'Workspace deleted. Recovery available for thirty days',weddingId:id};}}
    if(parts[2]==='recover'&&method==='POST'){await this.store.recoverWedding(actor,id);return {message:'Workspace recovered'};}
    if(parts[2]==='transfer'&&method==='POST'){await this.store.transfer(actor,id,transferSchema.parse(body).userId);return {message:'Ownership transferred'};}
+   if(parts[2]==='site'){
+    if(parts.length===3&&method==='GET')return this.publication.site(actor,id);
+    if(parts.length===3&&method==='PATCH'){const v=siteSaveSchema.parse(body);return this.publication.saveSite(actor,id,v.config,v.expectedVersion);}
+    if(parts[3]==='publish'&&method==='POST'){const v=publishSchema.parse(body);return this.publication.publish(actor,id,v.expectedVersion,v.weddingVersion);}
+    if(parts[3]==='shared-code'&&method==='POST'){const token=credential();await this.publication.rotateShared(actor,id,this.hash(token));return {code:token,message:'Old website access codes and sessions are now revoked'};}
+   }
+   if(parts[2]==='posts'){
+    if(parts.length===3&&method==='GET')return this.publication.listPosts(actor,id);
+    if(parts.length===3&&method==='POST'){const v=postSaveSchema.parse(body);res.status(201);return this.publication.savePost(actor,id,v.post,v.expectedVersion);}
+    const postId=uuid.parse(parts[3]);
+    if(parts.length===4&&method==='PATCH'){const v=postSaveSchema.parse(body);return this.publication.savePost(actor,id,v.post,v.expectedVersion,postId);}
+    if(parts.length===4&&method==='DELETE')return this.publication.deletePost(actor,id,postId,revisionSchema.parse(body).expectedVersion);
+    if(['publish','unpublish'].includes(parts[4])&&method==='POST')return this.publication.publishPost(actor,id,postId,revisionSchema.parse(body).expectedVersion,parts[4]==='publish');
+   }
    if(parts[2]==='events'){
     if(parts.length===3&&method==='GET')return this.store.listEvents(actor,id);
     if(parts.length===3&&method==='POST'){res.status(201);return this.store.saveEvent(actor,id,eventSchema.parse(body));}
