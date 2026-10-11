@@ -1,0 +1,306 @@
+Save The Date Product Requirements Document
+Version 1.0 | 12 October 2026 | MVP and future direction
+This document specifies the product to build, the user behaviour it must support and the acceptance gates for release. It turns the discussion into a bounded MVP while preserving the full pre-wedding, wedding-day and post-wedding direction. The Business Plan explains commercial hypotheses; the Technical Requirements Document defines architecture and implementation constraints. Requirement identifiers in this document are the shared traceability reference.
+The central product is one living website per wedding and a separate template-based invitation studio. Wedding details, blog posts, RSVP, guest uploads and final wedding media stay at the same website address. Cards can be customised and exported as JPEG or PDF and link to that website. The AI assistant produces concepts and a planner handoff that the couple reviews before applying.
+1 Product goals and boundaries
+Enable a couple to publish useful wedding information without code, generate a card matching their wedding colours, collect correct per-event RSVPs, manage admission and retain an organised collection of memories. Demonstrate whether structured AI concepts reduce the work of transferring a wedding vision to a human planner.
+The MVP is a responsive web application for couples, guests, planners and security. It is not a vendor booking marketplace, a payment processor, a native mobile app or a freeform graphic design tool. It supports a practical end-to-end wedding workflow rather than every task involved in planning a wedding.
+The existing app is a starting point. Its hardcoded couple details, announcements, six albums and four video sections become editable data. Existing staff roles, pass logic, Cloudinary, R2 and Maileroo integrations must be audited before reuse. This PRD does not assume their deployed behaviour has been verified.
+2 Release definitions
+Release
+Purpose
+Required content
+R0 foundation
+Make the existing application safe to generalise
+Repository audit, tenancy, identity, event model, ownership and migration plan
+R1 core alpha
+Test independent website and invitation creation
+Two website themes, blog, four card families, colours and typography, JPEG/PDF export
+R2 operational beta
+Test guests and event use
+Event-specific RSVP, passes, scanning, galleries, guest upload moderation
+R3 MVP pilot
+Validate the complete proposition
+Bounded AI concept workflow, mood board, theme application, planner brief, support and recovery controls
+R4 post-MVP
+Expand after pilot evidence
+Personalised card batches, planner workflow, reminders and planning tools
+
+R3 is the complete MVP, aimed at the six-month window. R1 or R2 demonstrations may support an early endorsement discussion but must not be labelled the complete MVP. R0 to R3 must fit an actual engineering estimate; the dates in the business plan are provisional capacity assumptions.
+3 Users and permissions
+Role
+Allowed tasks
+Explicit limits
+Wedding owner
+Manage all wedding settings members content guests and billing entitlement
+Cannot access another wedding without membership
+Co-owner
+Same operational control as owner
+Owner transfer and workspace deletion require the primary owner
+Planner
+Edit events drafts concepts guests and RSVP; use assigned albums
+Cannot change ownership delete workspace or manage billing; publishing is owner-approved
+Media contributor
+Upload and curate permitted wedding media
+No guest list admission or membership access
+Security
+Scan and manually redeem passes for assigned events
+No blog editing dietary answers contact export or billing access
+Guest
+View permitted content RSVP for their party retrieve own passes upload when permitted
+Cannot edit another party access private unrelated events or approve uploads
+Platform operator
+Support entitlements abuse response and audited troubleshooting
+No routine unlogged access to private wedding content
+
+The MVP supports both partners as owners and a wedding-scoped planner collaborator. A full planner organisation with employees and many-client billing follows later. Planner changes can be saved as drafts; only an owner or co-owner can publish website, blog or theme changes in the MVP. All staff must authenticate. Public guests do not need an account.
+4 Primary journeys
+4.1 Couple onboarding
+The couple registers, verifies an email, creates a wedding workspace, chooses a unique slug and enters display names, approximate or confirmed date, timezone and first event. They select a website theme and palette, add story and hero media, preview and publish. A wedding may be created before its date or venue is final; unpublished missing details must be clearly marked in the dashboard.
+They invite a partner as co-owner through an expiring email link. Membership only starts after acceptance by the addressed account. They can add more ceremonies without recreating the website. Publishing an event requires a name and appropriate date/time or explicit to-be-confirmed wording.
+4.2 Invitation creation
+The couple selects an event or supported multi-event card, chooses a template, edits wording and styles and previews the result. Names, event details and website URL come from the workspace. They can override colours for that card, upload a photo, adjust crop and toggle ornaments and QR. Export runs as a job and returns JPEG and PDF files with a details revision and timestamp. They may share those files themselves.
+If the venue later changes, the website updates after publication and the editor marks existing exports stale. The system offers regeneration. It cannot replace files already sent on WhatsApp or printed. A generic invitation website QR leads to the public website and RSVP identification flow; it is not an admission code.
+4.3 Guest RSVP
+A guest opens the website through a card URL or QR. If they have a private RSVP link or code, they access their household's eligible events. They respond separately for each named attendee and event, within the couple's plus-one allocation. They see confirmation and, where enabled and authorised, an entry pass. Guests may change a response until the event cutoff; after that they contact the couple.
+A visitor without a code can see public information and request access by entering minimal contact details. That request appears privately for the couple to review. No fuzzy public guest-name search reveals the guest list. Approval creates an invitation relationship and a private RSVP link.
+4.4 Blog and media
+The couple drafts a venue announcement with photographs and a video, previews it and publishes it on the wedding website. Guests upload memories through the website using an upload grant. The couple sees pending media, approves selected files, assigns them to albums and chooses visibility. After the wedding, they publish thanks and professional media at the same address.
+4.5 AI concept and planner handoff
+The couple enters preferences, reference images and practical constraints. The assistant asks only for missing information that materially affects the concept and produces up to three candidate themes per generation. The couple selects and revises a concept, approves its palette and mood board, and reviews the proposed website changes. They explicitly apply the theme and export a planner brief. The planner receives agreed choices, assumptions and open decisions, rather than an unexplained collage.
+4.6 Admission
+Security selects an assigned event and checks connectivity. A scan or manual entry returns admitted, already used, revoked, wrong event, expired or not recognised. A successful scan records the staff member and server time. A repeated scan shows the previous admission time. A disconnected scanner shows connection unavailable and must not report admitted locally.
+5 Scope and priority matrix
+All requirements marked Must are release blockers for R3. Should items are useful pilot enhancements that may be deferred openly. Later items do not block the MVP. The matrix is a scope summary; detailed acceptance rules below take precedence.
+ID group
+Capability
+MVP priority
+W01 to W04
+Workspace identity memberships lifecycle and stable URL
+Must
+S01 to S03
+Structured website themes details visibility and publication
+Must
+B01 to B03
+Blog editor media drafts and publishing
+Must
+I01 to I06
+Invitation templates granular styling preview export and website link
+Must
+G01 to G03
+Guests households import export and event eligibility
+Must
+R01 to R04
+Private RSVP plus ones capacity and confirmation
+Must
+P01 to P04
+Optional passes issue revoke and online admission
+Must
+M01 to M05
+Albums couple uploads guest uploads moderation and archive
+Must
+A01 to A05
+AI context concepts mood boards approval and planner brief
+Must
+N01 to N02
+Email and truthful delivery states
+Must
+O01 to O03
+Operator controls recovery and product measurement
+Must
+E01
+Guest-personalised card batch exports
+Should after core exports
+E02
+Schedule posts and automated RSVP reminders
+Later
+E03
+Full planner portfolio budget tasks seating vendors and run sheets
+Later
+E04
+Custom domains multilingual sites mobile and offline scanning
+Later
+E05
+Gifting payments booking marketplace freeform design and AI agents
+Later
+
+6 Workspace and website requirements
+W01 Accounts and workspace creation
+A verified account can create a wedding and invite a partner. Workspace settings contain display names, slug, timezone, primary date if known, locale, palette and lifecycle state. Invitations expire after seven days by default and can be revoked. Duplicate slug claims fail clearly without exposing the reserving account. Slugs use a defined length and character policy and reserve system route words.
+Acceptance: a user creates two independent weddings without data leaking between them; another user cannot obtain either workspace's private data by guessing its identifier; partner access begins only after accepting the addressed invitation. Account recovery invalidates prior sessions as defined in the TRD.
+W02 Events and memberships
+An event records title, type, schedule, timezone, venue, directions, dress code, RSVP cutoff, capacity, publication and admission policy. Types include traditional, civil, religious, reception and custom; no fixed six-event limit. Test a five-event wedding and different guest lists for each. Security membership can be limited to one event and revoked immediately.
+Acceptance: a guest invited to the reception sees reception RSVP but no private ceremony data; a public ceremony is visible without allowing RSVP by an ineligible guest. Date display uses the event's local timezone and remains correct across timezone changes.
+W03 Stable URL and lifecycle
+The platform provides one canonical path per wedding, unchanged by lifecycle transitions. Initial states are planning, wedding period, memories and archived. Couples switch the first three manually; a date-based suggestion is optional. Moving into memories closes no RSVP by itself; event cutoffs control responses. MVP slugs are locked after first publication. Support-led exceptional changes retain redirects and do not reassign old slugs.
+Acceptance: old cards still open the same wedding after the date and after media upload. Archive expiry displays a controlled notice until the wedding is deleted. Do not promise that a hostname remains valid after the operator changes domain without arranging a redirect.
+W04 Membership and destructive actions
+Owners can remove collaborators. Only the primary owner can transfer primary ownership to an accepted co-owner or delete a workspace after reauthentication and confirmation. Provide a thirty-day recovery period for accidental deletion, subject to the privacy erasure process. Removing a member blocks their subsequent requests, including background task access.
+S01 Themes and content sections
+Provide two responsive themes with configurable palette roles, font pairs, hero photograph, section visibility and supported ordering. Sections include story, events, schedule, directions, dress guidance, travel, FAQ, gifting instructions, blog, gallery and RSVP. Content editing must not require writing HTML. Optional external registry links are allowed without processing gifts.
+Acceptance: one theme change preserves all entered content; layouts work at 360-pixel mobile width and desktop; missing optional sections disappear cleanly; headings and navigation remain accessible. An unknown date displays chosen to-be-confirmed text, not a fabricated date.
+S02 Draft and published versions
+Editing creates a draft; public requests return the last published revision. Owners preview privately and publish explicitly. The dashboard shows unsaved, saved, publishing and failed states. Concurrent edits use version checks and surface conflicts. Changes to event facts warn that related exports may be stale; existing published details stay active until the new revision is published.
+S03 Privacy and visibility
+Website mode is public or shared-access in the MVP. New sites default to shared-access until the owner chooses public. Blog posts and albums can inherit site visibility or require an invited-guest session. Shared-access means possession of a site link/code, not verified identity; the UI explains the difference. Private guest data is never included in public page HTML, search metadata, previews or downloadable sitemaps.
+7 Blog requirements
+B01 Editable posts
+Create, edit, preview and delete posts with title, slug, structured rich text, cover media, ordered attachments, captions and alt text. Support paragraphs, headings, bold, italic, lists and validated links. Arbitrary scripts and raw HTML are not allowed. Images and videos are attached from authorised wedding media; include accessible titles for video embeds.
+B02 Publication and browsing
+Posts have draft, published and unpublished states. Owners publish immediately; planner edits remain drafts. The public blog lists newest publication first with title, excerpt and cover. Each post has a stable path beneath the wedding URL. Unpublishing removes public access and cached copies controlled by the platform. Post URL changes retain redirects where possible.
+B03 Media failure and optional story view
+Unavailable embedded media shows a useful fallback and keeps the article readable. Couple-uploaded media is the preferred durable route. A story carousel matching the existing five-second updates experience is future scope; it must include pause, reduced motion and ordinary article access when implemented.
+Acceptance for B01 to B03: a planner draft cannot appear publicly until an owner publishes; cross-wedding attachments are rejected; XSS test content renders as harmless text or fails validation; deleting an attachment warns about published references.
+8 Invitation studio requirements
+I01 Versioned template catalogue
+Four invitation families provide at least one portrait card each. Templates declare editable slots, supported layouts, colour roles, text limits and licensed assets. Cards may select a single event or a supported compact multi-event layout. Keep website themes and card templates separate, with shared palette and fonts where compatible. Published template revisions must remain available for saved designs.
+I02 Granular customisation
+Support solid background colour; primary, secondary and accent colours; separate names, headings, body and footer text colours; curated heading/body fonts; bounded per-group font sizes; supported alignment; wording; border and ornament colour/visibility; photo upload/crop/focal point; supported layout variation; and QR visibility. Users may enter valid hex values or choose wedding palette colours.
+Each colour control shows inherited or overridden. Reset removes the override. A wedding palette change affects inherited colours in current drafts but preserves explicit card overrides. Do not silently recolour previously exported files. Gradient backgrounds and selected textures are Should features; unrestricted image backgrounds and arbitrary element dragging are Later.
+I03 Preview validation
+Use the same resolved design and fonts for preview and export. Text must fit supported bounds; overflow blocks export and explains which field to shorten or resize. Low text contrast produces an actionable warning. QR codes retain a high-contrast quiet zone and cannot be distorted; decoration options may not overwrite them.
+Acceptance: long names, apostrophes and accented characters render correctly; theme overrides survive a wedding palette update; invalid colours fail immediately; every template has tested long-text and photo/no-photo variants. At least two real phones can scan every exported QR sample.
+I04 JPEG and PDF export
+Default portrait card is 5 by 7 inches. JPEG output is 1500 by 2100 pixels, equivalent to 300 pixels per inch at that print size. PDF has a 5 by 7 inch page with the same appearance, legible details and a real clickable wedding URL. This is a standard printable export without professional bleed/CMYK claims. Add bleed and print-shop presets later.
+Generation runs asynchronously with queued, processing, completed and failed states, retry guidance and no silent partial success. An export records event revision, theme/configuration, template version, time and formats. When relevant data changes the dashboard marks it stale. Download requires owner/planner permission; sharing the resulting file is the couple's action.
+Acceptance: generated files contain no editor controls; font loading finishes before render; line wraps match preview; PDF page dimensions are correct; the written URL and QR resolve to the expected wedding; one failed format is shown explicitly rather than calling both successful.
+I05 URL QR and invitation semantics
+The default card carries the canonical wedding URL and optional QR. Turning QR off leaves a written URL if RSVP is expected. Generic cards do not encode a private RSVP or admission token. Personalised private RSVP cards are a later enhancement and require a warning that the link grants access to that party's RSVP. Admission QR codes belong to passes and are visually labelled separately.
+I06 Editing and future batches
+Couples can save designs as drafts, duplicate a design for another ceremony and regenerate exports. Applying new event data requires a current preview. E01 adds per-guest or household name variants, bulk export jobs, zipped downloads and email delivery only after individual exports pass pilot quality gates.
+9 Guests and RSVP requirements
+G01 Guest records and households
+Store minimal guest names, optional email/phone, household, group and event eligibility. A household response covers named members, not an unlimited headcount. Groups can represent family, friends or wedding party but do not grant event access implicitly. A plus-one allocation creates a bounded attendee slot; the guest can name it before confirmation.
+G02 Import and export
+Support manual creation and CSV import with a documented column schema, preview, row-level validation and explicit duplicate resolution. Email matches alone do not automatically merge different people. CSV export is limited to authorised owners and planners and escapes spreadsheet formula injection. Provide an import result listing accepted, rejected and unchanged rows.
+G03 Invitation access
+Issue a random private link and manually enterable code per household. Store access separately from public site slug and admission passes. Revocation rotates credentials and invalidates guest sessions associated with that grant. Rate-limit wrong-code attempts and avoid guest-list enumeration. The owner can approve access requests from public visitors.
+R01 Event responses
+Each attendee answers attending or declining for each eligible event; unanswered is a separate state. RSVP deadline is stored per event with timezone. Optional questions are limited to necessary meal, dietary/accessibility needs and a note. Explain who sees those answers. Allow the couple to disable sensitive questions and delete answers when no longer needed.
+R02 Plus ones and changes
+Guests cannot increase their allocated party size. Response updates are idempotent and saved as a complete party/event submission. Declining revokes unused passes and releases reserved places. Changing a name after a pass has been used requires an owner correction and audit entry, rather than issuing another admission automatically.
+R03 Capacity and approval
+Event capacity is enforced against confirmed attendees. Under automatic confirmation, eligible positive RSVPs reserve capacity atomically. If capacity is unavailable, record waitlisted rather than confirmed. Under manual approval, attending responses are pending; an owner approves and reserves capacity. No passes are issued while pending or waitlisted. Capacity cannot be lowered below confirmed count without resolving attendees first.
+Reserved capacity includes confirmed attendees whether or not their optional pass has been issued. Pass issuance must not reserve a second place. Declining after admission is blocked for guest self-service; the owner can record a correction without erasing historical admission.
+R04 Confirmation and dashboard
+Guests receive a clear on-screen result even if email is delayed. Couples see per-event unanswered, pending, confirmed, declined, waitlisted and admitted counts. Provide filters and accessible exports; do not represent an email accepted by a provider as a delivered invitation.
+Acceptance for RSVP: repeated submission does not double-count; simultaneous requests for the final place yield one confirmation; an unrelated party token cannot update responses; deadline boundaries use server time; a lost email does not erase a saved response.
+10 Pass and admission requirements
+P01 Optional pass policy
+Enable passes per event. Policies are automatic issue to confirmed eligible attendees or owner-controlled issue after confirmation. MVP passes are per attendee per event, including each allowed plus one. Passes have an active credential, event and attendee association and issue/revoke/use history. Tickets show guest name, event, schedule and distinct admission QR/manual code.
+P02 Revocation and reissue
+An owner can revoke an unused pass with a reason. Reissue rotates the credential and invalidates the old one; it does not create an additional seat or erase history. A used pass cannot be reissued as an unused pass through the normal UI. Admission corrections require an owner-only audited operation, and intentional re-entry is Later.
+P03 Online redemption
+Camera scan and manual entry use the same server operation. It succeeds only for an active unused pass for the selected event and admission window. Default window is two hours before scheduled start through twelve hours after; owners can configure it before event use. If time is to be confirmed, the owner must set an admission window before enabling scans.
+Acceptance: one hundred simultaneous attempts against one pass create one successful admission and one admission record; later attempts display already used. Wrong-event and revoked passes never become admitted. Retrying a timed-out request with the same operation key returns the same outcome.
+P04 Connectivity and staff experience
+Require an online connection for authoritative admission. Show connectivity and event selection persistently. Staff see text and icons as well as colour results and can search only authorised operational identifiers. Log failures without showing guest private contact or dietary information. Provide a printable minimal attendee list for a separately managed human contingency; it cannot guarantee single-use redemption across disconnected devices and must not be advertised as offline scanning.
+11 Gallery guest uploads and retention requirements
+M01 Albums and media
+Couples create named albums with cover, ordering, descriptions and visibility. Support JPEG, PNG, WebP and accepted phone-image formats through conversion, plus MP4/MOV video with compatible playback processing. Preserve originals for authorised downloads. Embedded third-party films remain supported where approved, with an external-host dependency notice.
+M02 Quotas and processing
+Pilot defaults are 10 GB total storage per wedding including originals and derivatives, 25 MB per photograph, 250 MB per video and five-minute video duration. Limits are server configuration and visible before upload. Reserve quota before accepting bytes; release it on rejected or expired uploads. Higher quotas require entitlement. Video processing failure does not publish an unplayable asset.
+M03 Guest upload grants
+Provide guest upload from the same wedding website with no account requirement. Authorised RSVP sessions may upload; an owner can also create a dedicated event upload link/code for attendees without RSVP access. The public website address alone does not grant upload rights. Grants have expiry, per-session limits, rate limiting and abuse controls and can be revoked without changing the website URL.
+Show rights and publication consent clearly. Ask uploaders to confirm permission to share media and explain that the couple reviews it. Display progress, interruption/retry and per-file results. Malware or invalid file failures do not consume permanent quota.
+M04 Moderation and visibility
+Guest uploads enter a private moderation queue after safety and format processing. Owners approve, reject, delete or move them to albums. Approval does not override album/site visibility. Publication is a separate decision. Media contributors can curate only the albums they are assigned; they cannot publish guest uploads without owner approval.
+Acceptance: pending media is unavailable through unauthorised URLs or public pages; approval publishes only to the chosen audience; revocation/unpublishing invalidates platform caches and short-lived access; spoofed file extensions fail inspection; user-facing derivatives remove unnecessary location metadata.
+M05 Memories archive and deletion
+Pilot policy is an active period through twelve months after the last scheduled event, followed by a thirty-day export/renewal grace period. For weddings without a final date, display an explicit provisional service expiry and require periodic review. This is a proposed policy to confirm before paid launch, not a perpetual-hosting promise.
+Warn owners at thirty and seven days before expiry. Provide a queued archive export of media originals, captions, posts and wedding/guest records, with separate sensitive-data permissions. An archived site shows a notice and disables new uploads. At expiry, delete according to the published policy; retain only necessary audit/accounting data on its own schedule. The website URL remains the identifier while the service is maintained, but deletion can remove content permanently.
+12 AI assistant requirements
+A01 Wedding context and consent
+Gather ceremony types, locations, budget envelope and currency if supplied, guest count, style preferences, colour preferences and exclusions, cultural preferences stated by the couple, reference media and practical restrictions. Missing information stays unknown. Guests' names, dietary data, private contacts and admission codes are excluded from model context. Couple-uploaded references are used only with an explained processing purpose.
+A02 Concepts and planning help
+Generate one to three structured candidate concepts with a name, short rationale, palette roles and hex values, typography suggestions, event-specific design notes, decor directions, assumptions and open questions. The helper can answer planning questions and suggest checklist actions in the chat. Tasks, due dates and budgets are drafts unless approved; full task and budget management is future scope.
+All palette values must validate. Constraints such as excluded colours and no hanging decorations must appear in the output check. The assistant may propose approximate categories of cost, but must label assumptions and never invent verified vendor prices or availability. Cultural statements should be framed as suggestions for confirmation rather than rules about the couple.
+A03 Mood boards
+Create a labelled board containing palette swatches, reference/generated images, captions and design notes. Use owned, licensed or generated assets; do not scrape and republish arbitrary image-search results. Generated imagery is inspiration and may depict impractical elements. Users can replace tiles, edit captions and ask for a bounded revision. Each tile records its source and generation status.
+Generation defaults are three concept runs and one board regeneration per day per wedding, configurable by plan. Show remaining allowance and estimated charge/credit before paid generation. Failed jobs release reserved allowance unless the disclosed policy says otherwise. Cancellation stops new stages where possible and explains if a submitted provider job cannot be recalled.
+A04 Approval and theme application
+Concept states are draft, generated, revised, approved and superseded. Approval binds a specific revision. Applying a palette or font pair shows a before/after list of affected website and invitation fields. Only approved and compatible values can be applied; an owner confirms. Card overrides are preserved. Applying creates a website draft rather than publishing live without approval.
+Acceptance: stale concept revisions cannot overwrite newer decisions; a malicious instruction in uploaded content cannot publish content or read other weddings; model failure leaves the previous approved concept intact; all generated outputs are schema-checked before being displayed as usable designs.
+A05 Planner handoff
+Export an approved concept as PDF and structured JSON. Include wedding and event context, spending envelope and currency, source revision, palette roles/hex, typography licences or substitutions, board images/captions/sources, requirements, exclusions, assumptions, open questions, a proposed next-actions list and approval date. Do not include private RSVP or admission data.
+Acceptance: a planner can identify the approved decisions and unresolved choices without accessing the model chat; the exported brief corresponds to the selected revision; a manual reference-based board and brief remain available if an AI provider is disabled. Human review is recorded separately from model generation.
+13 Notifications operator controls and metrics
+N01 Email
+Support account verification, password recovery, collaborator invitations, owner-triggered RSVP links, confirmation, pass delivery and archive notices. No automatic bulk reminders in the MVP. Owners preview the intended recipient set before sending. Rate limits and duplicate-send protection apply. A guest can still access confirmation on the website when delivery is delayed.
+N02 Delivery states
+Distinguish queued, provider accepted, delivered where a provider reports it, bounced and failed. Providers without delivery webhooks remain accepted/unknown. Do not equate message opening with reliable attendance intent. Failed sends are retriable without issuing duplicate passes.
+O01 Support and moderation
+Operators can inspect job status, quota usage and delivery metadata without routine access to private media. Any exceptional access requires a reason and audit event. Feature flags and per-wedding limits allow disabling AI or uploads while leaving RSVP and admission usable. Provide abuse reporting and a rights/takedown contact path.
+O02 Account data and recovery
+Offer owner exports, account deletion requests, membership revocation and workspace recovery. Deletion must remove active credentials and private assets across adapters. Backups have a defined expiry and deletion tombstones are reapplied after restoration. Restore drills are a release requirement, not merely documentation.
+O03 Measurement
+Measure wedding creation, first publication, invitation export, event response, successful admission, approved upload, approved concept and brief export. Use tenant identifiers and pseudonymous aggregates; avoid raw personal answers and tokens in analytics. Metrics are visible to the founder/operator rather than exposing cross-wedding data to customers.
+Metric
+Definition
+Pilot target
+Activation
+Wedding publishes site and completes first export within seven days
+60 percent of recruited pilot weddings
+Independent task completion
+Couple publishes and exports without facilitator rescue
+80 percent of tested users
+RSVP correctness
+Eligible responses match party/event and capacity policies
+No critical failures in acceptance tests
+Admission correctness
+At most one success per attendee/event pass
+No duplicate admission
+Planner usefulness
+Brief needs only minor edits in planner assessment
+At least three of five planners
+Connected-workflow time
+Paired task time against normal tools
+Directional median reduction of 30 percent
+Cost to serve
+AI media export delivery and attributable support cost per wedding
+Measured before final pricing
+
+These are internal targets for small pilots, not generalisable market claims or visa criteria. Preserve sample sizes and failures when reporting them.
+14 Nonfunctional product requirements
+Public pages and core guest flows target WCAG 2.2 AA, including keyboard access, descriptive controls, visible focus, alternative text, contrast and reduced motion [P1]. Invitation card aesthetics cannot excuse an inaccessible RSVP form. Scanner results must not depend on colour alone.
+Target public page largest contentful paint below 2.5 seconds at the 75th percentile under the agreed mobile test profile. Target admitted-response p95 below one second at 20 concurrent redemption requests, excluding camera recognition and client network delay. Exports of a single card should complete within sixty seconds at p95 on the declared reference environment, excluding queue wait. Mood-board generation should give progress immediately and an explicit timeout/failure path; provider latency cannot be guaranteed by the UI.
+The production target is 99.5 percent monthly availability for core site and RSVP operations, with a higher event-day operating target of 99.9 percent when staffed and provisioned. These are design goals, not contractual SLAs at pilot launch. Capture outages and dependency effects. Define backup and restore targets in the TRD.
+Test recent iOS Safari and Android Chrome for RSVP, photo upload and scanning; desktop Chrome, Safari, Edge and Firefox for dashboard and editor. Camera permission denial always permits manual admission entry. The product defaults to English but uses Unicode, IANA timezones and explicit currency codes so later localisation does not require a domain rewrite.
+15 Future roadmap and entry gates
+Phase 1 Product depth
+Add personalised card batches, scheduled blog posts, RSVP reminders, richer textures and gradients, more templates and print presets. Entry gate: individual exports are stable, template conversion is measured and users request these enhancements. Preserve stale-export warnings and per-recipient access distinctions.
+Phase 2 Planner operations
+Add planner organisations and a portfolio dashboard, task assignments, due dates, event run sheets, budget/actual comparisons, supplier records and seating plans. Gate: at least two planners use the handoff repeatedly and specify the next operational pain worth solving. Budgets use one wedding currency initially; avoid implicit foreign-exchange conversions.
+Phase 3 Distribution and reach
+Add multilingual content with translation review, custom domains with ownership validation, planner referral programmes and photographer upload handoff. Evaluate a mobile/PWA experience based on observed usage. Offline admission requires a separately approved conflict model and threat assessment; it cannot be achieved by caching the current scanner alone.
+Phase 4 Transactions and broader ecosystem
+Consider vendor discovery, verified quotes, booking, registries, cash gifts, accommodation and print fulfilment only when there is evidence and operational capacity. Each introduces payment, contractual, fraud or supplier responsibilities. A future freeform card editor should preserve deterministic export, accessibility and licence controls. More autonomous AI must still use permission-scoped tools and review for consequential changes.
+16 Dependencies and decisions
+Before building, confirm founder capacity, supported phone-media formats, initial retention terms, template/font rights, prototype budget and who can participate in pilots. Authentication and privacy defaults are resolved in this PRD; implementation providers remain selectable in the TRD. Select a provider only if it can satisfy these product contracts or disclose a changed scope before shipping.
+Potential scope cuts under time pressure are gradients, extra templates, batch cards, scheduled posts, automated reminders and planner portfolio features. Do not cut tenancy isolation, atomic admission, RSVP correctness, guest moderation, source-aware mood boards or the required independent website/card distinction while calling the result the same MVP.
+17 Release gate and traceability
+R3 requires acceptance tests for every Must group, owner-reviewed copy, clean exported cards and briefs, mobile usability sessions, two-provider storage demonstration, tested backup restore, abuse limits and a recorded operational runbook. There must be no unresolved critical data exposure, capacity oversubscription or duplicate admission defect.
+Business objective
+Product requirements
+Technical areas
+Lasting wedding presence
+W03 S01 to S03 B01 to B03 M05
+Publication snapshots routing caching retention
+Customisable invitation product
+I01 to I06
+Template registry design resolver render worker
+Correct guest operations
+G01 to G03 R01 to R04 P01 to P04
+Tenant repositories transactions scoped credentials
+Shared wedding memories
+M01 to M05
+Upload grants quarantine storage processing moderation
+Connected creative planning
+A01 to A05
+AI adapters schemas revision approval brief export
+Sustainable portable service
+N01 to N02 O01 to O03
+Entitlements adapters telemetry recovery deployment
+
+18 Sources
+[P1] W3C Web Content Accessibility Guidelines 2.2 https://www.w3.org/TR/WCAG22/ Access checked 12 October 2026. WCAG 2.2 AA is the chosen product target; conformance requires testing the implementation.

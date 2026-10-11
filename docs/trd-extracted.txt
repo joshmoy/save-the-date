@@ -1,0 +1,422 @@
+Save The Date Technical Requirements Document
+Version 1.0 | 12 October 2026 | Architecture and engineering specification
+This document defines how to implement the Save The Date PRD as a portable, modular application. It covers service boundaries, data contracts, security, transactional behaviour, exports, AI, media, deployment, migrations, testing and operations. It is intended for engineers implementing and reviewing the platform. The PRD governs user behaviour; this document governs engineering mechanisms and technical release gates.
+Use an incremental pnpm workspace and Turborepo monorepo with Next.js for the web application, a NestJS modular monolith for authoritative domain operations, and dedicated workers for long-running tasks. Keep one operational data store per deployment and avoid microservices in the MVP. Infrastructure providers are configuration and adapter choices. PostgreSQL is the reference database implementation, not a mandated managed vendor or a claim that every database engine is interchangeable.
+1 Architecture decisions and portability contract
+1.1 What portability means
+The application must deploy on any environment that supplies the documented runtime capabilities, such as a container host, virtual machine, Kubernetes cluster or appropriately capable managed application platform. It must not require Vercel, Railway, Supabase, Cloudinary, R2, Maileroo or a particular AI provider. Providers are selected by deployment configuration and implement application-owned contracts.
+There are three different promises. Moving between PostgreSQL hosts should require configuration, data transfer and rehearsal, without domain-code changes. Replacing storage, email, AI or queue providers should require a supported adapter and contract tests. Replacing PostgreSQL with another database engine requires a persistence adapter, engine-specific migrations and proof of transaction invariants. A database URL alone cannot make an incompatible engine work.
+Support one reference relational engine in the MVP and define an extension path for others. MySQL is a plausible future relational adapter; a document database is only admissible if it can reproduce uniqueness, tenant scoping, atomic capacity changes and pass redemption. ORM support is not proof that those behaviours remain equivalent. Do not ship speculative adapters that are neither tested nor maintained.
+The permanent wedding path belongs to the product data model. Keeping old links valid when the deployment hostname changes requires continued control of the old domain and redirects. It is not solved by an environment variable alone.
+1.2 Application ownership
+Component
+Responsibility
+Forbidden dependency
+Next.js web
+Public rendering editor dashboard guest and scanner UI; browser session gateway
+Direct writes to wedding tables or provider SDKs in client bundles
+NestJS API
+Identity authority tenant policy domain commands queries publication and job records
+UI component dependencies and host-specific service assumptions
+Worker
+Media processing card/brief rendering email AI stages archive exports
+Direct unaudited public mutations bypassing domain rules
+Database adapter
+Transactions repositories migrations constraints outbox and leases
+Business UI assumptions
+Provider adapters
+Object storage email AI queue telemetry capabilities
+Tenant or publication policy decisions
+
+Next.js documents backend-for-frontend capabilities and deployment-dependent limitations for long-running work [T1]. NestJS offers queue integrations, but durability and infrastructure still require explicit configuration [T2]. The framework choice here is an engineering recommendation for this product, not a functional requirement to use two frameworks for every wedding site.
+1.3 Repository structure
+apps/web contains Next.js routes and UI. apps/api contains the NestJS domain modules and HTTP server. apps/worker starts processing handlers and background schedulers. packages/contracts contains runtime request/response schemas and generated API types. packages/domain contains framework-independent policy and state transitions. packages/persistence contains repository interfaces and database implementations. packages/templates contains versioned card definitions, design schemas and deterministic rendering. packages/ui contains shared components if there is real reuse. packages/adapters contains storage, email, AI and queue interfaces and implementations. packages/config contains lint, TypeScript and build configuration.
+Pin supported runtime and dependency versions in lockfiles and container manifests after the code audit. The supplied dependency ranges describe existing source, not deployment versions. Never introduce a package version solely from this document without compatibility and security checks.
+Dependency direction is web/API/worker to contracts/domain/ports, then infrastructure to domain ports. Domain code never imports an AI SDK, ORM client or cloud storage SDK. Template rendering consumes validated resolved data and local verified assets, not unrestricted remote URLs.
+2 Runtime topology and domain modules
+The browser accesses one public origin. A reverse proxy routes UI pages to web and application API requests to the session gateway/API. Next.js server rendering reads authorised published views from the API; private browser actions pass through the gateway. API, worker and database may share a host initially but are independently executable processes.
+Core API modules are Identity, Memberships, Weddings, Events, Publication, Blog, InvitationDesigns, Guests, RSVP, Admission, Media, CreativePlanning, Notifications, Entitlements, Audit and Support. Workers use the same domain application services where policy applies; they do not replicate a second implementation of RSVP or admission rules.
+Deploy a web/API/worker trio, relational database and object storage. The default job transport can use a database-backed leased job queue, avoiding a mandatory Redis service for the MVP. BullMQ with Redis is an optional adapter for higher throughput; its infrastructure is explicit. All transports deliver at least once from the application's perspective, so handlers must be idempotent.
+Real-time WebSockets are not required initially. Poll job status with capped exponential backoff and jitter; use server-sent events only where the deployment supports them. Core RSVP and admission use request/response transactions and do not depend on a persistent client connection.
+3 Identity tenancy and request security
+3.1 Identity authority
+NestJS is the sole identity and session authority in the reference implementation. Support verified email/password accounts and password reset initially; OIDC login can be added behind an identity adapter. Passwords use a modern memory-hard hash with recorded parameters. Sensitive actions require recent reauthentication. Email verification and reset tokens are random, hashed, time-limited and one-use. Completing password recovery revokes all existing user sessions. Reference defaults are a seven-day absolute staff-session lifetime, twenty-four-hour verification tokens and thirty-minute reset tokens; sensitive-action reauthentication is valid for fifteen minutes.
+The browser holds a Secure, HttpOnly, SameSite cookie for the web session gateway. The gateway forwards its opaque session credential to the API over TLS without exposing it to client JavaScript. The API stores and validates hashed opaque sessions with user identity, expiry and revocation. Next.js must not create an independent permission authority or trust an unsigned user-id header. Server-rendered private pages use the same session validation.
+Allow the API directly over the reverse proxy only with the same session security, CSRF protection and configured origins. Default to same-origin browser calls. Validate Origin and CSRF tokens on cookie-authenticated mutations; never use permissive credentialed CORS. Machine/service authentication is separate from end-user membership and cannot impersonate arbitrary users without policy checks.
+3.2 Tenant boundary
+Every wedding-owned entity has wedding_id. Authentication identifies the actor; membership or guest grants establish permitted weddings/events. Each application service authorises both tenant and resource before accessing a repository. Repositories require an explicit TenantContext and cannot expose an unscoped default query method.
+Child references use composite tenant constraints where supported, for example (wedding_id, event_id) references the event's (wedding_id, id). Every query and update includes wedding_id in its predicate. Row-level security on PostgreSQL is defence in depth if adopted and correctly managed; it is not the sole portable permission mechanism. Cross-tenant tests apply to API, workers, exports, object keys and cache entries.
+Membership changes are checked on each privileged operation, including queued jobs before exposing their results. A role attached to an expired login must not remain effective after removal. Security staff are scoped to specific events. Owners and planners have different capabilities even if both have dashboard access.
+3.3 Guest grants
+Use separate credentials for shared website access, party RSVP, guest upload and admission. Generate high-entropy secrets for private links, and store only keyed hashes or secure token hashes. Reference link credentials use thirty-two random bytes. Manually enterable RSVP/pass codes use at least twelve random unambiguous Base32 characters, strict rate limits and non-enumerating errors. QR and manual credentials resolve to the same pass state. Reissue rotates both. Credentials are never derived from sequential database IDs or couple names.
+Exchange a private RSVP link credential for a scoped short-lived guest session, then remove the secret from the address bar. Set Referrer-Policy to no-referrer for secret-bearing flows. Do not log query tokens. A generic wedding QR contains a canonical public URL only. Upload links and admission credentials must not be accidentally substituted for it.
+3.4 Support access
+Platform support receives metadata access by default. Exceptional private-content access requires an explicit capability, reason, bounded duration and audit entry. Public API errors never return another wedding's existence or details. Return a consistent not-found response for resources the actor cannot view.
+4 Data model and invariants
+Use application-generated opaque UUIDs, UTC timestamps for instants, IANA timezone strings for local schedules, ISO currency codes and integer minor units for money. Domain enumerations are application constants persisted as validated strings where practical, to avoid unnecessary engine-specific enum migrations. Structured design and content fields use schema-versioned JSON; indexed or transactional business facts remain relational columns.
+Entity
+Key fields and purpose
+Constraint
+users sessions identity_tokens
+Identity email password hash token hash expiry
+Verified email uniqueness; one-use reset tokens
+weddings memberships member_events
+Slug primary owner locale timezone lifecycle role scopes
+Unique slug; unique wedding/user membership
+events event_revisions
+Schedule venue capacity approval policy published facts
+Nonnegative capacity; explicit revision
+site_drafts site_publications slug_aliases
+Validated sections theme immutable published snapshot
+Unique canonical slug; alias cannot be reassigned
+posts post_revisions
+Slug title structured body media visibility state
+Unique wedding/post slug; publication revision
+invitation_designs invitation_exports
+Template version config theme overrides snapshot job assets
+Export tied to immutable resolved revision
+parties guests event_eligibility
+Household members allocated plus ones allowed events
+Eligibility unique per wedding/event/guest
+access_grants guest_sessions
+Scoped credential hash expiry revocation
+Separate credential purpose and wedding
+rsvps capacity_reservations
+Per attendee/event state optional answers version
+Unique attendee/event RSVP and reservation
+passes admissions scan_attempts
+Credential hash status attendee/event actor operation
+One pass lineage per attendee/event; one admission
+albums media_assets media_links upload_intents
+Storage key checksum bytes type processing moderation visibility
+Tenant-owned references; reserved quota accounting
+creative_projects concepts board_tiles approvals
+Context model revision source constraints assets approvals
+Approval bound to revision and actor
+planner_briefs
+Approved concept snapshot document and JSON object keys
+No guest sensitive data in export
+entitlements usage_reservations
+Feature limits storage/AI allowance service expiry
+Atomic reservation and release
+jobs outbox inbox email_messages
+Durable work payload leases attempts provider event state
+Dedupe keys; inbox event uniqueness
+audit_events deletion_tombstones
+Actor action resource reason time erasure markers
+Append-only through application
+
+4.1 Design configuration
+Store templateId, templateVersion, schemaVersion, weddingId, eventIds, content wording, inherited theme intent, explicit colour overrides, font IDs/sizes, photo asset ID and crop, layout variant and QR visibility. Event date/venue and canonical URL are resolved from the selected current event revision when generating a new preview. Literal override wording is allowed but must not silently alter the authoritative event.
+An export snapshot stores the complete resolved design, event revisions, template and font versions, asset checksums, URL, renderer version and creation time. This snapshot makes reproduction possible and prevents a retry from exporting newer data accidentally. A draft reference can inherit current theme values; a completed snapshot cannot.
+4.2 Example record contracts
+The following examples specify shapes rather than ORM-specific schema.
+{
+  "templateId": "royal-elegance",
+  "templateVersion": 1,
+  "schemaVersion": 1,
+  "eventIds": ["event_uuid"],
+  "themeMode": "inherit",
+  "overrides": {"background": "#FFF7EF", "accent": "#C6A36B"},
+  "typography": {"namesFontId": "licensed_serif_v1", "namesSizePt": 36},
+  "layout": {"variant": "framed", "showPhoto": false, "showQr": true},
+  "content": {"intro": "Together with their families"}
+}
+Concept records include schemaVersion, contextRevision, budgetCurrency, budgetMinor if supplied, palette role/hex pairs, allowed font IDs, per-event suggestions, constraints, assumptions, openQuestions, board tile IDs and provenance. Preserve unknown budget as null rather than zero. AI outputs must pass the same design-compatible schemas before they can be applied.
+4.3 Published data and concurrency
+Mutable drafts carry a version number. Mutations include expectedVersion; conflicting changes return 409 with a safe conflict description. Publication creates an immutable snapshot and updates the active publication pointer in one transaction. The public API reads that pointer and snapshot; it never builds public pages from partly edited private tables.
+Public event information and operational event configuration have separate concerns. Publishing a new schedule creates the new guest-visible revision. Admission/capacity policy changes are privileged operational commands with audit records. Closing RSVP due to its deadline uses server time and does not require a lifecycle publication.
+5 Persistence and provider interfaces
+5.1 Database interface
+Repositories expose domain-specific commands and queries rather than generic table CRUD. The UnitOfWork port provides a transaction scope used by RSVP, admission, publication and outbox recording. Storage implementation classes may use SQL or an ORM internally. Select an ORM only after confirming its transaction and migration support; do not let its generated types become the public API contract.
+interface UnitOfWork {
+  run<T>(fn: (tx: TransactionContext) => Promise<T>): Promise<T>;
+}
+interface AdmissionRepository {
+  redeem(tx: TransactionContext, tenant: TenantContext,
+    command: RedeemPassCommand): Promise<RedemptionResult>;
+}
+interface StoragePort {
+  beginUpload(input: UploadPolicy): Promise<UploadTarget>;
+  inspect(key: string): Promise<ObjectMetadata>;
+  readStream(key: string): Promise<ReadableStream>;
+  writeStream(input: ObjectWrite): Promise<ObjectRef>;
+  delete(key: string): Promise<void>;
+  signDownload(input: DownloadPolicy): Promise<string>;
+}
+These are illustrative signatures. Engineering must supply complete schemas, errors and cancellation semantics in packages/contracts and packages/adapters. Raw database SQL is confined to an adapter and migrations, including SQL shown later for the reference engine.
+5.2 Media and email
+Storage implementations may use an S3-compatible service, another object store, or a mounted filesystem adapter. Database records store logical storage namespace and object key, never a permanent vendor URL as the source of truth. A filesystem deployment needs shared durable access between API and workers or a mediated storage service; local ephemeral container files do not satisfy persistence.
+EmailPort exposes send with an application message ID, recipients, template data and idempotency context. Delivery-event adapters normalise provider webhooks. A basic SMTP adapter is valid but may only report acceptance; do not fabricate delivered status. Each adapter declares capabilities such as delivery webhooks, multipart upload and resumability.
+5.3 AI and queue
+LanguageModelPort accepts a validated task, minimal wedding context, output schema, deadline and usage budget, returning structured output, usage and provenance. ImageGenerationPort accepts references, prompt, asset policy and job context, returning managed asset references and provider metadata. Neither provider can directly publish, issue a pass or update business tables.
+JobTransportPort exposes dispatch/lease/ack/fail with retry metadata. The authoritative job record remains in the application database, so changing transport does not erase visible job history. Database adapter queue implementation must use atomic leasing; PostgreSQL can use row locks with SKIP LOCKED. Alternative queues require equivalent contract tests and ownership leases.
+If a chosen AI provider is unavailable, colour editing, manual mood-board assembly, invitation creation, RSVP and admission continue. Automatic silent provider switching is disabled by default because cost, data residency and processing terms may differ. Operators can configure explicit failover after reviewing those differences.
+5.4 Adapter completion definition
+An adapter is supported only when configuration validation, capability detection, failure handling, contract tests, security review and operating instructions exist. Keep fake/test adapters separate from production. CI uses local compatible fixtures; a provider smoke test uses synthetic non-personal data. Provider-specific settings remain namespaced in the infrastructure module, not scattered throughout feature code.
+6 API contracts
+Publish versioned REST endpoints under /api/v1 and generate OpenAPI from validated schemas. Use cursor pagination for lists, explicit timezone/ISO instants, structured field errors and stable machine-readable codes. Return 202 with jobId for asynchronous work. Return 401 for no valid identity, 403 for disallowed operations where safe, 404 for concealed resources, 409 for version/state conflicts, 413 for oversized requests and 429 with retry guidance for rate limits.
+Endpoint family
+Representative operations
+Policy
+/identity
+Register verify login logout recover reset sessions
+Rate limited and CSRF-aware
+/weddings
+Create read patch memberships transfer delete
+Membership and expectedVersion
+/weddings/{id}/events
+Create edit publish RSVP/admission policies
+Owner/planner draft policy
+/weddings/{id}/site
+Draft preview publish lifecycle
+Owners publish
+/weddings/{id}/posts
+Draft edit publish unpublish
+Owners publish
+/weddings/{id}/designs
+Save clone preview export
+Authorised wedding editor
+/weddings/{id}/guests
+CRUD import preview export eligibility
+Owner/planner scopes
+/guest/access
+Exchange private code request invitation
+Scoped non-enumerating flow
+/guest/events/{id}/rsvp
+Read submit responses retrieve own passes
+Party and event grant
+/weddings/{id}/passes
+Issue revoke reissue download
+Confirmed attendee policy
+/weddings/{id}/events/{eventId}/redeem
+Camera/manual credential redemption
+Assigned staff event
+/weddings/{id}/media
+Initiate complete list moderate albums delete
+Quota grant ownership
+/weddings/{id}/creative
+Context concepts generation approval theme brief
+Owner approval
+/jobs/{id}
+Status authorised result retry cancel
+Tenant and resource permissions
+/public/weddings/{slug}
+Published site posts permitted media
+Visibility-projected response
+/provider-events/{adapter}
+Email AI/storage callback if needed
+Verified signature replay prevention
+
+Use Idempotency-Key on pass issue/redemption, RSVP submissions, export requests, AI jobs and external sends. Scope keys by actor/tenant/operation, store request hash and result for a documented period, and reject reuse with a different body. For admission keep the resulting outcome linked to the durable scan operation. User-controlled request IDs do not bypass pass uniqueness.
+7 RSVP and admission transaction design
+7.1 RSVP transaction
+Authenticate the party grant, check deadline and eligibility, validate allocated attendees and obtain the event capacity lock or equivalent serialisation mechanism. Reconcile each guest/event RSVP using expected versions. Reserve one place for each newly confirmed attendee. Reject or mark waitlisted if capacity is exhausted, according to the PRD. Commit responses, reservations, any pass issuance commands, audit and notification outbox atomically.
+A practical reference strategy locks the event row during capacity reconciliation and uses unique reservation records per attendee/event. Confirmed count is maintained transactionally and periodically reconciled against reservations. Automatic confirmation and manual approval use the same reservation operation. All capacity-increasing commands must follow it, including staff actions and imported responses.
+Declining a confirmed unused attendee releases the reservation and revokes their active unused pass in the same transaction. A pass does not reserve another place. Pending and waitlisted records do not consume confirmed capacity. Capacity updates below the current confirmed count return a state conflict. Do not hold a database transaction while calling email, object storage or AI.
+7.2 Pass issue and reissue
+Require confirmation, eligibility and active admission policy. Enforce one active credential per attendee/event lineage. Issue random QR and manual credentials and store hashes for lookup. Keep the credential payload encrypted under a versioned application encryption key so authorised ticket rendering and retrieval can reproduce the same unused pass. Decryption is available only to the admission delivery service after policy checks; plaintext never enters logs or general query responses. Erase the encrypted payload after use, revocation or expiry and show status instead. Ticket assets remain private under the media retention policy. Rendering and external delivery happen after the issue transaction commits through the outbox.
+Reissue rotates credential and retains the same lineage and reservation. The old code fails immediately. Used passes cannot become unused through reissue. An owner correction is separate, audited and does not destroy the original admission record.
+7.3 Atomic redemption
+Check staff membership and event assignment. Resolve the credential hash within wedding/event scope. Check server time against admission window. In one transaction, insert or load the scan operation, conditionally transition active to used, insert the unique admission, record scan outcome and audit, then commit. The database is the admission authority.
+UPDATE passes
+SET status = 'used', used_at = :server_time, used_by = :actor_id
+WHERE wedding_id = :wedding_id
+  AND event_id = :event_id
+  AND credential_hash = :credential_hash
+  AND status = 'active';
+This is reference SQL, not a complete implementation. Check affected-row count and insert admission inside the same transaction with a unique pass-lineage constraint. Concurrent attempts see one successful conditional update; the others return already used after resolving state. Revocation and redemption compete using conditional transitions, so a revoked pass cannot be admitted later.
+If the client times out after commit, retry with the same idempotency key returns its previous admitted result. A new scan operation returns already used. Never declare success before commit. Log rejected attempts with safe identifiers, never plaintext tokens. Avoid showing distinctions that permit unauthenticated code enumeration.
+7.4 Offline boundary
+No offline authoritative scanning in the MVP. Different disconnected devices cannot guarantee a single global redemption without a coordination or allocation model. A manual contingency list is operational fallback with known limitations. Future offline design must specify event/device allocation, signed credential rules, conflict reconciliation, clock assumptions and lost-device protection.
+8 Invitation rendering and export pipeline
+8.1 Template registry
+Each template contains templateId, immutable version, configuration schema, supported layouts, region bounds, defaults, text-fitting rules, colour roles, licensed font IDs and asset checksums. The renderer is a reusable React-to-HTML component with deterministic CSS. Treat card templates separately from responsive website themes. User input enters as validated text or constrained design values, not code.
+The preview uses the resolved design at a fixed logical size scaled to the viewport. Export jobs use the same template renderer, exact resolved snapshot, local fonts and verified assets. Browsers can differ in rasterisation, so tolerance-based visual tests check layout/line wrapping and agreed pixel differences, rather than demanding impossible bit identity across environments.
+8.2 Export jobs
+Validate design, permissions and asset readiness; create an immutable snapshot and job plus outbox message. The worker leases the job, fetches approved assets via StoragePort into scratch, renders in an isolated pinned browser, waits for fonts/images, checks overflow and writes JPEG/PDF. Store output checksums and dimensions and transition completion only after verified writes.
+Default JPEG is 1500 by 2100 pixels. PDF page size is 360 by 504 points, equivalent to 5 by 7 inches, with verified hyperlinks. Do not call it press-ready CMYK or bleed-enabled. QR payload is the snapshotted canonical URL; use a standard QR encoder, correct quiet zone and scan tests. Names and wording remain actual text, not generated image typography.
+Pin browser and font assets in the render container. Disable unrestricted external networking for render pages. Prevent SSRF by resolving only authorised asset IDs, restricting allowed embed providers and rejecting arbitrary fetch URLs. Render workers must not load cloud metadata endpoints, local files or user-provided scripts.
+Retried jobs use the existing snapshot. If one format fails, record per-format status and expose partial failure accurately. Stale detection compares relevant event/theme/template references with current drafts and publications; it warns without mutating completed files. Large personalised batches are later and use child jobs, bounded concurrency and manifest-based zip export.
+9 Media upload processing and visibility
+9.1 Upload protocol
+Client asks the API for an upload intent with filename, declared type/size, target album and guest grant if applicable. API verifies scope, entitlement, grant expiry and quotas and reserves declared bytes. Storage adapter issues a short-lived upload target bound to an application-generated key and limits. Providers supporting direct multipart uploads can use them; others use a streaming API path with enforced limits.
+Client uploads bytes and calls completion. API inspects actual object metadata and checksum, validates expected size/key and enqueues processing. Treat client MIME, filename and completion claims as untrusted. Expired uncompleted intents release reservation and remove orphaned objects through a sweeper. Actual processed bytes reconcile reserved quota, including derivatives.
+9.2 Quarantine and processing
+Objects enter a private quarantine namespace. Workers check file signatures, supported codec, dimensions/duration, malware where appropriate and decompression/image resource limits. Convert phone formats where licensed tooling supports them; fail clearly on unsupported media rather than pretending it uploaded successfully. Preserve private originals and strip unnecessary EXIF/geolocation from public derivatives.
+Generate responsive image sizes and compatible video previews using CPU/memory-limited tools such as FFmpeg through an adapter-managed process. A five-minute duration limit is checked from actual media. Corrupt files, processing timeouts and malware are rejected with safe error details. Avoid executing user-supplied filenames in shell commands.
+9.3 Independent states
+Track upload/processing state separately from moderation and publication. For example: uploaded -> processing -> ready/rejected; pending -> approved/rejected; private -> published/unpublished. A ready image is not automatically public. A worker never grants public visibility merely because conversion succeeded.
+Public requests access only ready, approved, published media in an authorised album/site. Private storage remains private. Generate short-lived signed read URLs after checking policy, or stream through an authorised media gateway. Default private URL lifetime is five minutes; explain that revocation is bounded by issued URL expiry unless the adapter supports immediate invalidation.
+For strong public unpublish/delete guarantees, route revocable public media through the application-controlled media gateway with cache purge/version handling rather than permanent vendor public links. Do not promise immediate removal of copies already downloaded by guests. Cache keys include wedding, audience, asset version and publication version; private responses are not stored in shared public caches.
+9.4 Retention
+Entitlements store service-expiry policy and reference last scheduled event. A scheduler emits thirty/seven-day notices and archive actions through the outbox. Archive exports use job manifests and resumable processing. Deletion removes live storage keys, generated exports, access grants, cached views and AI/provider references where supported. Record deletion tombstones and reapply after restoring a backup so erased data is not silently republished.
+10 AI concepts mood boards and planner briefs
+10.1 Bounded orchestration
+Implement one CreativePlanning module with task handlers for context intake, concept generation, board generation, revision and brief export. No multi-agent infrastructure is required. The model receives a minimal structured wedding context and authorised reference descriptions/assets. Guest personal data and admission tokens never enter the prompt.
+Use runtime schemas for palettes, font IDs, suggestions, assumptions and open questions. Validate all outputs and check hard exclusions. Record provider/model identifier, prompt/schema versions, context revision, usage, cost estimate and source assets. Do not store unnecessary raw model content indefinitely. External reference text is untrusted data, not instructions granting tools or privileges.
+10.2 Concept lifecycle and consent
+Generation reserves allowance and creates a job. Its result becomes a draft concept. An owner can revise and approve an immutable revision. Theme application checks current revision and owner permission, presents a diff and commits a new site draft plus design inheritance changes. It does not overwrite card overrides or publish automatically.
+Models return suggestions; domain services execute approved commands. Even if tool calling is added, tools must be tenant-scoped and unable to bypass approval. Vendor availability and prices remain unknown unless backed by a separately implemented verified source. AI text must label approximate budget advice and generated imagery must be marked as inspiration.
+10.3 Board assets and handoff
+Board tiles have type, image asset, caption, source/licence metadata and generated flag. Colours are rendered as exact swatches in the application, not trusted to image generation. Build the collage deterministically from tiles, retaining editable annotations. A human planner can distinguish chosen requirements from illustration and open questions.
+Brief export uses the approved concept snapshot and safe assets and generates PDF plus versioned JSON. It contains event context, spending envelope, palette, typography, references, constraints, exclusions, assumptions and next actions. It explicitly excludes private guest data. A manual board composed from uploaded references supports the same export when AI is disabled.
+10.4 Cost failures and evaluations
+Default limits follow the PRD and are entitlements, not hardcoded provider rules. Reserve generation budget atomically and track actual reported usage separately. Mark uncertain external submission state as unknown; do not blindly resubmit expensive image jobs on a network timeout without checking provider job IDs. Cancellation prevents subsequent stages; it may not reverse already incurred provider charges.
+Maintain an evaluation set covering excluded colours, low budget, no hanging decor, missing date, multicultural multi-event preferences, prompt injection and contradictory references. Evaluate constraint satisfaction, JSON validity, usefulness and invented facts. Model/provider upgrades require running the set before production. Planner review scores measure usefulness; synthetic evaluation does not prove customer demand.
+11 Durable jobs notifications and consistency
+Write domain state and outbox events in one database transaction. A dispatcher leases outbox rows and sends jobs; workers track dedupe keys and processing stages. Inbox records deduplicate signed provider events. This handles the crash between saving a business change and requesting an external effect.
+Jobs have pending, leased, running, succeeded, failed, cancelled and unknown-external states; attempts, lease owner/expiry, heartbeat, retryAt, error code and safe progress. Retry only classified transient failures using exponential backoff/jitter and a configured maximum. Permanent validation or permission failures do not retry indefinitely. Send exhausted jobs to a visible failed-work queue with operator repair guidance.
+Do not hold transactions through AI, email or render calls. External side effects are not exactly once. Use provider idempotency if available and durable application message IDs. If an email provider accepts a send but the acknowledgement is lost and it has no lookup/idempotency support, mark the delivery uncertain and use an explicit retry policy rather than promising no duplicates.
+Notification templates are versioned and parameterised. Recipient lists are authorised and snapshotted at user confirmation. Apply per-wedding and global send limits. Webhooks verify signatures and timestamps and deduplicate provider event IDs. SMTP acceptance remains accepted/unknown until there is valid delivery evidence.
+Critical admission is independent of the queue, email and AI adapters. Quota and status caches may accelerate reads, but the database enforces authority. Queue outage can delay exports and mail while core RSVP and scanning continue, provided database/API are healthy.
+12 Deployment contract and configuration
+12.1 Reference package
+Ship OCI-compatible images for web, API and worker, plus a local compose example with reference database and local storage/mail fixtures. Docker is a packaging option; hosts may run the same built processes directly if they provide equivalent capabilities. Provide start commands, health checks, migration commands and a synthetic smoke-test script independent of a host's console.
+The reference API/web runtime is the selected supported Node LTS. Render workers require a compatible browser, fonts and native libraries; video workers require media tooling and adequate temporary disk. Database service requires transactions, durability and supported engine version. Object storage requires authenticated read/write/delete and metadata inspection. Public origin requires HTTPS; camera use depends on a secure browser context.
+Static-only hosting cannot run the API, sessions or workers. Function platforms can host compatible short request handlers, but long render/video/AI jobs still need an adequate worker runtime. A static export of the whole app is therefore outside the deployment contract.
+12.2 Configuration matrix
+Configuration
+Meaning
+Validation
+PUBLIC_ORIGIN and API_INTERNAL_ORIGIN
+Canonical external host and private service route
+HTTPS in production; explicit allowed origins
+DB_ADAPTER and DB_CONNECTION
+Selected tested engine implementation and credentials
+Engine/version/capability checks
+STORAGE_ADAPTER and STORAGE_NAMESPACE
+Object/file store and logical namespace
+Access tests and privacy capabilities
+JOB_TRANSPORT and JOB_CONNECTION
+Database-backed or supported queue transport
+Durable lease/ack support
+EMAIL_ADAPTER and EMAIL_FROM
+SMTP or provider adapter
+Sender/auth configuration
+LLM_ADAPTER and IMAGE_ADAPTER
+Selected AI capabilities
+Credentials budgets data-handling settings
+SESSION_KEYS and TOKEN_HASH_KEYS
+Secret material with rotation metadata
+No development defaults in production
+MEDIA_LIMITS and AI_LIMITS
+Plan defaults and safety ceilings
+Valid bounded numbers
+RETENTION_POLICY and BACKUP_POLICY
+Service archive and recovery policies
+Explicit nonempty production policy
+OTEL_ENDPOINT and LOG_LEVEL
+Optional telemetry export
+Safe redaction and local fallback
+
+Use environment variables or mounted config/secrets; avoid host-specific configuration names in domain code. Fail startup for missing critical configuration and expose optional-disabled features explicitly. Secrets never use a NEXT_PUBLIC prefix. Do not log full connection strings, cookies, credentials or signed URLs. Document rotation and support a rolling key transition where existing credentials require it.
+12.3 Deployment profiles
+Profile
+Suitable use
+Required caution
+Single VM or container host
+Small pilot with web API worker colocated
+Durable volumes backups and process restart; shared-host failure risk
+Managed app platform
+Separate web API worker plus managed database/storage
+Request/job runtime limits and outbound access
+Kubernetes
+Larger operational deployment
+Resource limits migrations ingress secrets and autoscaling ownership
+Serverless web with hosted API/workers
+Fast public rendering and bounded gateway calls
+No long workers in request functions; session/network configuration
+
+No profile changes product business rules. Persistent files may not rely on a process's working directory. Horizontal API replicas use the same authoritative database/session store. Worker scaling follows queue depth and resource class; admission capacity is provisioned independently of image generation.
+13 Migrations existing app transition and backups
+13.1 Incremental migration
+Audit the existing schema, authentication, pass issuance, scanner transaction logic and provider integrations first. Preserve its behaviour in a branch and create a backup before moving code. Establish the monorepo by moving Next.js to apps/web and verifying existing routes. Add the API and ports without simultaneously rewriting every view.
+Create a seed wedding for Adeola and Joshua and map existing posts/events/gallery collections into tenant-owned records. Build migration scripts for users, passes, scans, settings and asset references with counts, checksums and exception reports. Never infer the meaning of old redemption flags without inspecting them.
+If legacy pass credentials are weaker than the new policy, choose either a time-bounded legacy resolver scoped only to the original wedding or a controlled reissue with notification. Old URLs can be retained by redirects. The homepage date remains historical until an owner chooses new copy; do not silently recast the original wedding as upcoming.
+Move domains in order: identity and tenancy, events/publication, guests/RSVP/admission, then content/media/design and AI. Give each domain one authoritative writer at each stage. Route transitional Next.js handlers to the API; do not let both independently write the same tables. Retire redundant direct SQL and provider SDK calls after equivalent checks pass.
+13.2 Schema and host changes
+Use ordered engine-specific migrations with checksums and a migration lock. Prefer expand/backfill/switch/contract for rolling changes. Backfills are restartable and tenant-scoped. Destructive migrations require a restore point and a tested rollback or roll-forward plan. Rollback of application code must remain compatible with the expanded schema.
+For a database host move, rehearse backup restore, connection rotation, asset access, final write freeze or replication catch-up, cutover and smoke tests. For an engine change, use a neutral versioned data export/import, reconcile counts/checksums and execute capacity/admission concurrency suites against the new adapter before switching. ORM migration conversion alone is insufficient.
+13.3 Recovery
+Target RPO of fifteen minutes and RTO of four hours for normal operation. During a supported live event, target RPO of one minute for admission data using continuous recovery/replication where available, and a tested failover/runbook. Providers unable to support these targets cannot be advertised as meeting them; document a lower-tier service policy if deliberately chosen.
+Back up database, object inventories/versions, template/font assets and configuration needed for reconstruction. Keep encrypted database backups for thirty days by default, with at least one failure-independent copy. Storage must have a documented recoverable copy/version policy rather than relying on the live bucket. Treat encryption keys and restoration credentials as part of the recovery system.
+Restore into an isolated environment before launch and at least monthly during the pilot. Validate tenant scopes, published pages, a sample media download, job resumption, pass status and deletion tombstones. Do not restore an event-day database snapshot and reopen scanning without reconciling admissions committed after the snapshot; this could re-enable already used passes.
+14 Observability security and service targets
+Emit structured redacted logs with correlation IDs, operation IDs and pseudonymous tenant IDs. Use OpenTelemetry-compatible tracing and metrics where possible, with a local log/metrics option. Audit business changes separately from debug logs. Avoid raw guest answers, model reference images, token hashes and plaintext credentials in telemetry.
+Track latency/error rate for public reads, RSVP and redemption; capacity conflicts; duplicate scan outcomes; job lease expiry; export failure; upload rejection; bytes stored; AI cost; notification uncertainty; backup age and recovery success. Alert on unexpected cross-tenant failures, admission error spikes, stalled jobs and cost ceilings. Event-day dashboards must distinguish invalid tickets from infrastructure failure.
+Use TLS, least-privilege database/storage credentials, dependency checks, secret scanning, request body limits and per-actor/tenant/IP rate limits. Sanitize rich text and allowlist external embeds. Guard media/renderer fetches against SSRF and constrain processing resources. Rate-limit AI and media usage by authoritative entitlements rather than browser state.
+Privacy controls follow ICO guidance to integrate data protection into defaults [T3]. Determine legal roles and lawful bases outside this architecture specification. Protect dietary/accessibility responses with narrower permissions, optional collection and a proposed ninety-day post-event deletion policy, subject to actual necessity and legal review. Keep audit/security logs for a proposed twelve months, revisiting necessity rather than retaining everything indefinitely.
+Apply PRD performance targets on a declared reference environment. The pilot load profile is 100 active weddings, up to five events and 1,000 attendee records per wedding, bursts of 100 public reads per second, 20 redemption requests per second and bounded worker concurrency. These are test assumptions, not sold plan limits or predictions. Benchmark and resize using real pilot data.
+15 Engineering verification and release sequence
+15.1 Required test layers
+Use policy unit tests for state transitions and permissions; repository integration tests on the real reference engine for constraints, transactions and tenant boundaries; adapter contract tests for storage/email/queue/AI; API tests for schema/idempotency; and browser tests for the primary user journeys. Avoid tests that only restate implementation without checking a meaningful invariant.
+Test area
+Release evidence
+Tenant isolation
+Actor from wedding A cannot read mutate upload export or render wedding B resources
+Capacity
+Concurrent final-place RSVP and owner approval preserve the configured cap
+Admission
+One hundred concurrent scans admit once; timeout retry returns original result
+Revoke versus redeem
+Exactly one compatible transition commits; revoked credential never admits later
+Design export
+Four templates long/short names accents photo variants overrides PDF geometry and real QR scans
+Publication
+Draft changes never appear publicly until publish; private data never enters public cache
+Media
+Spoofed types oversized files invalid codecs orphan cleanup private moderation and deletion
+AI
+Schema failures exclusions injection usage ceilings approval version conflicts and manual fallback
+Notifications
+Duplicate events late webhooks provider failure uncertain send and permissioned recipient sets
+Portability
+Reference app runs on generic container host; storage swaps without domain edits
+Recovery
+Database/media restore preserves pass history private scope and deletion tombstones
+Accessibility
+Keyboard screen reader contrast focus and reduced motion on core flows
+
+Changing database engines requires running the transaction and repository suites on that engine; do not substitute mocked tests. Changing rendering versions requires visual regression and export review. Load tests simulate scanner contention rather than only measuring static pages.
+15.2 Implementation order
+First establish monorepo builds, configuration, contracts and adapter fixtures. Implement identity, tenant-scoped repositories and migration seed. Then events, site publication and blog. Add invitation registry/resolver/export worker. Implement guest grants, RSVP reservations and atomic admission before exposing real event use. Add media quota/quarantine/moderation. Finally add AI concepts, board assembly, theme application and brief exports on the tested job framework.
+Before R3, complete operator entitlements, retention/export, telemetry, restore drill, security review and pilot support runbooks. Ship via staged environments and feature flags. Existing weddings remain on their verified path until migrated; preserve a rollback decision for each domain.
+15.3 Definition of done
+For each requirement, deliver validated contracts, authorised application service, persistence/provider implementation, useful error handling, required tests, operational metrics and documentation. A UI button with a mocked backend is not complete. A supported adapter needs its own failure and restore instructions. A migration needs a rehearsal report.
+The R3 release report references PRD requirement IDs, actual passing checks, known limitations, provider capabilities and measured performance. No release may hide an unresolved critical tenant leak, duplicate admission or capacity defect. Pilot availability goals become contractual commitments only after operational evidence and explicit service terms.
+16 Decisions and implementation records
+Decision
+Baseline
+Change criterion
+Service architecture
+Next.js web NestJS modular API dedicated worker
+Measured complexity or capacity justifies a revised boundary
+Database
+PostgreSQL reference adapter vendor unspecified
+Alternative passes invariants migrations and operating checks
+Queue
+Durable database-backed jobs initially
+Throughput/latency justifies supported external queue
+Media
+Private object storage through StoragePort
+Adapter meets signed access deletion and processing needs
+Authentication
+API-owned opaque sessions behind same-origin gateway
+Identity provider meets same revocation and policy contract
+Templates
+Structured versioned React/CSS deterministic renderer
+Freeform demand outweighs added export/editor complexity
+AI
+Bounded workflows schema validation owner approval
+Evidence supports additional scoped tools
+Deployment
+Independently runnable services portable images
+Host meets runtime persistence and recovery contract
+
+Create architecture decision records for concrete ORM selection, session library, render engine, queue implementation, media codecs, provider capability differences and retention implementation. Record reasons and consequences. Configuration selects a tested implementation; it does not waive the product requirements.
+17 Technical sources
+Sources checked 12 October 2026. The prescriptions above are project design decisions unless explicitly attributed. Recheck installed framework documentation before implementation because APIs and versions change.
+[T1] Next.js Backend for Frontend guide https://nextjs.org/docs/app/guides/backend-for-frontend
+[T2] NestJS Queues guide https://docs.nestjs.com/application/queues
+[T3] ICO Data protection by design and by default https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/accountability-and-governance/guide-to-accountability-and-governance/data-protection-by-design-and-by-default
