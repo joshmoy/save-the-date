@@ -17,3 +17,5 @@ Source audit confirms:
 Existing integration behaviour is established from source; live provider credentials and production data have not been tested. Public legacy media is already public, not suitable for new private uploads.
 
 Verified baseline after installing dependencies: `npm run lint`, `npx tsc --noEmit`, and `npm run build` all pass. Build generates 24 routes; warns that an unrelated parent lockfile influences workspace-root inference. No automated behavioural tests exist. Build does not prove live database/provider behaviour.
+
+Resumed execution note: this turn began after the specification/audit commit 5b8f331 with an uncommitted monorepo move, package configuration and initial contracts/schema. Those changes were preserved and completed rather than reset. Runtime-generated root Turborepo and apps/web Next.js AGENTS.md files appeared during builds/dev startup; both were read and retained. Current migrated checks and evidence are in verification/r0-report.md and r1-publication-report.md. Production dependencies now pass `pnpm audit --prod`; the older install audit above remains historical baseline evidence.

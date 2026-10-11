@@ -12,3 +12,5 @@ PRD 1.0 and TRD 1.0 (12 October 2026) govern implementation. Extracted text is r
 Each feature receives a commit after relevant checks. Required final gates: build/lint/type checks; real PostgreSQL tenant/capacity/admission tests; browser/mobile/a11y journeys; all-template render inspection; two storage adapters; isolated restore including tombstones; production adapter smoke checks explicitly identified where credentials are unavailable. A passing compilation alone is not a release gate.
 
 Execute sequentially without changing live data, deploying, emailing guests or using paid AI. Resume from implementation-status.md and actual evidence in requirements-traceability.md.
+
+Verified checkpoints (12 October): R0 foundation plus connected site/journal publication slice. Local database restore and Linux API container smoke passed. See verification/r0-report.md and r1-publication-report.md. Next dependency is private processed owner media (hero and post attachments) and the versioned four-family invitation renderer; R1 remains incomplete until actual exports and their quality evidence pass. R2/R3 work is still pending, not blocked solely by credentials.

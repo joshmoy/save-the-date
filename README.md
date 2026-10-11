@@ -1,120 +1,40 @@
 # Save The Date
 
-Next.js app for Adeola and Joshua's wedding site.
+A Next.js web, NestJS API and worker monorepo being built against docs/Save_The_Date_PRD.docx and docs/Save_The_Date_TRD.docx. **The complete R3 MVP is not finished.** See docs/implementation-status.md and docs/requirements-traceability.md for the verified checkpoint and remaining release blockers.
 
-## Local Setup
+Implemented: verified email/password identity and recovery; tenant workspaces, collaborator invitations, scoped events, ownership/recovery; two website themes with immutable publication and revocable shared access; structured journal drafts/publication; durable capture/provider email transport. Existing Adeola & Joshua pages, gallery and legacy passes remain on their original writer. They have not been migrated into the new guest/admission model.
 
-Copy `.env.example` to `.env.local` and fill in your Railway Postgres connection string:
-
-```txt
-DATABASE_URL=
-AUTH_COOKIE_SECRET=
-MAILEROO_API_KEY=
-MAILEROO_FROM_EMAIL=
-MAILEROO_FROM_NAME=
-```
-
-Install dependencies and run the app:
+Requires Node 22.23.x, pnpm 11.8.0 and PostgreSQL 16. Do not use a production database for local setup or tests.
 
 ```sh
-npm install
-npm run dev
+pnpm install --frozen-lockfile
+cp .env.platform.example .env.platform
+# Set DB_CONNECTION to your isolated PostgreSQL database.
+PLATFORM_ENV_FILE="$PWD/.env.platform" pnpm db:migrate
+pnpm build
 ```
 
-## Image preparation
-
-Prepare the traditional-marriage photos for Cloudinary with:
+Run each process in a separate terminal from the repository root:
 
 ```sh
-npm run media:process-images
+PLATFORM_ENV_FILE="$PWD/.env.platform" pnpm dev:api
+PLATFORM_ENV_FILE="$PWD/.env.platform" pnpm dev:worker
+pnpm dev:web
 ```
 
-By default, the command reads `~/Documents/wedding/trad` recursively and writes optimized JPEG
-copies to `~/Documents/wedding/trad-optimized`. Originals are never modified. Existing output
-files are skipped; pass `--force` to regenerate them:
+Open http://localhost:3000/platform. Local verification/recovery/invitation mail is captured as JSON in EMAIL_CAPTURE_ROOT by the worker. Read its link to complete email verification. Capture is development/test only and never sends real email. The historical wedding remains at /; new sites use /w/{slug}.
+
+After building, production process commands are `pnpm --filter @save-the-date/api start`, `pnpm --filter @save-the-date/worker start`, and `pnpm --filter @save-the-date/web start`, with explicit configuration as above. The web start command uses the prepared standalone server. Production requires HTTPS, protected secret material, a durable storage configuration, a production-capable email adapter or explicit disabled state, and documented backup/retention policies. This checkpoint is not ready for a production pilot.
 
 ```sh
-npm run media:process-images -- --force
+pnpm lint
+pnpm typecheck
+TEST_DB_CONNECTION=postgresql://YOUR_USER@127.0.0.1:YOUR_PORT/std_test \
+  PLATFORM_ENV_FILE="$PWD/.env.platform" pnpm test
+pnpm audit --prod
+pnpm db:legacy-report
 ```
 
-To process the same folder at a different location, pass its path:
+Tests require an explicitly local database ending `_test` and add synthetic fixtures. Stop the background worker before running the queue tests. Rebuild packages after contract/repository edits. `docker compose up --build` provides a portable local profile; do not use its development credentials publicly.
 
-```sh
-npm run media:process-images -- "/path/to/Documents/wedding/trad"
-```
-
-Administrators can instead process and upload a local folder entirely in the browser at
-`/admin/media/images`. Add `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
-`CLOUDINARY_API_SECRET` to the deployed environment. The browser resizes each supported image and
-uploads it directly to the selected `wedding/media/<category>/photos` Cloudinary folder; the API
-secret is only used by the server to authorize the upload.
-
-Add the Cloudinary tag `featured` to up to six images to include them in the `/media` hero
-crossfade. Featured images are ordered newest first. After changing tags, use **Sync public
-gallery** on `/admin/media/images` to invalidate the permanent media cache.
-
-Upload browser-ready MP4 videos directly through the Cloudflare R2 dashboard using these object
-prefixes:
-
-```txt
-media/engagement/videos/
-media/traditional-marriage/videos/
-media/church-wedding/videos/
-media/wedding-reception/videos/
-```
-
-Configure `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, and
-`R2_PUBLIC_URL`. The public URL should be an R2 custom domain or public bucket URL. After uploading
-videos in R2, use **Sync public gallery** on `/admin/media/images`; this invalidates the otherwise
-permanent media cache so the next `/media` page load lists the new files.
-
-MP4 and MOV objects are listed. MP4 with H.264 video and AAC audio is recommended because MOV
-playback support depends on the visitor's browser and the codecs inside the file.
-
-Run database migrations against the configured Railway Postgres database:
-
-```sh
-npm run db:migrate
-```
-
-The migrations create:
-
-- `hall_passes` for unique QR-backed hall passes
-- `redeem_hall_pass(pass_token, scanner_name)` for atomic first-scan redemption
-
-## Auth
-
-The admin and bouncer flows use database-backed users with bcrypt password hashes:
-
-- `AUTH_COOKIE_SECRET` signs the HTTP-only session cookie
-- `app_users` stores user emails, bcrypt password hashes, and roles
-
-Generate a long random cookie secret before deploying.
-
-Create or update users with:
-
-```sh
-npm run user:create
-```
-
-The script prompts for an email, password, and role. Use `admin` for full admin access
-or `security_admin` for scanner/security access. You can also pass everything inline:
-
-```sh
-npm run user:create -- admin@example.com "strong-password" admin
-npm run user:create -- security@example.com "strong-password" security_admin
-```
-
-## Hall pass dependencies
-
-The hall pass flow uses:
-
-- Railway Postgres for persistent hall pass state
-- `pg` for server-side database access from Next.js routes
-- `qrcode` for QR code generation
-- `pdf-lib` for server-generated PDF ticket attachments
-- Maileroo Email API for optional PDF ticket delivery
-- `html5-qrcode` for camera-based QR scanning
-
-Keep real Railway credentials in `.env.local`; do not commit them. `DATABASE_URL` is server-only and should never be exposed with a `NEXT_PUBLIC_` prefix.
-`MAILEROO_FROM_EMAIL` must be an address on a verified Maileroo domain.
+Operational details: docs/runbooks/local-setup.md, deployment.md and migrations-recovery.md. Decisions awaiting morning review: docs/decisions-for-review.md. Visual and test evidence: docs/verification/. The original README is retained as historical migration context under docs/runbooks/legacy-original-readme.md.

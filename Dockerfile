@@ -4,9 +4,7 @@ FROM ${NODE_IMAGE} AS build
 WORKDIR /app
 RUN corepack enable
 COPY . .
-RUN pnpm install --frozen-lockfile && pnpm build \
- && cp -r apps/web/public apps/web/.next/standalone/apps/web/public \
- && cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
+RUN pnpm install --frozen-lockfile && pnpm build
 FROM ${NODE_IMAGE} AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
