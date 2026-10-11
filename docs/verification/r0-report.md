@@ -1,0 +1,13 @@
+# R0 verification — 12 October 2026
+
+Start of resumed work: inherited uncommitted monorepo/contracts/schema. Historical baseline commit 4a197d4 was audited previously; this turn verified the migrated routes and implemented runnable API/worker/persistence/UI. Turborepo generated AGENTS.md during the first build; it was read and retained.
+
+Checks: pnpm build (8/8 packages, 25 web routes), pnpm typecheck (8/8), pnpm lint pass. TEST_DB_CONNECTION explicitly points to local PostgreSQL 16.14 at port 55439. tests/r0.test.ts: 11/11 passing, including 12 simultaneous draft saves yielding exactly one revision. Tests cover independent weddings, foreign tenant concealment, five events, addressed/expired/revoked invitations, role/event scopes, primary ownership, reauthentication, soft deletion/recovery, verification renewal, password recovery revocation, concurrent jobs and truthful email uncertainty, private filesystem checks, HTTP cookie/CSRF/origin/schema boundaries.
+
+Browser: synthetic browser-fixture@example.test signed in through same-origin gateway; created browser-r0-verification wedding; saved Garden reception and reopened persisted fields. Narrow viewport (reported CSS width 327px) had document width 327px with no overflow and all inputs inside labels. Desktop inspected as well. Evidence screenshot: r0-dashboard.jpg. Full screen-reader/contrast/device browser assessment remains pending.
+
+Legacy report checksum 264650a92549b1b8d42c496963beddb35267e227f4c3839c47dbc9de03760db1: 4 posts, 6 albums, 4 video collections. Atomic import used the explicitly verified synthetic account, created an unpublished seed and preserved source JSON; legacy tables/provider references were untouched.
+
+Backup/restore: pg_dump custom archive of synthetic source, pg_restore into independent std_restore_test. scripts/verify-restore.ts matched counts and content checksums for users (39), weddings (13), memberships (23), events (30), sessions (49), identity tokens (47), invitations (25), audit (126), jobs (79), mail (79), legacy snapshots (1), deletion tombstones (1), migrations (2). Source count drift on future test runs is expected. This proves R0 database reconstruction, not R3 media/pass history or tombstone erasure replay.
+
+Container: pinned Node base registry request timed out. Fallback to cached official Node 22.23.2 (manifest 83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5) built the complete workspace in Linux and produced save-the-date:r0-api. Disposable API container exposed only on localhost:4001 returned database-backed readiness successfully and was stopped. Default Dockerfile now pins that verified manifest. Production provider credentials unavailable. No R3 release claim.

@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:16.14-bookworm
+    environment:
+      POSTGRES_DB: std_local
+      POSTGRES_USER: std
+      POSTGRES_PASSWORD: local-only-change-me
+    ports: ["127.0.0.1:54329:5432"]
+    volumes: ["postgres:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U std -d std_local"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  migrate:
+    build: {context: ., target: api}
+    environment: &platform
+      NODE_ENV: development
+      DB_ADAPTER: postgres
+      DB_CONNECTION: postgresql://std:local-only-change-me@db:5432/std_local
+      PUBLIC_ORIGIN: http://localhost:3000
+      API_INTERNAL_ORIGIN: http://api:4000
+      TOKEN_HASH_KEYS: development-compose-key-change-before-production
+      STORAGE_ADAPTER: filesystem
+      STORAGE_ROOT: /data/storage
+      STORAGE_NAMESPACE: weddings
+      EMAIL_ADAPTER: capture
+      EMAIL_CAPTURE_ROOT: /data/mail
+      EMAIL_FROM: local@example.test
+      LLM_ADAPTER: disabled
+      IMAGE_ADAPTER: disabled
+      JOB_TRANSPORT: postgres
+    command: ["pnpm", "db:migrate"]
+    depends_on: {db: {condition: service_healthy}}
+  api:
+    build: {context: ., target: api}
+    environment: *platform
+    depends_on: {migrate: {condition: service_completed_successfully}}
+    volumes: ["storage:/data/storage", "mail:/data/mail"]
+  worker:
+    build: {context: ., target: worker}
+    environment: *platform
+    depends_on: {migrate: {condition: service_completed_successfully}}
+    volumes: ["storage:/data/storage", "mail:/data/mail"]
+  web:
+    build: {context: ., target: web}
+    environment:
+      NODE_ENV: development
+      API_INTERNAL_ORIGIN: http://api:4000
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on: [api]
+volumes:
+  postgres:
+  storage:
+  mail:
