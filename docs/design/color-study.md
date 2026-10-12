@@ -1,6 +1,6 @@
 # Application colour study
 
-Status: five unapproved palette options. This study does not change application colours or establish a design system. Source: `apps/web/public/color-schemes.html`.
+Status: Harbour selected by the user on 12 October 2026. See [the design guide](design-guide.md) for the approved application palette and usage rules. The study remains a historical comparison and does not itself change application colours. Source: `apps/web/public/color-schemes.html`.
 
 ## Preview
 
@@ -22,7 +22,7 @@ Open [the colour study](http://localhost:4175/color-schemes.html). Explore one s
 | Clay | `#A04C32` | Warm whites and terracotta; sociable and spirited | Strongest warm accent; keep its use concentrated on actions and selection. |
 | Graphite | `#414147` | Silver surfaces and charcoal; quiet and contemporary | Gives imagery room, with less traditional wedding character. |
 
-Evergreen is marked as a starting recommendation in the preview, not an approved choice. Full surface, text, interaction and semantic colour values remain in the source palette objects.
+Evergreen was the original starting recommendation displayed in the preview. The user subsequently selected Harbour. Full surface, text, interaction and semantic colour values remain in the source palette objects.
 
 ## Design rationale
 
