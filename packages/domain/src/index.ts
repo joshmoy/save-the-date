@@ -28,6 +28,9 @@ export interface WeddingRepository {
  tenant(actor:Actor,weddingId:string):Promise<TenantContext>;
 }
 export interface UnitOfWork<T> { run<R>(fn:(transaction:T)=>Promise<R>):Promise<R> }
+export interface NotificationRepository {
+ receive(event:{id:string;type:string;created_at:string;data:{email_id:string;project_id:string;status:string;recipients:string[];failure_code?:string;error_code?:string}}):Promise<void>;
+}
 
 // The application depends on operations, not a database engine or query API.
 export interface FoundationRepository extends IdentityRepository {

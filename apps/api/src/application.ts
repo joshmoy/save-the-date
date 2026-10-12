@@ -1,11 +1,11 @@
-import { credential, credentialHash, hashPassword, checkPassword } from '@save-the-date/adapters';
-import { DomainError, type Actor, type FoundationRepository, type PublicationRepository } from '@save-the-date/domain';
+import { verifyRavenEvent, credential, credentialHash, hashPassword, checkPassword } from '@save-the-date/adapters';
+import { DomainError, type Actor, type FoundationRepository, type NotificationRepository, type PublicationRepository } from '@save-the-date/domain';
 import { registerSchema, loginSchema, tokenSchema, recoverSchema, resetSchema, weddingSchema, weddingPatchSchema, eventSchema, eventPatchSchema, inviteSchema, reauthSchema, transferSchema, deleteSchema, uuid, slug, siteSaveSchema, publishSchema, postSaveSchema, revisionSchema } from '@save-the-date/contracts';
 import type { Config } from '@save-the-date/config';
 import type { Request, Response } from 'express';
 
 export class Application {
- constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository){}
+ constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository){}
  hash(token:string){return credentialHash(token,this.config.TOKEN_HASH_KEYS);}
  cookie(res:Response,token:string,clear=false){res.cookie('std_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:clear?0:7*24*3600*1000});}
  session(req:Request){return req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_session='))?.slice(12)??'';}
@@ -14,6 +14,11 @@ export class Application {
   res.setHeader('Cache-Control','no-store');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Content-Type-Options','nosniff');
   const method=req.method;const parts=req.path.replace(/^\/api\/v1\/?/,'').split('/').filter(Boolean);const body=req.body??{};
   if(method==='GET'&&parts[0]==='health'){await this.store.ping();return {status:'ok',database:'postgres',ai:'disabled'};}
+  if(parts[0]==='provider-events'&&parts[1]==='ravenrelay'&&method==='POST'){
+   if(!this.config.RAVENRELAY_WEBHOOK_SECRET||!this.config.RAVENRELAY_PROJECT_ID||!this.notifications)throw new DomainError(503,'WEBHOOK_DISABLED','Provider callback is not configured');
+   let event;try{event=verifyRavenEvent((req as Request&{rawBody?:Buffer}).rawBody??Buffer.alloc(0),{timestamp:String(req.headers['ravenrelay-timestamp']??''),signature:String(req.headers['ravenrelay-signature']??''),eventId:String(req.headers['ravenrelay-event-id']??'')},this.config.RAVENRELAY_WEBHOOK_SECRET,this.config.RAVENRELAY_PROJECT_ID);}catch{throw new DomainError(401,'INVALID_WEBHOOK','Provider signature or event is invalid');}
+   await this.notifications.receive(event);return {received:true};
+  }
   if(!['GET','HEAD'].includes(method)){
    if(req.headers.origin!==this.config.PUBLIC_ORIGIN)throw new DomainError(403,'ORIGIN_REJECTED','Use the configured application origin');
    if(req.headers['x-std-csrf']!=='1'||!req.is('application/json'))throw new DomainError(403,'CSRF_REJECTED','Reload and retry this request');

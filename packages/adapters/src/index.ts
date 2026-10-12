@@ -33,7 +33,7 @@ export class S3Storage implements StoragePort {
  async delete(key:string){await this.client.send(new DeleteObjectCommand({Bucket:this.bucket,Key:safeKey(key)}));}
 }
 export interface EmailMessage { id:string; to:string; subject:string; text:string }
-export interface EmailPort { readonly capabilities:{idempotent:boolean;deliveryEvents:boolean}; send(message:EmailMessage):Promise<{state:'accepted'|'unknown';providerId:string}> }
+export interface EmailPort { readonly capabilities:{idempotent:boolean;deliveryEvents:boolean}; send(message:EmailMessage):Promise<{state:'accepted'|'unknown'|'provider_queued'|'failed';providerId:string}> }
 export class CaptureEmail implements EmailPort {
  readonly capabilities={idempotent:true,deliveryEvents:false};
  constructor(private root:string){}
@@ -57,3 +57,4 @@ export interface JobTransportPort { lease(owner:string):Promise<Job|null>; ack(j
 
 // Password and opaque credential primitives remain adapter-owned.
 export * from './credentials.js';
+export * from './raven-relay.js';

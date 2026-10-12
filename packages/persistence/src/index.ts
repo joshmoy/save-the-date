@@ -97,3 +97,5 @@ export class PostgresStore implements FoundationRepository {
 }
 export { PostgresJobs } from './jobs.js';
 export { PostgresPublication } from './publication.js';
+
+export { PostgresNotifications } from './notifications.js';

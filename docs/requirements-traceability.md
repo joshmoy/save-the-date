@@ -13,7 +13,7 @@ Every mandatory PRD identifier is listed individually. Foundation evidence does 
 | P01 | Optional pass policy | R2 | Pending | — | — |
 | M01 | Albums and media | R2 | Pending | — | — |
 | A01 | Wedding context and consent | R3 | Pending | — | — |
-| N01 | Email | R3 | Partial email transport only | packages/adapters; persistence/jobs; worker | Capture/idempotency/uncertainty tests; remaining notifications pending |
+| N01 | Email | R3 | Partial; capture + Raven Relay transport/callbacks | packages/adapters; persistence/jobs + notifications; worker; API provider-events | 20 PostgreSQL/API tests, including 4 Raven tests; remaining notification flows pending |
 | O01 | Support and moderation | R3 | Pending | — | — |
 | W02 | Events and memberships | R0 | Implemented foundation | contracts/domain/persistence; apps/api; apps/web/app/platform | 16 PostgreSQL/API tests; browser and R0 restore reports |
 | W03 | Stable URL and lifecycle | R0 | Partial; canonical published path works; expiry/redirect operations pending | API publication + /w/[slug] | Stable slug/lifecycle tests; rendered canonical site |
@@ -43,7 +43,7 @@ Every mandatory PRD identifier is listed individually. Foundation evidence does 
 | A03 | Mood boards | R3 | Pending | — | — |
 | A04 | Approval and theme application | R3 | Pending | — | — |
 | A05 | Planner handoff | R3 | Pending | — | — |
-| N02 | Delivery states | R3 | Partial email transport only | packages/adapters; persistence/jobs; worker | Capture/idempotency/uncertainty tests; remaining notifications pending |
+| N02 | Delivery states | R3 | Partial; capture + Raven Relay transport/callbacks | packages/adapters; persistence/jobs + notifications; worker; API provider-events | 20 PostgreSQL/API tests, including 4 Raven tests; remaining notification flows pending |
 | O02 | Account data and recovery | R3 | Partial; workspace recovery foundation; exports/erasure pending | foundation repository + recovery UI | Ownership/reauth/deletion/restore tests |
 | O03 | Measurement | R3 | Pending | — | — |
 
