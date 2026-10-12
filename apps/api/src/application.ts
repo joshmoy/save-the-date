@@ -1,3 +1,5 @@
+import {passIssueSchema,passActionSchema,redemptionSchema,admissionCorrectionSchema} from '@save-the-date/contracts';
+import type {PassRepository} from '@save-the-date/domain';
 import {guestSaveSchema,guestAccessSchema,guestGrantSchema,rsvpSchema,questionPolicySchema,accessRequestSchema,importSchema,z} from '@save-the-date/contracts';
 import type {GuestRepository} from '@save-the-date/domain';
 import {designSchema,catalogue,type ResolvedDesign} from '@save-the-date/templates';
@@ -10,7 +12,7 @@ import type { Request, Response } from 'express';
 
 export class Application {
  private activeUploads=0;
- constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository,readonly invitations?:InvitationRepository,readonly guests?:GuestRepository){}
+ constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository,readonly invitations?:InvitationRepository,readonly guests?:GuestRepository,readonly passes?:PassRepository){}
  hash(token:string){return credentialHash(token,this.config.TOKEN_HASH_KEYS);}
  cookie(res:Response,token:string,clear=false){res.cookie('std_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:clear?0:7*24*3600*1000});}
  session(req:Request){return req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_session='))?.slice(12)??'';}
@@ -60,6 +62,10 @@ export class Application {
    if(parts[1]==='request'&&method==='POST'){await this.store.rateLimit('guest-request:'+this.hash(req.ip??'unknown'),5);const v=accessRequestSchema.parse(body);return this.guests.request(v.slug,v);}
    if(parts[1]==='logout'&&method==='POST'){await this.guests.logout(sessionHash);res.cookie('std_guest_session','',{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:0});return {signedOut:true};}
    const session=await this.guests.authenticate(sessionHash);
+   if(this.passes&&parts[1]==='passes'){
+    if(parts.length===2&&method==='GET')return this.passes.guestList(session);
+    if(parts.length===4&&method==='GET'){const format=z.enum(['jpeg','pdf']).parse(parts[3]);res.setHeader('Content-Disposition',`attachment; filename=admission-pass.${format}`);this.binary(req,res,await this.passes.guestDownload(session,uuid.parse(parts[2]),format));return;}
+   }
    if(parts[1]==='party'&&method==='GET')return this.guests.party(session);
    if(parts[1]==='events'&&parts[3]==='rsvp'&&method==='POST')return this.guests.submit(sessionHash,uuid.parse(parts[2]),rsvpSchema.parse(body),uuid.parse(req.headers['idempotency-key']));
   }
@@ -71,6 +77,20 @@ export class Application {
    if(parts.length===2){if(method==='GET')return this.store.readWedding(actor,id);if(method==='PATCH')return this.store.patchWedding(actor,id,weddingPatchSchema.parse(body));if(method==='DELETE'){deleteSchema.parse(body);await this.store.deleteWedding(actor,id);return {message:'Workspace deleted. Recovery available for thirty days',weddingId:id};}}
    if(parts[2]==='recover'&&method==='POST'){await this.store.recoverWedding(actor,id);return {message:'Workspace recovered'};}
    if(parts[2]==='transfer'&&method==='POST'){await this.store.transfer(actor,id,transferSchema.parse(body).userId);return {message:'Ownership transferred'};}
+   if(this.passes&&parts[2]==='passes'){
+    if(parts.length===3&&method==='GET')return this.passes.list(actor,id);
+    if(parts.length===3&&method==='POST'){const v=passIssueSchema.parse(body);res.status(201);return this.passes.issue(actor,id,v.attendeeId,v.eventId,uuid.parse(req.headers['idempotency-key']));}
+    const passId=uuid.parse(parts[3]);
+    if(parts[4]==='recipients'&&method==='GET')return this.passes.deliveryRecipients(actor,id,passId);
+    if(parts[4]==='send'&&method==='POST'){const v=z.object({expectedVersion:z.number().int().positive(),recipients:z.array(z.email()).min(1).max(100)}).strict().parse(body);return this.passes.send(actor,id,passId,v.expectedVersion,v.recipients,uuid.parse(req.headers['idempotency-key']));}
+    if(parts[4]==='revoke'&&method==='POST'){const v=passActionSchema.parse(body);return this.passes.revoke(actor,id,passId,v.expectedVersion,v.reason,uuid.parse(req.headers['idempotency-key']));}
+    if(parts[4]==='reissue'&&method==='POST'){const v=passActionSchema.parse(body);return this.passes.reissue(actor,id,passId,v.expectedVersion,v.reason,uuid.parse(req.headers['idempotency-key']));}
+    if(parts[5]==='retry'&&method==='POST')return this.passes.retryTicket(actor,id,passId,z.enum(['jpeg','pdf']).parse(parts[4]));
+    if(parts.length===5&&method==='GET'){const format=z.enum(['jpeg','pdf']).parse(parts[4]);res.setHeader('Content-Disposition',`attachment; filename=admission-pass.${format}`);this.binary(req,res,await this.passes.download(actor,id,passId,format));return;}
+   }
+   if(this.passes&&parts[2]==='events'&&parts[4]==='redeem'&&method==='POST')return this.passes.redeem(actor,id,uuid.parse(parts[3]),redemptionSchema.parse(body).credential,uuid.parse(req.headers['idempotency-key']));
+   if(this.passes&&parts[2]==='events'&&parts[4]==='operational-list'&&method==='GET')return this.passes.operationalList(actor,id,uuid.parse(parts[3]));
+   if(this.passes&&parts[2]==='admission-corrections'&&method==='POST')return this.passes.correction(actor,id,admissionCorrectionSchema.parse(body),uuid.parse(req.headers['idempotency-key']));
    if(this.guests&&parts[2]==='guests'){
     if(parts.length===3&&method==='GET')return this.guests.list(actor,id);
     if(parts[3]==='responses'&&parts[4]==='export'&&method==='GET'){res.setHeader('Content-Disposition','attachment; filename=responses.csv');res.setHeader('Content-Type','text/csv; charset=utf-8');res.send(await this.guests.rsvpExport(actor,id,req.query.sensitive==='true'));return;}

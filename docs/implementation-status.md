@@ -1,37 +1,18 @@
 # Implementation status
 
-**R3 MVP is not complete.** Verified checkpoint: R0 foundation and connected R1 website/journal publication slice. R1 as a whole is still incomplete.
+Updated 2026-10-12. MVP is incomplete; no external credential blocks the next engineering milestone.
 
-Completed: independently runnable Next.js/NestJS/worker monorepo; verified identity/recovery; tenant workspaces/memberships/events; primary ownership and thirty-day soft recovery; durable email/capture transport; two responsive website themes, immutable publication, revocable shared access; structured journal drafting/publication/aliases. Legacy wedding/routes/data are preserved on their original sole writer.
+## Verified and committed
+R0 identity, tenancy, memberships, events, canonical website publication and recovery foundation. Raven Relay durable delivery adapter/callback. Harbour marketing landing page and workspace redesign. Staff private media processing, quotas, moderation and albums. Four invitation families with real immutable JPEG/PDF exports. Households, CSV, private guest credentials and transactional RSVP capacity.
 
-Verification: build/typecheck 8/8 packages; lint; 16 PostgreSQL/API tests; synthetic browser onboarding/event/site/journal journeys; desktop and 360px rendered inspection; zero script elements in XSS sample article; production dependency audit found no known vulnerabilities. Legacy snapshot rehearsal preserved 4 posts/6 albums/4 video collections. R0 isolated restore matched all 13 table counts/checksums, including a deletion tombstone. R0 Linux container build and database-backed readiness passed; expanded R1 container/compose startup not yet rehearsed.
+## Latest verified milestone
+Admission lineage, optional automatic/owner issuance, revoke/reissue/expiry, encrypted credentials, private JPEG/PDF, owner corrections and online scanner. All 57 tests pass without skips; build/typecheck pass for nine packages and lint passes. Browser evidence includes a real dropped-after-commit scan response and safe same-operation retry. See verification/admission/report.md.
 
-Current blockers are unfinished engineering, not just credentials: invitation studio/actual JPEG/PDF; private processed media/hero/blog attachments; households/CSV/RSVP/capacity; new admission lineage/scanner; quotas/moderation; AI/manual boards/planner briefs; retention/export/erasure/support/metrics; key rotation/OpenAPI/pagination; R3 security/mobile/performance/provider/full recovery gates. There are no new platform RSVP/pass/upload/AI features to use yet. Legacy pass/user operational cutover awaits R2 invariants.
+## Current work and next action
+Implement dedicated guest upload grants and RSVP-authorised uploads, then invited-only website/blog/media projections. Guest uploads must remain private until processing and owner moderation; upload credentials cannot grant RSVP or admission.
 
-Next concrete action: add the private owner-upload/process/authorised-read path (with quota, validation and derivative tests) to enable hero and blog attachments; then implement the four versioned invitation families with one shared preview/export resolver and queued JPEG/PDF renderer. Continue the existing plan into R2 and R3 without repeating R0.
+## Remaining mandatory scope
+AI/manual concepts and mood boards, approval/application and planner briefs; archive/export/retention/erasure/support/metrics; key rotation, API documentation/pagination; complete notification flows; portable Linux worker/storage and expanded backup/restore rehearsals; R3 security/load/accessibility/browser/device gates.
 
-Resume: read this file, requirements-traceability.md, decisions-for-review.md and verification reports. Run existing checks before extending schema. Local synthetic PostgreSQL is at localhost:55439/std_test; configuration is in ignored root .env. Stop the background worker before queue tests. Database restore target std_restore_test preserves the R0 drill; no production source was touched.
-
-External checks: live Raven Relay/S3 capability checks need synthetic credentials; real phone/browser matrix and complete R3 restore require appropriate devices/runtimes. No real guest email, paid AI, public deployment or production write was performed. SMTP/provider acceptance is never called delivered. Fixed licensed invitation fonts and media codecs remain implementation decisions to resolve before those features ship.
-
-Commit checkpoint: ad3d4ef monorepo; 7fac61c identity/tenant/events; 9fb8cdc connected dashboard; 30134d8 migration/container/restore runbooks; ca1b1d5 website/journal publication and calendar-date fix. Remaining work above is a continuation checkpoint, not an MVP completion report.
-
-Configuration update: root `.env` loads automatically for API/worker/migration commands and web scripts. Use `pnpm dev:api` and `pnpm dev:worker` directly. `DB_CONNECTION` remains separate from legacy `DATABASE_URL`. This replaces the earlier PLATFORM_ENV_FILE setup.
-
-Resumed baseline (12 October): build 8/8, lint and typecheck pass; all 16 existing PostgreSQL/API tests pass. Plain pnpm test requires TEST_DB_CONNECTION by design; tests ran against the existing isolated local _test database. Raven Relay adapter and raw signed callback routing implemented; 20 PostgreSQL/API tests now pass, including 4 Raven Relay adapter/callback tests; lint and typecheck pass. Next: Harbour application redesign and marketing/couple route separation, then private media slice. Complete R3 remains the active goal.
-
-Harbour milestone: new root marketing page, original couple homepage preserved at /couples/adeola-and-joshua, shared app palette applied; web build/lint/typecheck pass. Desktop/390/360 captures and review fixes recorded in verification/harbour/report.md. Private media quota/upload/processing slice is now in implementation, not yet verified.
-
-Goal tracker correction (12 October): the goal service reports `blocked` without a reason. No actionable technical blocker has been identified for continuing implementation. The goal tool does not expose a resume operation; authorized implementation continues in this thread. This state must not be interpreted as completion or as a credentials-only dependency.
-
-Current actual checkpoint: Raven Relay delivery adapter/callback and Harbour marketing/workspace redesign are committed (27f2efb, 34bdfa0). Connected private media uploads, processing, quota reservations, album permissions/moderation, website/journal media and browser inspection are implemented but uncommitted. Final permission changes require fresh checks before that feature is committed. Guest upload grants and invited-guest media visibility remain unfinished. Next concrete action: finish media verification and its traceability record, commit the feature, then implement the four invitation families and real JPEG/PDF exports. The earlier media “not yet verified” statement describes an older checkpoint.
-
-Media verification checkpoint: all 31 tests pass, including real HEIC/MP4 and final assigned-album permission changes; lint and web typecheck pass. Production build passed for all 8 packages. See verification/media/report.md. Invitation implementation follows immediately.
-
-Invitation continuation: four versioned families, constrained granular editing, shared resolved preview, immutable asynchronous JPEG/PDF snapshots, per-format errors/retries, stale warnings, authenticated downloads and QR/overflow checks are implemented. Actual file/browser evidence is recorded in verification/invitations/report.md. Durable export operation-key verification is running before commit. Next concrete milestone is households, guest credentials/CSV and transactional RSVP capacity, followed by admission and guest uploads; R3 remains incomplete.
-
-Invitation verified milestone: 35 tests passed with no skips, production build/typecheck 9/9 and lint passed. Both finish-review corrections resolved. Individual invitation editing and actual downloads work locally. Two-phone QR and Linux sandbox/container gates remain explicit. Next action: implement G01–G03/R01–R04 as one connected household/guest-access/RSVP slice.
-
-Guest/RSVP continuation in progress: household/named attendee/allocated plus-one schema and API, hashed rotating private grants/guest sessions, CSV preview with duplicate decisions, capacity reservations and idempotent complete party/event submissions are implemented. Five initial PostgreSQL tests passed, including twenty requests competing for one place. Couple dashboard and private /w/[slug]/rsvp UI are connected; final seven-test HTTP/notification checks and browser inspection are underway. Pass issue/redemption and guest upload grants remain the immediate following slices; their tables exist only to enforce RSVP/admission boundaries and are not complete features.
-
-Guest/RSVP verified milestone: 44 tests passed with no skips, build/typecheck 9/9 and lint passed. Browser household plus-one confirmation and owner counts verified at desktop/360px; both finish-review fixes resolved. Private event publication projection prevents draft leakage. Next action: implement encrypted pass lineage, ticket files, automatic issue commands, revoke/reissue, audited corrections and idempotent online scanner; then guest uploads/invited visibility and R3.
+## External checks
+Live Raven delivery/callback, optional AI provider smoke checks and production storage need configured credentials and explicit authorisation for real/paid traffic. Physical camera and two-phone QR checks need devices. These do not prevent continued local implementation.

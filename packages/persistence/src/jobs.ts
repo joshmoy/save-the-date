@@ -18,6 +18,7 @@ export class PostgresJobs implements JobTransportPort {
     if(['provider_queued','accepted','delivered','bounced','complained','delayed'].includes(r.rows[0].state))return false;
     if(r.rows[0].state==='unknown'&&!email.capabilities.idempotent)throw new Error('UNCERTAIN_SEND');
     if(job.weddingId){const w=await tx.query('select deleted_at from std_weddings where id=$1',[job.weddingId]);if(!w.rowCount||w.rows[0].deleted_at)return false;}
+    if(message.context){const pass=await tx.query("select id from std_passes where wedding_id=$1 and id=$2 and version=$3 and status='active'",[job.weddingId,message.context.passId,message.context.passVersion]);if(!pass.rowCount)throw new Error('STALE_PASS_DELIVERY');if(j.rows[0].requested_by){const permission=await tx.query("select role from std_memberships where wedding_id=$1 and user_id=$2 and role in ('owner','co_owner')",[job.weddingId,j.rows[0].requested_by]);if(!permission.rowCount)throw new Error('PASS_DELIVERY_PERMISSION_REVOKED');}}
     await tx.query("update std_email_messages set state='unknown',updated_at=now() where id=$1",[message.id]);return true;
    });
    if(allowed){const result=await email.send(message);await new PostgresNotifications(this.store).submitted(message.id,result.state,result.providerId);await this.ack(job,result);}else await this.ack(job,{skipped:true});

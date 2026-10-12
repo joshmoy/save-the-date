@@ -63,3 +63,10 @@ Use Royal elegance, Garden romance, Modern minimal and Photo story as the four M
 ## Guest and RSVP continuation decisions
 
 Use explicit household membership and owner-allocated attendee slots; groups do not grant access. Default private household grants to 180 days and guest sessions to seven days, with 16-character manual codes and fragment links. Limit pilot plus-one allocation to five per named guest; guests cannot increase it. Keep sensitive optional answers owner/co-owner-only while planners manage ordinary guest/status records. Default questions off. Publish private event facts into a separate projection and show those snapshots on RSVP; live capacity/deadline policy remains authoritative. Same-import household labels group new rows; existing households require explicit IDs. Suppress duplicate invitation sends per active grant/recipient and record queued delivery truthfully.
+
+## Admission implementation decisions — 2026-10-12
+- One attendee/event lineage retains a used admission permanently; corrections are audited and cannot reset entry. Reissue rotates credentials without reserving another seat.
+- AES-GCM key ring binds payloads to wedding/pass IDs; active payloads are erased on use, revoke or expiry.
+- Scanner retries retain the same operation UUID after an uncertain response and require explicit next-guest action. Offline rosters assist people but cannot authorise admission.
+- Raven pass notices link to private guest access; undocumented attachment support is not invented. Delivery is blocked if pass version or requester authority changes.
+- UUID inputs are normalised to lowercase so equivalent representations preserve tenant-bound encryption and idempotency.

@@ -112,3 +112,18 @@ export interface GuestRepository {
  importCommit(actor:Actor,weddingId:string,csv:string,decisions:Record<string,'create'|'skip'>):Promise<unknown>;
  sendAccess(actor:Actor,weddingId:string,partyId:string,grant:{url:string;code:string},recipients:string[],key:string):Promise<unknown>;
 }
+export interface PassRepository {
+ list(actor:Actor,weddingId:string):Promise<unknown>;
+ guestList(session:GuestSession):Promise<unknown>;
+ issue(actor:Actor,weddingId:string,attendeeId:string,eventId:string,key:string):Promise<unknown>;
+ revoke(actor:Actor,weddingId:string,passId:string,version:number,reason:string,key:string):Promise<unknown>;
+ reissue(actor:Actor,weddingId:string,passId:string,version:number,reason:string,key:string):Promise<unknown>;
+ redeem(actor:Actor,weddingId:string,eventId:string,credential:string,key:string):Promise<unknown>;
+ correction(actor:Actor,weddingId:string,input:{attendeeId:string;eventId:string;name?:string;state?:'confirmed'|'declined';reason:string},key:string):Promise<unknown>;
+ download(actor:Actor,weddingId:string,passId:string,format:'jpeg'|'pdf'):Promise<{bytes:Buffer;contentType:string}>;
+ guestDownload(session:GuestSession,passId:string,format:'jpeg'|'pdf'):Promise<{bytes:Buffer;contentType:string}>;
+ operationalList(actor:Actor,weddingId:string,eventId:string):Promise<unknown>;
+ deliveryRecipients(actor:Actor,weddingId:string,passId:string):Promise<string[]>;
+ send(actor:Actor,weddingId:string,passId:string,version:number,recipients:string[],key:string):Promise<unknown>;
+ retryTicket(actor:Actor,weddingId:string,passId:string,format:'jpeg'|'pdf'):Promise<unknown>;
+}

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-export const uuid = z.uuid();
+export const uuid = z.uuid().transform(v=>v.toLowerCase());
 export const roles = ['owner', 'co_owner', 'planner', 'media_contributor', 'security'] as const;
 export const roleSchema = z.enum(roles);
 export type Role = z.infer<typeof roleSchema>;
@@ -45,3 +45,4 @@ export const postSaveSchema=z.object({expectedVersion:z.number().int().nonnegati
 export const revisionSchema=z.object({expectedVersion:z.number().int().positive()}).strict();
 export * from './media.js';
 export * from './guests.js';
+export * from './passes.js';
