@@ -24,3 +24,5 @@ Household/RSVP checkpoint: connected CRUD/CSV/access requests/private guest sess
 Checkpoint 2026-10-12: P01–P04 admission and M03 guest access/invited projections verified with real files, scanner and browser evidence. Next dependent R3 slice: A01–A05 concepts/boards/approval/planner brief; retention/export/support and release gates remain pending.
 
 2026-10-12 checkpoint: creative A01–A05 connected and locally verified (75 full tests, actual files and browser). Continue R3 M05/O02 retention/archive/erasure, then O01/O03 support/metrics and release gates.
+
+2026-10-12 checkpoint: M05/O02 local retention, streaming archive and recovery-safe erasure verified (84 full tests, real browser TAR). Next O01/O03 support/entitlements/metrics, followed by complete notification and portability/security/restore gates.

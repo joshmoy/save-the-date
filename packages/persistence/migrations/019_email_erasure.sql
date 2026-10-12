@@ -1,0 +1,1 @@
+create table std_email_erasure_effects(message_id uuid primary key,wedding_id uuid,account_id uuid,provider_hash text,state text not null default 'pending' check(state in ('pending','local_erased','provider_unsupported')),created_at timestamptz not null default now(),completed_at timestamptz);

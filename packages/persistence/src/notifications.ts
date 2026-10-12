@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import type { PoolClient } from 'pg';
 import type { RavenEvent } from '@save-the-date/adapters';
 import type { NotificationRepository } from '@save-the-date/domain';
@@ -6,7 +7,7 @@ import { PostgresStore } from './index.js';
 export class PostgresNotifications implements NotificationRepository {
  constructor(private store:PostgresStore){}
  async receive(event:RavenEvent){await this.store.transaction(async tx=>{
-  await tx.query('select pg_advisory_xact_lock(hashtext($1))',['email:'+event.data.email_id]);
+  await tx.query('select pg_advisory_xact_lock(hashtext($1))',['email:'+event.data.email_id]);if((await tx.query("select 1 from std_erased_provider_refs where adapter='ravenrelay' and provider_hash=$1",[createHash('sha256').update(event.data.email_id).digest('hex')])).rowCount)return;
   await tx.query("insert into std_provider_inbox(adapter,event_id,provider_id,status,occurred_at,recipients,failure_code) values('ravenrelay',$1,$2,$3,$4,$5,$6) on conflict do nothing",[event.id,event.data.email_id,event.data.status,event.created_at,event.data.recipients,event.data.failure_code??event.data.error_code??null]);
   await this.reconcile(tx,event.data.email_id);
  });}

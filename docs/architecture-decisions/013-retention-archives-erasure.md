@@ -1,0 +1,11 @@
+# Service retention, archives and recovery-safe erasure
+
+2026-10-12. Implement PRD pilot policy v1: twelve months after the last dated event (end time where available), then thirty days for export/renewal. A known primary date anchors service when no event is dated, using the end of that date in the wedding timezone. Otherwise creation anchors an explicitly provisional expiry, with ninety-day reviews. Review never silently renews. Only support-led renewal can reopen an expired archive.
+
+The API owns export requests and immutable metadata snapshots; workers resume a manifest of verified original copies. Streaming POSIX TAR avoids a multi-gigabyte in-memory ZIP and preserves original bytes. Each entry has a checksum and explicit omission state. Unsafe/unprocessed originals are excluded. Guest records require separate owner selection and recent password confirmation. Tokens, sessions and admission credentials never enter archives. Stage copies and final archives stay private and are erased with the wedding. Provision temporary/storage capacity for staging and final output beyond the live-media quota.
+
+Deletion immediately hides the workspace and revokes all scoped credentials, while keeping recoverable data for thirty days. Final erasure clears private objects, worker leftovers, grants, RSVP/contact data, generated files and provider inbox references. A private deletion ledger lives outside the normal rollback boundary. API startup replays it before accepting requests; workers repeat reconciliation to catch late writes. Minimal hashed retired slugs prevent path reuse while removing identifying plaintext slugs.
+
+Account requests require recent authentication and primary ownership resolution. They disable sign-in and remove memberships, then erase credentials after thirty days. Durable account markers also replay after restore. Support recovery must remain audited and must not silently reinstate collaborator grants.
+
+Backup policy: encrypted daily database/object snapshots, maximum thirty-day rolling retention; operational audit details expire after ninety days. Deletion markers and hashed reserved identifiers contain no raw contact/content data and remain necessary to prevent resurrection from out-of-policy older backups. Real multi-adapter restore and runtime gates remain release checks.

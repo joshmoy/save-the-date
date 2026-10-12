@@ -1,0 +1,11 @@
+# Retention, archives and deletion
+
+Run normal `pnpm dev:api` and `EMAIL_ADAPTER=capture pnpm dev:worker` locally. The worker sweeps expiry once per minute. Owners see exact expiry/review/grace dates under Settings. Archive requests have durable idempotency and individual failed-export retries. Download `.tar` and extract with a standard archive tool (`tar -xf wedding-archive.tar`); inspect `wedding.json` for source records, checksums and omitted/unavailable originals.
+
+Production must supply a private `DELETION_LEDGER_ROOT` on a separately retained volume, or `DELETION_LEDGER_S3_BUCKET` on a separate private bucket. Never roll this ledger back with the database/object snapshot. S3 archives need multipart permissions (create/upload/complete/abort); workers need temporary disk for the full output plus resumable private staging. Live media has its own 10 GiB allowance; archive staging needs additional capacity.
+
+Before restoring: keep public/API/worker traffic stopped, restore database and private object inventory using supported PostgreSQL tools, retain the current deletion ledger and keys, run migrations, and start the API in isolation. Startup replays ledger quarantine before opening routes. Run the worker's erasure reconciliation, verify grants/pass status and private object absence, reconcile post-backup admissions, then reopen traffic. Never treat an old admission snapshot as authoritative without reconciliation.
+
+Backups: encrypt and retain daily snapshots for at most thirty days, with access logging and off-host copies. Age out obsolete objects/config/key backups on the same schedule; operational audit payloads have a ninety-day schedule. Minimal deletion markers and hashed retired slugs persist to prevent older-snapshot resurrection. This local fixture replay is not the complete multi-adapter disaster-recovery release drill.
+
+Do not run deletion on existing wedding data for testing. Use a disposable `_test` database and synthetic fixtures. The API does not export unverified/unsafe originals; the manifest explains omissions. Already downloaded guest copies cannot be recalled. External email/AI provider erasure is limited to locally held references and provider-supported deletion; no unauthorised external calls are performed.
