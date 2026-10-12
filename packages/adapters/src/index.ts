@@ -32,6 +32,11 @@ export class S3Storage implements StoragePort {
  async inspect(key:string){const r=await this.client.send(new HeadObjectCommand({Bucket:this.bucket,Key:safeKey(key)}));return {bytes:r.ContentLength??0,checksum:r.Metadata?.sha256??'',contentType:r.ContentType??'application/octet-stream'};}
  async delete(key:string){await this.client.send(new DeleteObjectCommand({Bucket:this.bucket,Key:safeKey(key)}));}
 }
+export function createStorage(config:{STORAGE_ADAPTER:'filesystem'|'s3';STORAGE_ROOT:string;S3_BUCKET?:string;S3_ENDPOINT?:string;S3_REGION?:string;S3_ACCESS_KEY_ID?:string;S3_SECRET_ACCESS_KEY?:string}):StoragePort{
+ if(config.STORAGE_ADAPTER==='filesystem')return new FilesystemStorage(config.STORAGE_ROOT);
+ if(!config.S3_BUCKET||!config.S3_ACCESS_KEY_ID||!config.S3_SECRET_ACCESS_KEY)throw Error('S3 storage requires bucket and credentials');
+ return new S3Storage(new S3Client({endpoint:config.S3_ENDPOINT,region:config.S3_REGION??'auto',forcePathStyle:true,credentials:{accessKeyId:config.S3_ACCESS_KEY_ID,secretAccessKey:config.S3_SECRET_ACCESS_KEY}}),config.S3_BUCKET);
+}
 export interface EmailMessage { id:string; to:string; subject:string; text:string }
 export interface EmailPort { readonly capabilities:{idempotent:boolean;deliveryEvents:boolean}; send(message:EmailMessage):Promise<{state:'accepted'|'unknown'|'provider_queued'|'failed';providerId:string}> }
 export class CaptureEmail implements EmailPort {
@@ -58,3 +63,4 @@ export interface JobTransportPort { lease(owner:string):Promise<Job|null>; ack(j
 // Password and opaque credential primitives remain adapter-owned.
 export * from './credentials.js';
 export * from './raven-relay.js';
+export * from './media-processing.js';

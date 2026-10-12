@@ -5,4 +5,5 @@ allowBuilds:
   esbuild: true
   sharp: true
   '@nestjs/core': true
+  ffmpeg-static: true
 verifyDepsBeforeRun: false

@@ -7,9 +7,9 @@ export class PostgresJobs implements JobTransportPort {
  async lease(owner:string):Promise<Job|null>{const r=await this.store.pool.query("update std_jobs set state='leased',lease_owner=$1,lease_until=now()+interval '60 seconds',attempts=attempts+1,updated_at=now() where id=(select id from std_jobs where (state='pending' and retry_at<=now()) or (state in ('leased','running') and lease_until<now()) order by created_at for update skip locked limit 1) returning *",[owner]);if(!r.rowCount)return null;const j=r.rows[0];return {id:j.id,weddingId:j.wedding_id,type:j.type,payload:j.payload,attempts:j.attempts,leaseOwner:owner};}
  async ack(job:Job,result:unknown){await this.store.pool.query("update std_jobs set state='succeeded',result=$3,lease_until=null,updated_at=now() where id=$1 and lease_owner=$2 and state in ('leased','running')",[job.id,job.leaseOwner,JSON.stringify(result)]);}
  async fail(job:Job,code:string,retryable:boolean){await this.store.pool.query("update std_jobs set state=$3,error_code=$4,retry_at=now()+($5*interval '1 second'),lease_until=null,updated_at=now() where id=$1 and lease_owner=$2 and state in ('leased','running')",[job.id,job.leaseOwner,code==='UNCERTAIN_SEND'?'unknown_external':retryable&&job.attempts<5?'pending':'failed',code,Math.min(300,2**job.attempts)]);}
- async processOne(owner:string,email:EmailPort){const job=await this.lease(owner);if(!job)return false;
+ async processOne(owner:string,email:EmailPort,handlers:Record<string,(job:Job)=>Promise<unknown>>={}){const job=await this.lease(owner);if(!job)return false;
   try{
-   if(job.type!=='email')throw new Error('UNSUPPORTED_JOB');
+   if(job.type!=='email'){const handler=handlers[job.type];if(!handler)throw new Error('UNSUPPORTED_JOB');const heartbeat=setInterval(()=>{void this.store.pool.query("update std_jobs set lease_until=now()+interval '60 seconds' where id=$1 and lease_owner=$2 and state in ('leased','running')",[job.id,owner]).catch(()=>{});},20000);try{await this.ack(job,await handler(job));}finally{clearInterval(heartbeat);}return true;}
    const message=job.payload as EmailMessage;
    // Persist the send intent before calling a provider. Expired leases must not resend an uncertain effect.
    const allowed=await this.store.transaction(async tx=>{

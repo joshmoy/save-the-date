@@ -8,7 +8,7 @@ export interface TenantContext { weddingId: string; actorId: string; role: Role;
 export type Capability = 'read'|'edit'|'publish'|'members'|'guests'|'media'|'scan'|'primary';
 export function requireCapability(tenant: TenantContext, capability: Capability, resourceId?: string) {
  const owner = tenant.role === 'owner' || tenant.role === 'co_owner';
- const allowed = capability==='primary' ? tenant.role==='owner' : capability==='read' ? true : capability==='publish'||capability==='members' ? owner : capability==='edit'||capability==='guests' ? owner||tenant.role==='planner' : capability==='media' ? owner||tenant.role==='planner'||(tenant.role==='media_contributor'&&!!resourceId&&tenant.albumIds.includes(resourceId)) : owner||(tenant.role==='security'&&!!resourceId&&tenant.eventIds.includes(resourceId));
+ const allowed = capability==='primary' ? tenant.role==='owner' : capability==='read' ? true : capability==='publish'||capability==='members' ? owner : capability==='edit'||capability==='guests' ? owner||tenant.role==='planner' : capability==='media' ? owner||(['planner','media_contributor'].includes(tenant.role)&&!!resourceId&&tenant.albumIds.includes(resourceId)) : owner||(tenant.role==='security'&&!!resourceId&&tenant.eventIds.includes(resourceId));
  if(!allowed) throw notFound();
 }
 export function requireRecentAuthentication(actor: Actor, now = new Date()) {
@@ -30,6 +30,17 @@ export interface WeddingRepository {
 export interface UnitOfWork<T> { run<R>(fn:(transaction:T)=>Promise<R>):Promise<R> }
 export interface NotificationRepository {
  receive(event:{id:string;type:string;created_at:string;data:{email_id:string;project_id:string;status:string;recipients:string[];failure_code?:string;error_code?:string}}):Promise<void>;
+}
+export interface MediaRepository {
+ list(actor:Actor,weddingId:string):Promise<unknown>;
+ saveAlbum(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').AlbumInput,version:number,albumId?:string):Promise<unknown>;
+ intent(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').UploadIntent):Promise<unknown>;
+ expectedUpload(actor:Actor,weddingId:string,id:string):Promise<number>;
+ receive(actor:Actor,weddingId:string,id:string,bytes:Buffer):Promise<unknown>;
+ read(actor:Actor,weddingId:string,id:string,original?:boolean):Promise<{bytes:Buffer;contentType:string}>;
+ readPublic(weddingId:string,id:string,publication:unknown):Promise<{bytes:Buffer;contentType:string}>;
+ edit(actor:Actor,weddingId:string,id:string,input:import('@save-the-date/contracts').MediaEdit):Promise<unknown>;
+ remove(actor:Actor,weddingId:string,id:string,version:number,confirmed:boolean):Promise<unknown>;
 }
 
 // The application depends on operations, not a database engine or query API.

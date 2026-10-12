@@ -1,15 +1,20 @@
 import { verifyRavenEvent, credential, credentialHash, hashPassword, checkPassword } from '@save-the-date/adapters';
-import { DomainError, type Actor, type FoundationRepository, type NotificationRepository, type PublicationRepository } from '@save-the-date/domain';
-import { registerSchema, loginSchema, tokenSchema, recoverSchema, resetSchema, weddingSchema, weddingPatchSchema, eventSchema, eventPatchSchema, inviteSchema, reauthSchema, transferSchema, deleteSchema, uuid, slug, siteSaveSchema, publishSchema, postSaveSchema, revisionSchema } from '@save-the-date/contracts';
+import { DomainError, type Actor, type FoundationRepository, type MediaRepository, type NotificationRepository, type PublicationRepository } from '@save-the-date/domain';
+import { registerSchema, loginSchema, tokenSchema, recoverSchema, resetSchema, weddingSchema, weddingPatchSchema, eventSchema, eventPatchSchema, inviteSchema, reauthSchema, transferSchema, deleteSchema, uuid, slug, siteSaveSchema, publishSchema, postSaveSchema, revisionSchema, albumSaveSchema, uploadIntentSchema, mediaEditSchema, mediaDeleteSchema } from '@save-the-date/contracts';
 import type { Config } from '@save-the-date/config';
 import type { Request, Response } from 'express';
 
 export class Application {
- constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository){}
+ private activeUploads=0;
+ constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository){}
  hash(token:string){return credentialHash(token,this.config.TOKEN_HASH_KEYS);}
  cookie(res:Response,token:string,clear=false){res.cookie('std_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:clear?0:7*24*3600*1000});}
  session(req:Request){return req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_session='))?.slice(12)??'';}
  async actor(req:Request):Promise<Actor>{const actor=await this.store.authenticate(this.hash(this.session(req)));if(!actor)throw new DomainError(401,'UNAUTHENTICATED','Sign in to continue');return actor;}
+ binary(req:Request,res:Response,file:{bytes:Buffer;contentType:string}){
+  res.setHeader('Content-Type',file.contentType);res.setHeader('Accept-Ranges','bytes');const range=req.headers.range;
+  if(range){const match=/^bytes=(\d+)-(\d*)$/.exec(range);const start=Number(match?.[1]),end=match?.[2]?Number(match[2]):file.bytes.length-1;if(!match||start>end||start>=file.bytes.length){res.status(416).setHeader('Content-Range','bytes */'+file.bytes.length);res.end();return;}const last=Math.min(end,file.bytes.length-1);res.status(206).setHeader('Content-Range',`bytes ${start}-${last}/${file.bytes.length}`);res.send(file.bytes.subarray(start,last+1));return;}res.send(file.bytes);
+ }
  async dispatch(req:Request,res:Response){
   res.setHeader('Cache-Control','no-store');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Content-Type-Options','nosniff');
   const method=req.method;const parts=req.path.replace(/^\/api\/v1\/?/,'').split('/').filter(Boolean);const body=req.body??{};
@@ -21,7 +26,7 @@ export class Application {
   }
   if(!['GET','HEAD'].includes(method)){
    if(req.headers.origin!==this.config.PUBLIC_ORIGIN)throw new DomainError(403,'ORIGIN_REJECTED','Use the configured application origin');
-   if(req.headers['x-std-csrf']!=='1'||!req.is('application/json'))throw new DomainError(403,'CSRF_REJECTED','Reload and retry this request');
+   if(req.headers['x-std-csrf']!=='1'||!(req.is('application/json')||method==='PUT'&&parts[0]==='weddings'&&parts[2]==='media'&&parts[4]==='bytes'&&req.is('application/octet-stream')))throw new DomainError(403,'CSRF_REJECTED','Reload and retry this request');
   }
   // Direct API requests use the actual peer IP. Deployment must configure a trusted proxy explicitly.
   await this.store.rateLimit('http:'+this.hash(req.ip??'unknown'),300);
@@ -40,6 +45,7 @@ export class Application {
   }
   if(parts[0]==='public'&&parts[1]==='weddings'){
    const weddingSlug=slug.parse(parts[2]);const cookieName='std_site_'+weddingSlug;const session=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith(cookieName+'='))?.slice(cookieName.length+1);
+   if(parts[3]==='media'&&parts.length===5&&method==='GET'&&this.media){const site=await this.publication.publicSite(weddingSlug,session?this.hash(session):undefined);const file=await this.media.readPublic(weddingSlug,uuid.parse(parts[4]),site);this.binary(req,res,file);return undefined;}
    if(parts.length===3&&method==='GET')return this.publication.publicSite(weddingSlug,session?this.hash(session):undefined);
    if(parts[3]==='access'&&method==='POST'){await this.store.rateLimit('site-access:'+this.hash(req.ip??'unknown'),10);const token=credential();await this.publication.exchangeShared(weddingSlug,this.hash(tokenSchema.parse(body).token),this.hash(token));res.cookie(cookieName,token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:7*24*3600*1000});return {message:'Website access granted. This is shared access, not identity verification'};}
    if(parts[3]==='posts'&&parts.length===5&&method==='GET')return this.publication.publicPost(weddingSlug,slug.parse(parts[4]),session?this.hash(session):undefined);
@@ -52,6 +58,19 @@ export class Application {
    if(parts.length===2){if(method==='GET')return this.store.readWedding(actor,id);if(method==='PATCH')return this.store.patchWedding(actor,id,weddingPatchSchema.parse(body));if(method==='DELETE'){deleteSchema.parse(body);await this.store.deleteWedding(actor,id);return {message:'Workspace deleted. Recovery available for thirty days',weddingId:id};}}
    if(parts[2]==='recover'&&method==='POST'){await this.store.recoverWedding(actor,id);return {message:'Workspace recovered'};}
    if(parts[2]==='transfer'&&method==='POST'){await this.store.transfer(actor,id,transferSchema.parse(body).userId);return {message:'Ownership transferred'};}
+   if(this.media&&parts[2]==='albums'){
+    if(parts.length===3&&method==='POST'){const v=albumSaveSchema.parse(body);res.status(201);return this.media.saveAlbum(actor,id,v.album,v.expectedVersion);}
+    if(parts.length===4&&method==='PATCH'){const v=albumSaveSchema.parse(body);return this.media.saveAlbum(actor,id,v.album,v.expectedVersion,uuid.parse(parts[3]));}
+   }
+   if(this.media&&parts[2]==='media'){
+    if(parts.length===3&&method==='GET')return this.media.list(actor,id);
+    if(parts[3]==='intents'&&method==='POST'){res.status(201);return this.media.intent(actor,id,uploadIntentSchema.parse(body));}
+    const assetId=uuid.parse(parts[3]);
+    if(parts[4]==='bytes'&&method==='PUT'){const max=await this.media.expectedUpload(actor,id,assetId);const length=Number(req.headers['content-length']);if(Number.isFinite(length)&&length>max)throw new DomainError(413,'FILE_TOO_LARGE','Transfer exceeds the reserved file size');if(this.activeUploads>=2)throw new DomainError(429,'UPLOAD_BUSY','Uploads are busy. Retry this file in a moment');await this.store.rateLimit('upload:'+actor.userId,20,3600);this.activeUploads++;req.setTimeout(120000);try{const chunks:Buffer[]=[];let size=0;for await(const chunk of req){const bytes=Buffer.from(chunk);size+=bytes.length;if(size>max)throw new DomainError(413,'FILE_TOO_LARGE','Transfer exceeds the reserved file size');chunks.push(bytes);}res.status(202);return await this.media.receive(actor,id,assetId,Buffer.concat(chunks));}finally{this.activeUploads--;}}
+    if(method==='GET'){if(parts[4]==='original')res.setHeader('Content-Disposition',`attachment; filename="${assetId}"`);const file=await this.media.read(actor,id,assetId,parts[4]==='original');this.binary(req,res,file);return undefined;}
+    if(method==='PATCH')return this.media.edit(actor,id,assetId,mediaEditSchema.parse(body));
+    if(method==='DELETE'){const v=mediaDeleteSchema.parse(body);return this.media.remove(actor,id,assetId,v.expectedVersion,v.confirmPublishedReferences);}
+   }
    if(parts[2]==='site'){
     if(parts.length===3&&method==='GET')return this.publication.site(actor,id);
     if(parts.length===3&&method==='PATCH'){const v=siteSaveSchema.parse(body);return this.publication.saveSite(actor,id,v.config,v.expectedVersion);}

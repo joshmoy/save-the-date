@@ -2,7 +2,14 @@ import type { Metadata } from "next";
 import { Providers } from "./providers";
 import "../src/index.css";
 import "../src/harbour.css";
-import "@fontsource/source-serif-4/latin-400.css";
+import "@fontsource/source-serif-4/400.css";
+import "@fontsource/great-vibes/400.css";
+import "@fontsource/cormorant/400.css";
+import "@fontsource/cormorant/600.css";
+import "@fontsource/cormorant/700.css";
+import "@fontsource/lora/400.css";
+import "@fontsource/lora/600.css";
+import "@fontsource/lora/700.css";
 
 export const metadata: Metadata = {
   title: "Save The Date",

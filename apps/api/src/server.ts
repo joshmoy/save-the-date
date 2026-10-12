@@ -3,16 +3,17 @@ import { Module, Controller, All, Req, Res } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import type { Config } from '@save-the-date/config';
-import { PostgresStore, PostgresPublication, PostgresNotifications } from '@save-the-date/persistence';
+import { PostgresStore, PostgresPublication, PostgresNotifications, PostgresMedia } from '@save-the-date/persistence';
+import {createStorage} from '@save-the-date/adapters';
 import { DomainError } from '@save-the-date/domain';
 import { z } from '@save-the-date/contracts';
 import type { Request, Response } from 'express';
 import { Application } from './application.js';
 
 export async function createServer(config:Config){
- const store=new PostgresStore(config.DB_CONNECTION),service=new Application(store,config,new PostgresPublication(store),new PostgresNotifications(store));
+ const store=new PostgresStore(config.DB_CONNECTION),service=new Application(store,config,new PostgresPublication(store),new PostgresNotifications(store),new PostgresMedia(store,createStorage(config),config.STORAGE_NAMESPACE,config.MEDIA_STORAGE_BYTES));
  async function handle(req:Request,res:Response){
-  try{res.json(await service.dispatch(req,res));}catch(e){
+  try{const result=await service.dispatch(req,res);if(!res.headersSent)res.json(result);}catch(e){
    if(e instanceof z.ZodError)res.status(400).json({code:'VALIDATION_ERROR',message:'Check the highlighted fields',fields:e.issues.map(v=>({path:v.path,message:v.message}))});
    else if(e instanceof DomainError){if(e.status===429)res.setHeader('Retry-After','60');res.status(e.status).json({code:e.code,message:e.message});}
    else{console.error(JSON.stringify({event:'request.failed',code:(e as {code?:string}).code??'INTERNAL'}));res.status(500).json({code:'INTERNAL_ERROR',message:'The request could not be completed. Please retry'});}
