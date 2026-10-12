@@ -19,4 +19,8 @@ CMD ["node", "apps/web/.next/standalone/apps/web/server.js"]
 FROM runtime AS api
 CMD ["node", "apps/api/dist/main.js"]
 FROM runtime AS worker
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends chromium ffmpeg && rm -rf /var/lib/apt/lists/*
+ENV INVITATION_BROWSER_PATH=/usr/bin/chromium MEDIA_FFMPEG_PATH=/usr/bin/ffmpeg MEDIA_FFPROBE_PATH=/usr/bin/ffprobe
+USER node
 CMD ["node", "apps/worker/dist/main.js"]

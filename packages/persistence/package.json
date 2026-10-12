@@ -16,9 +16,14 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "pg": "^8.21.0",
+    "@save-the-date/adapters": "workspace:*",
     "@save-the-date/contracts": "workspace:*",
     "@save-the-date/domain": "workspace:*",
-    "@save-the-date/adapters": "workspace:*"
+    "@save-the-date/templates": "workspace:*",
+    "pg": "^8.21.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.6"
   }
 }

@@ -55,3 +55,7 @@ All choices below are reversible unless explicitly noted. No production data or 
 ## Private media continuation decisions
 
 Use private filesystem/S3 storage through the existing port, with quota reservations covering originals and derivative headroom. Use bounded Sharp/HEIC/FFmpeg processing; production codec binaries remain configurable. Restrict planners and contributors to explicitly assigned albums. Preserve legacy font families with local licensed font packages. These reversible choices connect staff media now; guest grants and retention remain separate mandatory slices. The goal tracker reports blocked without a reason; this is not an implementation dependency, and work continues.
+
+## Invitation continuation decisions
+
+Use Royal elegance, Garden romance, Modern minimal and Photo story as the four MVP families. Use one React renderer at 480×672 logical size for both preview and browser export; embed licensed local fonts and approved photo bytes in snapshots, block browser network access, and preserve a written canonical website URL when QR is disabled. Give JPEG/PDF independent states and retry the original snapshot. Include durable actor/tenant-scoped operation keys for timeout retries. Retain Chromium's sandbox rather than disabling it to simplify deployment; production hosts must provide its runtime capabilities. Photo compact layouts use a smaller image region and a side-by-side footer to fit three events. Real-phone scans and Linux container execution remain verification gates, not presumed passes.

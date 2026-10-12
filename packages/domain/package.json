@@ -16,6 +16,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@save-the-date/contracts": "workspace:*"
+    "@save-the-date/contracts": "workspace:*",
+    "@save-the-date/templates": "workspace:*"
   }
 }

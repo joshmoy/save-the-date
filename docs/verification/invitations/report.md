@@ -1,0 +1,11 @@
+# Invitation verification — 12 October 2026
+
+Four version-one families use the same React renderer for preview/export. Actual rendered JPEG/PDF tests exercise accents/apostrophes, photo/no-photo, inherited overrides, compact three-event layouts and deliberate long-name overflow. JPEG dimensions are checked at 1500×2100; every sample QR decodes to its canonical website URL. PDFs have exactly one 360×504 point page and a real URL annotation. Render tests are explicitly skipped unless a browser path is supplied; local verification supplied Google Chrome. Generated samples are retained under /tmp/std-invitation-verification for inspection, not as customer data.
+
+Database tests cover foreign-tenant denial, optimistic conflicts, immutable snapshots, stale detection, separate format failure and retry with the same snapshot. Export operation keys deduplicate retries and reject changed payloads. The test-only renderer used for the independent-failure test is not the production renderer.
+
+Browser journey: saved a synthetic wedding design, resolved a preview, queued both formats, observed independent completed states and downloaded its authenticated PDF. Updating the draft showed the earlier export as stale while retaining its downloads. Desktop and 360px captures are in this directory; mobile body width 360 and preview width 278 confirm no page overflow. The browser download tool completed unusually slowly; no external guest mail or paid services were used.
+
+Bounded finish review fixed silent draft-discard on switching and incomplete initial-loading retry; both fixes were scored resolved. Subsequent compact-photo rendering failure was corrected while retaining strict overflow checks. Two physical phones scanning every QR and the full Linux sandboxed-worker/browser matrix remain unverified external/runtime gates. The complete MVP remains unfinished.
+
+Final checks: all 35 regression/invitation/media tests passed with no skips, including concurrent HTTP export requests sharing one operation key (one export, two format jobs) and changed-body key rejection. Production build 9/9 packages, workspace typecheck 9/9 and ESLint passed. Font checksum validation and compact-photo fixes were included in the final real-render run.

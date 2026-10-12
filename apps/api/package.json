@@ -18,14 +18,15 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
-    "@save-the-date/contracts": "workspace:*",
-    "@save-the-date/domain": "workspace:*",
-    "@save-the-date/persistence": "workspace:*",
-    "@save-the-date/adapters": "workspace:*",
-    "@save-the-date/config": "workspace:*",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
+    "@save-the-date/adapters": "workspace:*",
+    "@save-the-date/config": "workspace:*",
+    "@save-the-date/contracts": "workspace:*",
+    "@save-the-date/domain": "workspace:*",
+    "@save-the-date/persistence": "workspace:*",
+    "@save-the-date/templates": "workspace:*",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   }

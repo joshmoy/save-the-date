@@ -1,3 +1,5 @@
+import {designSchema,catalogue,type ResolvedDesign} from '@save-the-date/templates';
+import type {InvitationRepository} from '@save-the-date/domain';
 import { verifyRavenEvent, credential, credentialHash, hashPassword, checkPassword } from '@save-the-date/adapters';
 import { DomainError, type Actor, type FoundationRepository, type MediaRepository, type NotificationRepository, type PublicationRepository } from '@save-the-date/domain';
 import { registerSchema, loginSchema, tokenSchema, recoverSchema, resetSchema, weddingSchema, weddingPatchSchema, eventSchema, eventPatchSchema, inviteSchema, reauthSchema, transferSchema, deleteSchema, uuid, slug, siteSaveSchema, publishSchema, postSaveSchema, revisionSchema, albumSaveSchema, uploadIntentSchema, mediaEditSchema, mediaDeleteSchema } from '@save-the-date/contracts';
@@ -6,7 +8,7 @@ import type { Request, Response } from 'express';
 
 export class Application {
  private activeUploads=0;
- constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository){}
+ constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository,readonly invitations?:InvitationRepository){}
  hash(token:string){return credentialHash(token,this.config.TOKEN_HASH_KEYS);}
  cookie(res:Response,token:string,clear=false){res.cookie('std_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:clear?0:7*24*3600*1000});}
  session(req:Request){return req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_session='))?.slice(12)??'';}
@@ -58,6 +60,19 @@ export class Application {
    if(parts.length===2){if(method==='GET')return this.store.readWedding(actor,id);if(method==='PATCH')return this.store.patchWedding(actor,id,weddingPatchSchema.parse(body));if(method==='DELETE'){deleteSchema.parse(body);await this.store.deleteWedding(actor,id);return {message:'Workspace deleted. Recovery available for thirty days',weddingId:id};}}
    if(parts[2]==='recover'&&method==='POST'){await this.store.recoverWedding(actor,id);return {message:'Workspace recovered'};}
    if(parts[2]==='transfer'&&method==='POST'){await this.store.transfer(actor,id,transferSchema.parse(body).userId);return {message:'Ownership transferred'};}
+   if(this.invitations&&parts[2]==='invitations'){
+    const z=(await import('@save-the-date/contracts')).z;
+    if(parts[3]==='catalogue'&&method==='GET'){await this.store.readWedding(actor,id);return catalogue;}
+    if(parts[3]==='preview'&&method==='POST')return this.invitations.preview(actor,id,designSchema.parse(body));
+    if(parts.length===3&&method==='GET')return this.invitations.list(actor,id);
+    if((parts.length===3&&method==='POST')||(parts.length===4&&method==='PATCH')){const v=z.object({title:z.string().trim().min(1).max(100),design:designSchema,expectedVersion:z.number().int().min(0)}).strict().parse(body);return this.invitations.save(actor,id,v.title,v.design,v.expectedVersion,parts[3]?uuid.parse(parts[3]):undefined);}
+    if(parts[3]==='exports'){
+     const exportId=uuid.parse(parts[4]),format=z.enum(['jpeg','pdf']).parse(parts[5]);
+     if(parts[6]==='retry'&&method==='POST')return this.invitations.retry(actor,id,exportId,format);
+     if(method==='GET'){res.setHeader('Content-Disposition',`attachment; filename=invitation-${exportId}.${format}`);this.binary(req,res,await this.invitations.download(actor,id,exportId,format));return;}
+    }
+    if(parts[4]==='export'&&method==='POST'){const v=z.object({expectedVersion:z.number().int().positive(),preview:z.object({events:z.array(z.unknown()),weddingVersion:z.number().int()})}).parse(body);res.status(202);return this.invitations.queue(actor,id,uuid.parse(parts[3]),v.expectedVersion,v.preview as ResolvedDesign,uuid.parse(req.headers['idempotency-key']));}
+   }
    if(this.media&&parts[2]==='albums'){
     if(parts.length===3&&method==='POST'){const v=albumSaveSchema.parse(body);res.status(201);return this.media.saveAlbum(actor,id,v.album,v.expectedVersion);}
     if(parts.length===4&&method==='PATCH'){const v=albumSaveSchema.parse(body);return this.media.saveAlbum(actor,id,v.album,v.expectedVersion,uuid.parse(parts[3]));}

@@ -24,24 +24,26 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@save-the-date/adapters": "workspace:*",
+    "@save-the-date/config": "workspace:*",
+    "@save-the-date/contracts": "workspace:*",
+    "@save-the-date/domain": "workspace:*",
+    "@save-the-date/persistence": "workspace:*",
+    "@save-the-date/templates": "workspace:*",
+    "@types/express": "^5.0.0",
     "@types/node": "^24.10.1",
+    "@types/pg": "^8.20.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "^16.5.0",
-    "typescript": "~5.9.3",
-    "typescript-eslint": "^8.46.4",
-    "turbo": "^2.6.0",
+    "jsqr": "^1.4.0",
     "tsx": "^4.20.0",
-    "@types/pg": "^8.20.0",
-    "@types/express": "^5.0.0",
-    "@save-the-date/persistence": "workspace:*",
-    "@save-the-date/config": "workspace:*",
-    "@save-the-date/adapters": "workspace:*",
-    "@save-the-date/contracts": "workspace:*",
-    "@save-the-date/domain": "workspace:*"
+    "turbo": "^2.6.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4"
   },
   "dependencies": {
-    "pg": "^8.21.0",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "pg": "^8.21.0"
   }
 }
