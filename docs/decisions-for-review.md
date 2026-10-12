@@ -88,3 +88,5 @@ Keep deletion ledger storage outside rollback snapshots; use a separate S3 bucke
 
 ## Operator verification permissions
 Automatic approval review rejected a persistent operator allowlist grant to the existing synthetic browser account, because the exact privileged grant was not specifically authorised. No grant was made. Verify backend role permissions through disposable test fixtures and visual layout through a development-only read-only synthetic route. That route returns 404 outside development and performs no service requests/actions. This does not replace a live authorised founder acceptance journey; it avoids changing existing account permissions while allowing the remaining engineering work to continue.
+
+Notification retries use a fresh child attempt only after a definite failure and owner recipient review; uncertain outcomes never get a new attempt. Old queued private links without a resource reference fail closed. Previously submitted email cannot be recalled; access credentials are always validated at use. Harbour history remains a readable list with inline recipient review, not a delivery dashboard claiming attendance.

@@ -32,5 +32,7 @@ export async function createServer(config:Config){
  class HealthController {async health(req:Request,res:Response){await handle(req,res);}}
  Controller('api/v1')(HealthController);All('health')(HealthController.prototype,'health',Object.getOwnPropertyDescriptor(HealthController.prototype,'health')!);Req()(HealthController.prototype,'health',0);Res()(HealthController.prototype,'health',1);
  class ApiModule {} Module({imports:modules,controllers:[HealthController]})(ApiModule);
- const app=await NestFactory.create<NestExpressApplication>(ApiModule,{logger:['error','warn'],bodyParser:false,rawBody:true});app.useBodyParser('json',{limit:'1mb'});await app.init();return {app,store,service};
+ const app=await NestFactory.create<NestExpressApplication>(ApiModule,{logger:['error','warn'],bodyParser:false,rawBody:true});// The provider route consumes bounded raw bytes before any JSON parser runs.
+ app.use('/api/v1/provider-events/ravenrelay',(req:Request,res:Response,next:()=>void)=>{if(req.method!=='POST'){next();return;}void (async()=>{try{const chunks:Buffer[]=[];let size=0;for await(const chunk of req){const bytes=Buffer.from(chunk);size+=bytes.length;if(size>1024*1024){res.status(413).json({code:'WEBHOOK_TOO_LARGE',message:'Provider event exceeds the byte limit'});return;}chunks.push(bytes);}(req as Request&{rawBody?:Buffer}).rawBody=Buffer.concat(chunks);req.body={};next();}catch{if(!res.headersSent)res.status(400).json({code:'INVALID_WEBHOOK_BODY',message:'Provider event could not be read'});}})();});
+ app.useBodyParser('json',{limit:'1mb'});await app.init();return {app,store,service};
 }

@@ -50,7 +50,7 @@ export function createStorage(config:{STORAGE_ADAPTER:'filesystem'|'s3';STORAGE_
  if(!config.S3_BUCKET||!config.S3_ACCESS_KEY_ID||!config.S3_SECRET_ACCESS_KEY)throw Error('S3 storage requires bucket and credentials');
  return new S3Storage(new S3Client({endpoint:config.S3_ENDPOINT,region:config.S3_REGION??'auto',forcePathStyle:true,credentials:{accessKeyId:config.S3_ACCESS_KEY_ID,secretAccessKey:config.S3_SECRET_ACCESS_KEY}}),config.S3_BUCKET);
 }
-export interface EmailMessage { id:string; to:string; subject:string; text:string; context?:{passId:string;passVersion:number} }
+export interface EmailMessage { id:string; to:string; subject:string; text:string; context?:{passId?:string;passVersion?:number;guestGrantId?:string;memberInviteId?:string;identityTokenId?:string;retentionExpiry?:string;partyId?:string} }
 export interface EmailPort { readonly capabilities:{idempotent:boolean;deliveryEvents:boolean}; send(message:EmailMessage):Promise<{state:'accepted'|'unknown'|'provider_queued'|'failed';providerId:string}> }
 export interface LocalEmailErasurePort {eraseLocal(messageId:string):Promise<void>}
 export class CaptureEmail implements EmailPort,LocalEmailErasurePort {

@@ -22,3 +22,7 @@
 
 .tableScroll{overflow-x:auto;max-width:100%}
 .root details>summary{min-height:44px;padding:12px 0;cursor:pointer;line-height:20px}
+
+.wrap{overflow-wrap:anywhere}
+
+.historyItem{overflow-wrap:anywhere}

@@ -29,6 +29,8 @@ export interface WeddingRepository {
 }
 export interface UnitOfWork<T> { run<R>(fn:(transaction:T)=>Promise<R>):Promise<R> }
 export interface NotificationRepository {
+ list(actor:Actor,weddingId:string,cursor?:string):Promise<unknown>;
+ retry(actor:Actor,weddingId:string,messageId:string,recipient:string,operationKey:string):Promise<unknown>;
  receive(event:{id:string;type:string;created_at:string;data:{email_id:string;project_id:string;status:string;recipients:string[];failure_code?:string;error_code?:string}}):Promise<void>;
 }
 export interface MediaRepository {

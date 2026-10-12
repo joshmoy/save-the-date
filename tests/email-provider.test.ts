@@ -42,5 +42,8 @@ test('N02 HTTP verifies original bytes before origin-free provider callback acce
  try{const address=server.app.getHttpServer().address(),origin=`http://127.0.0.1:${address.port}`;const payload=event(randomUUID(),'delivered',new Date().toISOString()),raw=JSON.stringify(payload),timestamp=String(Math.floor(Date.now()/1000));const headers={'Content-Type':'application/json','RavenRelay-Timestamp':timestamp,'RavenRelay-Event-Id':payload.id,'RavenRelay-Signature':'v1='+createHmac('sha256',secret).update(timestamp+'.'+raw).digest('hex')};
   assert.equal((await fetch(origin+'/api/v1/provider-events/ravenrelay',{method:'POST',headers,body:raw})).status,200);
   assert.equal((await fetch(origin+'/api/v1/provider-events/ravenrelay',{method:'POST',headers,body:'{}'})).status,401);
+  assert.equal((await fetch(origin+'/api/v1/provider-events/ravenrelay',{method:'POST',headers,body:'{invalid-json'})).status,401);
+  const malformed='{signed-invalid-json',signed={...headers,'RavenRelay-Signature':'v1='+createHmac('sha256',secret).update(timestamp+'.'+malformed).digest('hex')};assert.equal((await fetch(origin+'/api/v1/provider-events/ravenrelay',{method:'POST',headers:signed,body:malformed})).status,401);
+  assert.equal((await fetch(origin+'/api/v1/provider-events/ravenrelay',{method:'POST',headers,body:'x'.repeat(1024*1024+1)})).status,413);
  }finally{await server.app.close();await server.store.close();}
 });

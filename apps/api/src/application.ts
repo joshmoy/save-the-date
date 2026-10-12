@@ -100,6 +100,7 @@ export class Application {
    if(parts.length===1){if(method==='GET')return this.store.listWeddings(actor);if(method==='POST'){res.status(201);return this.store.createWedding(actor,weddingSchema.parse(body));}}
    const id=uuid.parse(parts[1]);
    if(parts.length===2){if(method==='GET')return this.store.readWedding(actor,id);if(method==='PATCH')return this.store.patchWedding(actor,id,weddingPatchSchema.parse(body));if(method==='DELETE'){deleteSchema.parse(body);await this.store.deleteWedding(actor,id);return {message:'Workspace deleted. Recovery available for thirty days',weddingId:id};}}
+   if(this.notifications&&parts[2]==='notifications'){if(parts.length===3&&method==='GET')return this.notifications.list(actor,id,req.query.cursor===undefined?undefined:uuid.parse(req.query.cursor));if(parts[4]==='retry'&&method==='POST'){const v=z.object({recipient:z.email()}).strict().parse(body);return this.notifications.retry(actor,id,uuid.parse(parts[3]),v.recipient,uuid.parse(req.headers['idempotency-key']));}}
    if(this.retention&&parts[2]==='retention'){
     if(parts.length===3&&method==='GET')return this.retention.status(actor,id);
     if(parts[3]==='review'&&method==='POST')return this.retention.review(actor,id);
