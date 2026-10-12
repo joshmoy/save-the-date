@@ -24,7 +24,7 @@ export class PostgresStore implements FoundationRepository {
    await tx.query(sql);await tx.query('insert into std_migrations(name,checksum) values($1,$2)',[name,checksum]);
   }
  });}
- async audit(tx:PoolClient,weddingId:string|null,actorId:string|null,action:string,resourceId?:string){await tx.query('insert into std_audit_events(id,wedding_id,actor_id,action,resource_id) values($1,$2,$3,$4,$5)',[randomUUID(),weddingId,actorId,action,resourceId??null]);}
+ async audit(tx:PoolClient,weddingId:string|null,actorId:string|null,action:string,resourceId?:string,details:unknown={}){await tx.query('insert into std_audit_events(id,wedding_id,actor_id,action,resource_id,details) values($1,$2,$3,$4,$5,$6)',[randomUUID(),weddingId,actorId,action,resourceId??null,details]);}
  async email(tx:PoolClient,to:string,subject:string,text:string,weddingId:string|null=null,actorId:string|null=null){const id=randomUUID();await tx.query('insert into std_email_messages(id,wedding_id,recipient,subject) values($1,$2,$3,$4)',[id,weddingId,to,subject]);await tx.query("insert into std_jobs(id,wedding_id,requested_by,type,dedupe_key,payload) values($1,$2,$3,'email',$4,$5)",[randomUUID(),weddingId,actorId,'email:'+id,JSON.stringify({id,to,subject,text})]);}
  async register(email:string,passwordHash:string,tokenHash:string,link?:string){await this.transaction(async tx=>{
   const id=randomUUID();const r=await tx.query('insert into std_users(id,email,password_hash) values($1,$2,$3) on conflict(email) do nothing returning id',[id,email,passwordHash]);
@@ -102,3 +102,4 @@ export { PostgresNotifications } from './notifications.js';
 
 export { PostgresMedia } from './media.js';
 export * from './invitations.js';
+export * from './guests.js';

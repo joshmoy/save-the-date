@@ -89,3 +89,26 @@ export interface InvitationRepository {
  retry(actor:Actor,weddingId:string,exportId:string,format:'jpeg'|'pdf'):Promise<unknown>;
  download(actor:Actor,weddingId:string,exportId:string,format:'jpeg'|'pdf'):Promise<{bytes:Buffer;contentType:string}>;
 }
+export type GuestSession={id:string;grantId:string;weddingId:string;partyId:string;slug:string};
+export interface GuestRepository {
+ list(actor:Actor,weddingId:string):Promise<unknown>;
+ save(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').GuestInput,version:number,attendeeId?:string):Promise<unknown>;
+ remove(actor:Actor,weddingId:string,attendeeId:string,version:number):Promise<unknown>;
+ issueGrant(actor:Actor,weddingId:string,partyId:string,days:number):Promise<{id:string;code:string;url:string;expiresInDays:number}>;
+ revokeGrant(actor:Actor,weddingId:string,grantId:string):Promise<unknown>;
+ exchange(slug:string,credential:string,sessionHash:string):Promise<unknown>;
+ authenticate(sessionHash:string):Promise<GuestSession>;
+ logout(sessionHash:string):Promise<unknown>;
+ party(session:GuestSession):Promise<unknown>;
+ submit(sessionHash:string,eventId:string,input:import('@save-the-date/contracts').RsvpInput,key:string):Promise<unknown>;
+ approve(actor:Actor,weddingId:string,eventId:string,attendeeId:string,version:number):Promise<unknown>;
+ questions(actor:Actor,weddingId:string,eventId:string,input:{meal:boolean;dietary:boolean;accessibility:boolean;note:boolean;deleteAnswers:boolean}):Promise<unknown>;
+ request(slug:string,input:{name:string;email:string;note:string}):Promise<unknown>;
+ resolveRequest(actor:Actor,weddingId:string,requestId:string,approve:boolean,eventIds:string[]):Promise<{partyId:string|null}>;
+ csvExport(actor:Actor,weddingId:string):Promise<string>;
+ answers(actor:Actor,weddingId:string,eventId:string):Promise<unknown>;
+ rsvpExport(actor:Actor,weddingId:string,sensitive?:boolean):Promise<string>;
+ importPreview(actor:Actor,weddingId:string,csv:string):Promise<unknown>;
+ importCommit(actor:Actor,weddingId:string,csv:string,decisions:Record<string,'create'|'skip'>):Promise<unknown>;
+ sendAccess(actor:Actor,weddingId:string,partyId:string,grant:{url:string;code:string},recipients:string[],key:string):Promise<unknown>;
+}

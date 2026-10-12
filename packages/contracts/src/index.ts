@@ -44,3 +44,4 @@ export type PostInput=z.infer<typeof postSchema>;
 export const postSaveSchema=z.object({expectedVersion:z.number().int().nonnegative(),post:postSchema}).strict();
 export const revisionSchema=z.object({expectedVersion:z.number().int().positive()}).strict();
 export * from './media.js';
+export * from './guests.js';

@@ -1,0 +1,11 @@
+import {z} from 'zod';
+export const guestSchema=z.object({name:z.string().trim().min(1).max(160),email:z.email().max(254).nullable().default(null),phone:z.string().trim().max(40).default(''),group:z.string().trim().max(80).default(''),partyId:z.uuid().nullable().default(null),household:z.string().trim().min(1).max(160),eventIds:z.array(z.uuid()).max(50).refine(ids=>new Set(ids).size===ids.length,'Choose each event once'),plusOnes:z.number().int().min(0).max(5).default(0)}).strict();
+export type GuestInput=z.infer<typeof guestSchema>;
+export const guestSaveSchema=z.object({guest:guestSchema,expectedVersion:z.number().int().min(0)}).strict();
+export const guestAccessSchema=z.object({slug:z.string().min(3).max(63),credential:z.string().trim().min(8).max(128)}).strict();
+export const guestGrantSchema=z.object({days:z.number().int().min(1).max(365).default(180)}).strict();
+export const rsvpSchema=z.object({responses:z.array(z.object({attendeeId:z.uuid(),expectedVersion:z.number().int().min(0),attendeeVersion:z.number().int().positive(),choice:z.enum(['attending','declining']),name:z.string().trim().max(160),meal:z.string().trim().max(100).default(''),dietary:z.string().trim().max(300).default(''),accessibility:z.string().trim().max(300).default(''),note:z.string().trim().max(500).default('')}).strict()).min(1).max(100)}).strict();
+export type RsvpInput=z.infer<typeof rsvpSchema>;
+export const questionPolicySchema=z.object({meal:z.boolean(),dietary:z.boolean(),accessibility:z.boolean(),note:z.boolean(),deleteAnswers:z.boolean().default(false)}).strict();
+export const accessRequestSchema=z.object({slug:z.string().min(3).max(63),name:z.string().trim().min(1).max(160),email:z.email().max(254),note:z.string().trim().max(300).default('')}).strict();
+export const importSchema=z.object({csv:z.string().max(500000),decisions:z.record(z.string(),z.enum(['create','skip'])).default({})}).strict();

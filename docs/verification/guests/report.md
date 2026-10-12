@@ -1,0 +1,11 @@
+# Household and RSVP verification — 12 October 2026
+
+PostgreSQL integration tests verify tenant concealment, household-scoped grants, rotation/revocation/logout, invalid-purpose credentials and HTTP staff/guest cookie separation with CSRF. Twenty concurrent households competing for the last place produce one confirmation; concurrent manual approvals also reserve one place. Complete-party submissions reject foreign attendees, extra/missing slots, missing attending names, stale versions, changed idempotency payloads and server-time deadlines. Declining releases reservations. Sensitive questions default off, deleted answers are cleared and planners cannot read/export owner-only answers.
+
+CSV tests inspect real quoted parsing, invalid rows, explicit duplicate outcomes and formula-safe export. Sending tests reject foreign URLs/recipients and suppress duplicate sends for the same current grant/recipient. No live messages were sent. Private guest event facts stay snapshotted across unpublished event edits; anonymous site output excludes them.
+
+Browser: owner created a named guest plus one slot in the existing synthetic browser-r0-verification wedding, issued a private household code, opened /w/[slug]/rsvp without account signup, named the slot and submitted both responses. The page showed confirmed states; the owner dashboard showed two confirmed attendees. Desktop and 360px dashboard/RSVP captures are retained; body width equals viewport on mobile. Captures omit private grant credentials. Bounded UI review fixed RSVP gutters/button text and the existing-household form requirement; both fixes passed review.
+
+This verifies guest/RSVP core. Pass issuance/redemption, dedicated guest upload grants, complete invited website/blog/media projections and R3 notification/retention/recovery gates remain unfinished. Admission tables support response invariants but are not a completed pass feature. Broader physical-device/accessibility/load checks remain pending.
+
+Final checks: 44 tests passed with no skips, including real HEIC/video and invitation rendering regression checks. Production build/typecheck 9/9 and ESLint passed. Both guest UI fixes were scored 2/2 resolved. Nine guest-specific tests include publication and owner-only sensitive-answer boundaries.

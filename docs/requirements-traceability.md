@@ -8,8 +8,8 @@ Every mandatory PRD identifier is listed individually. Foundation evidence does 
 | S01 | Themes and content sections | R1 | Implemented core themes/sections/processed hero; final R3 review pending | contracts + persistence/publication + web publishing/site | Theme-preservation and contrast tests; desktop/360px screenshots |
 | B01 | Editable posts | R1 | Implemented rich text and processed photo/video attachments | post contracts + publication adapter + journal editor | XSS/link tests; rendered escaped article |
 | I01 | Versioned template catalogue | R1 | Implemented four version-one families; final release review pending | packages/templates + persistence/invitations + adapters/invitation-export + InvitationStudio | Actual JPEG/PDF/QR tests and browser journey; verification/invitations/report.md |
-| G01 | Guest records and households | R2 | Pending | — | — |
-| R01 | Event responses | R2 | Pending | — | — |
+| G01 | Guest records and households | R2 | Implemented households, named attendees, allocated slots and explicit eligibility | contracts/guests + persistence/guests + API + GuestStudio + private RSVP | PostgreSQL concurrency/permission tests and browser journey; verification/guests/report.md |
+| R01 | Event responses | R2 | Implemented private per-event complete-party responses and optional questions | contracts/guests + persistence/guests + API + GuestStudio + private RSVP | PostgreSQL concurrency/permission tests and browser journey; verification/guests/report.md |
 | P01 | Optional pass policy | R2 | Pending | — | — |
 | M01 | Albums and media | R2 | Implemented staff albums, order, metadata and private originals; guest audience pending | persistence/media + adapters/media-processing + API + MediaStudio | 31 passing tests; verification/media/report.md |
 | A01 | Wedding context and consent | R3 | Pending | — | — |
@@ -27,11 +27,11 @@ Every mandatory PRD identifier is listed individually. Foundation evidence does 
 | I04 | JPEG and PDF export | R1 | Implemented real queued JPEG/PDF, immutable snapshots and per-format results; Linux gate pending | packages/templates + persistence/invitations + adapters/invitation-export + InvitationStudio | Actual JPEG/PDF/QR tests and browser journey; verification/invitations/report.md |
 | I05 | URL QR and invitation semantics | R1 | Implemented canonical URL/website QR; no private/admission credentials | packages/templates + persistence/invitations + adapters/invitation-export + InvitationStudio | Actual JPEG/PDF/QR tests and browser journey; verification/invitations/report.md |
 | I06 | Editing and future batches | R1 | Implemented drafts/duplication/stale detection/regeneration; batch Later excluded | packages/templates + persistence/invitations + adapters/invitation-export + InvitationStudio | Actual JPEG/PDF/QR tests and browser journey; verification/invitations/report.md |
-| G02 | Import and export | R2 | Pending | — | — |
-| G03 | Invitation access | R2 | Pending | — | — |
-| R02 | Plus ones and changes | R2 | Pending | — | — |
-| R03 | Capacity and approval | R2 | Pending | — | — |
-| R04 | Confirmation and dashboard | R2 | Pending | — | — |
+| G02 | Import and export | R2 | Implemented CSV preview/results, duplicate decisions and safe exports | contracts/guests + persistence/guests + API + GuestStudio + private RSVP | PostgreSQL concurrency/permission tests and browser journey; verification/guests/report.md |
+| G03 | Invitation access | R2 | Implemented rotating household links/codes, sessions and owner access requests | contracts/guests + persistence/guests + API + GuestStudio + private RSVP | PostgreSQL concurrency/permission tests and browser journey; verification/guests/report.md |
+| R02 | Plus ones and changes | R2 | Implemented slot/name/version limits, release and unused-pass revocation; admission corrections follow | contracts/guests + persistence/guests + API + GuestStudio + private RSVP | PostgreSQL concurrency/permission tests and browser journey; verification/guests/report.md |
+| R03 | Capacity and approval | R2 | Implemented transactional capacity, manual approval and waitlisting | contracts/guests + persistence/guests + API + GuestStudio + private RSVP | PostgreSQL concurrency/permission tests and browser journey; verification/guests/report.md |
+| R04 | Confirmation and dashboard | R2 | Implemented confirmation, counts/filters/exports; complete notification gates pending | contracts/guests + persistence/guests + API + GuestStudio + private RSVP | PostgreSQL concurrency/permission tests and browser journey; verification/guests/report.md |
 | P02 | Revocation and reissue | R2 | Pending | — | — |
 | P03 | Online redemption | R2 | Pending | — | — |
 | P04 | Connectivity and staff experience | R2 | Pending | — | — |

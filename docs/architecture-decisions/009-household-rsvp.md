@@ -1,0 +1,7 @@
+# Household access and capacity
+
+Use explicit household/named-attendee/plus-one-slot records with tenant-qualified keys and explicit event eligibility. Default to at most five allocated plus-one slots per named guest in the pilot, configurable later by an entitlement change; guests cannot allocate more. Groups are labels only. Private grants expire after 180 days by default, accept a 16-character hexadecimal manual code, and rotate both code/link hashes. Separate HttpOnly guest sessions expire after seven days or grant expiry and recheck grant/wedding state on every operation. Links use fragments to avoid placing credentials in HTTP URLs.
+
+Serialise complete party/event responses using party then event locks, expected versions, server time and unique reservations. Reserve confirmed seats independently of passes; manual approval uses the same event lock. Sensitive questions default off and their owner-controlled read/export is distinct from planner guest management. Retain admission history when RSVP changes, and require owner corrections after use.
+
+Keep private published event facts in a separate projection table, so authenticated RSVP shows published information while deadline/capacity policy stays authoritative. Public website JSON cannot accidentally expose invited-event snapshots. CSV duplicate handling never merges by email; same-import household labels group new records, and existing households require an explicit ID. Capture-only testing avoids live guest sends.

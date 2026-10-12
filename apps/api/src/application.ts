@@ -1,3 +1,5 @@
+import {guestSaveSchema,guestAccessSchema,guestGrantSchema,rsvpSchema,questionPolicySchema,accessRequestSchema,importSchema,z} from '@save-the-date/contracts';
+import type {GuestRepository} from '@save-the-date/domain';
 import {designSchema,catalogue,type ResolvedDesign} from '@save-the-date/templates';
 import type {InvitationRepository} from '@save-the-date/domain';
 import { verifyRavenEvent, credential, credentialHash, hashPassword, checkPassword } from '@save-the-date/adapters';
@@ -8,7 +10,7 @@ import type { Request, Response } from 'express';
 
 export class Application {
  private activeUploads=0;
- constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository,readonly invitations?:InvitationRepository){}
+ constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository,readonly invitations?:InvitationRepository,readonly guests?:GuestRepository){}
  hash(token:string){return credentialHash(token,this.config.TOKEN_HASH_KEYS);}
  cookie(res:Response,token:string,clear=false){res.cookie('std_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:clear?0:7*24*3600*1000});}
  session(req:Request){return req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_session='))?.slice(12)??'';}
@@ -52,6 +54,15 @@ export class Application {
    if(parts[3]==='access'&&method==='POST'){await this.store.rateLimit('site-access:'+this.hash(req.ip??'unknown'),10);const token=credential();await this.publication.exchangeShared(weddingSlug,this.hash(tokenSchema.parse(body).token),this.hash(token));res.cookie(cookieName,token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:7*24*3600*1000});return {message:'Website access granted. This is shared access, not identity verification'};}
    if(parts[3]==='posts'&&parts.length===5&&method==='GET')return this.publication.publicPost(weddingSlug,slug.parse(parts[4]),session?this.hash(session):undefined);
   }
+  if(parts[0]==='guest'&&this.guests){
+   const sessionToken=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_guest_session='))?.slice(18)??'';const sessionHash=this.hash('guest-session:'+sessionToken);
+   if(parts[1]==='access'&&method==='POST'){await this.store.rateLimit('guest-access:'+this.hash(req.ip??'unknown'),10);const v=guestAccessSchema.parse(body),token=credential();await this.guests.exchange(v.slug,v.credential,this.hash('guest-session:'+token));res.cookie('std_guest_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:7*24*3600*1000});return {signedIn:true};}
+   if(parts[1]==='request'&&method==='POST'){await this.store.rateLimit('guest-request:'+this.hash(req.ip??'unknown'),5);const v=accessRequestSchema.parse(body);return this.guests.request(v.slug,v);}
+   if(parts[1]==='logout'&&method==='POST'){await this.guests.logout(sessionHash);res.cookie('std_guest_session','',{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:0});return {signedOut:true};}
+   const session=await this.guests.authenticate(sessionHash);
+   if(parts[1]==='party'&&method==='GET')return this.guests.party(session);
+   if(parts[1]==='events'&&parts[3]==='rsvp'&&method==='POST')return this.guests.submit(sessionHash,uuid.parse(parts[2]),rsvpSchema.parse(body),uuid.parse(req.headers['idempotency-key']));
+  }
   const actor=await this.actor(req);
   if(parts[0]==='invites'&&parts[1]==='accept'&&method==='POST')return this.store.acceptInvite(actor,this.hash(tokenSchema.parse(body).token));
   if(parts[0]==='weddings'){
@@ -60,6 +71,22 @@ export class Application {
    if(parts.length===2){if(method==='GET')return this.store.readWedding(actor,id);if(method==='PATCH')return this.store.patchWedding(actor,id,weddingPatchSchema.parse(body));if(method==='DELETE'){deleteSchema.parse(body);await this.store.deleteWedding(actor,id);return {message:'Workspace deleted. Recovery available for thirty days',weddingId:id};}}
    if(parts[2]==='recover'&&method==='POST'){await this.store.recoverWedding(actor,id);return {message:'Workspace recovered'};}
    if(parts[2]==='transfer'&&method==='POST'){await this.store.transfer(actor,id,transferSchema.parse(body).userId);return {message:'Ownership transferred'};}
+   if(this.guests&&parts[2]==='guests'){
+    if(parts.length===3&&method==='GET')return this.guests.list(actor,id);
+    if(parts[3]==='responses'&&parts[4]==='export'&&method==='GET'){res.setHeader('Content-Disposition','attachment; filename=responses.csv');res.setHeader('Content-Type','text/csv; charset=utf-8');res.send(await this.guests.rsvpExport(actor,id,req.query.sensitive==='true'));return;}
+    if(parts[3]==='export'&&method==='GET'){res.setHeader('Content-Disposition','attachment; filename=guests.csv');res.setHeader('Content-Type','text/csv; charset=utf-8');res.send(await this.guests.csvExport(actor,id));return;}
+    if(parts[3]==='import'&&method==='POST'){const v=importSchema.parse(body);return parts[4]==='preview'?this.guests.importPreview(actor,id,v.csv):this.guests.importCommit(actor,id,v.csv,v.decisions);}
+    if(parts[3]==='requests'&&parts[4]&&method==='POST'){const v=z.object({approve:z.boolean(),eventIds:z.array(uuid).max(50)}).strict().parse(body);const r=await this.guests.resolveRequest(actor,id,uuid.parse(parts[4]),v.approve,v.eventIds);return r.partyId?{...r,grant:await this.guests.issueGrant(actor,id,r.partyId,180)}:r;}
+    if(parts[3]==='grants'&&parts[4]&&method==='DELETE')return this.guests.revokeGrant(actor,id,uuid.parse(parts[4]));
+    if(parts[3]==='parties'&&parts[4]&&parts[5]==='grant'&&method==='POST')return this.guests.issueGrant(actor,id,uuid.parse(parts[4]),guestGrantSchema.parse(body).days);
+    if(parts[3]==='parties'&&parts[4]&&parts[5]==='send'&&method==='POST'){const v=z.object({grant:z.object({url:z.url(),code:z.string().max(128)}),recipients:z.array(z.email()).min(1).max(100)}).strict().parse(body);return this.guests.sendAccess(actor,id,uuid.parse(parts[4]),v.grant,v.recipients,uuid.parse(req.headers['idempotency-key']));}
+    if(parts.length===3&&method==='POST'){res.status(201);const v=guestSaveSchema.parse(body);return this.guests.save(actor,id,v.guest,v.expectedVersion);}
+    if(parts.length===4&&method==='PATCH'){const v=guestSaveSchema.parse(body);return this.guests.save(actor,id,v.guest,v.expectedVersion,uuid.parse(parts[3]));}
+    if(parts.length===4&&method==='DELETE')return this.guests.remove(actor,id,uuid.parse(parts[3]),revisionSchema.parse(body).expectedVersion);
+   }
+   if(this.guests&&parts[2]==='events'&&parts[4]==='answers'&&method==='GET')return this.guests.answers(actor,id,uuid.parse(parts[3]));
+   if(this.guests&&parts[2]==='events'&&parts[4]==='questions'&&method==='PATCH')return this.guests.questions(actor,id,uuid.parse(parts[3]),questionPolicySchema.parse(body));
+   if(this.guests&&parts[2]==='events'&&parts[4]==='rsvp'&&parts[6]==='approve'&&method==='POST')return this.guests.approve(actor,id,uuid.parse(parts[3]),uuid.parse(parts[5]),revisionSchema.parse(body).expectedVersion);
    if(this.invitations&&parts[2]==='invitations'){
     const z=(await import('@save-the-date/contracts')).z;
     if(parts[3]==='catalogue'&&method==='GET'){await this.store.readWedding(actor,id);return catalogue;}

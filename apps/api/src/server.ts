@@ -3,15 +3,15 @@ import { Module, Controller, All, Req, Res } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import type { Config } from '@save-the-date/config';
-import { PostgresStore, PostgresPublication, PostgresNotifications, PostgresMedia, PostgresInvitations } from '@save-the-date/persistence';
-import {createStorage} from '@save-the-date/adapters';
+import { PostgresStore, PostgresPublication, PostgresNotifications, PostgresMedia, PostgresInvitations, PostgresGuests } from '@save-the-date/persistence';
+import {createStorage,credentialHash} from '@save-the-date/adapters';
 import { DomainError } from '@save-the-date/domain';
 import { z } from '@save-the-date/contracts';
 import type { Request, Response } from 'express';
 import { Application } from './application.js';
 
 export async function createServer(config:Config){
- const store=new PostgresStore(config.DB_CONNECTION),service=new Application(store,config,new PostgresPublication(store),new PostgresNotifications(store),new PostgresMedia(store,createStorage(config),config.STORAGE_NAMESPACE,config.MEDIA_STORAGE_BYTES),new PostgresInvitations(store,createStorage(config),config.STORAGE_NAMESPACE,config.PUBLIC_ORIGIN));
+ const store=new PostgresStore(config.DB_CONNECTION),service=new Application(store,config,new PostgresPublication(store),new PostgresNotifications(store),new PostgresMedia(store,createStorage(config),config.STORAGE_NAMESPACE,config.MEDIA_STORAGE_BYTES),new PostgresInvitations(store,createStorage(config),config.STORAGE_NAMESPACE,config.PUBLIC_ORIGIN),new PostgresGuests(store,token=>credentialHash(token,config.TOKEN_HASH_KEYS),config.PUBLIC_ORIGIN));
  async function handle(req:Request,res:Response){
   try{const result=await service.dispatch(req,res);if(!res.headersSent)res.json(result);}catch(e){
    if(e instanceof z.ZodError)res.status(400).json({code:'VALIDATION_ERROR',message:'Check the highlighted fields',fields:e.issues.map(v=>({path:v.path,message:v.message}))});
@@ -21,7 +21,7 @@ export async function createServer(config:Config){
  }
  // Feature modules share application policy ports; Nest owns route registration and request parsing.
  // Apply decorators explicitly so the workspace can retain standard NodeNext TypeScript semantics.
- const modules=['identity','weddings','invites','public','provider-events'].map(prefix=>{
+ const modules=['identity','weddings','invites','public','provider-events','guest'].map(prefix=>{
   class FeatureController {async dispatch(req:Request,res:Response){await handle(req,res);}}
   Controller('api/v1/'+prefix)(FeatureController);
   All(['','{*path}'])(FeatureController.prototype,'dispatch',Object.getOwnPropertyDescriptor(FeatureController.prototype,'dispatch')!);
