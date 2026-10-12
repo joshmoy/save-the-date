@@ -7,7 +7,7 @@ import {guestSaveSchema,guestAccessSchema,guestGrantSchema,rsvpSchema,questionPo
 import type {GuestRepository} from '@save-the-date/domain';
 import {designSchema,catalogue,type ResolvedDesign} from '@save-the-date/templates';
 import type {InvitationRepository} from '@save-the-date/domain';
-import { verifyRavenEvent, credential, credentialHash, hashPassword, checkPassword } from '@save-the-date/adapters';
+import { verifyRavenEvent, credential, credentialHash,credentialHashCandidates, hashPassword, checkPassword } from '@save-the-date/adapters';
 import { DomainError, type Actor, type FoundationRepository, type MediaRepository, type NotificationRepository, type PublicationRepository } from '@save-the-date/domain';
 import { registerSchema, loginSchema, tokenSchema, recoverSchema, resetSchema, weddingSchema, weddingPatchSchema, eventSchema, eventPatchSchema, inviteSchema, reauthSchema, transferSchema, deleteSchema, uuid, slug, siteSaveSchema, publishSchema, postSaveSchema, revisionSchema, albumSaveSchema, uploadIntentSchema, uploadGrantSchema,uploadAccessSchema,creativeContextSaveSchema,conceptSaveSchema,conceptRevisionSchema,creativeGenerationSchema,mediaEditSchema, mediaDeleteSchema } from '@save-the-date/contracts';
 import type { Config } from '@save-the-date/config';
@@ -17,9 +17,10 @@ export class Application {
  private activeUploads=0;
  constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository,readonly invitations?:InvitationRepository,readonly guests?:GuestRepository,readonly passes?:PassRepository,readonly uploads?:import('@save-the-date/domain').UploadRepository,readonly creative?:import('@save-the-date/domain').CreativeRepository,readonly retention?:import('@save-the-date/domain').RetentionRepository,readonly operator?:import('@save-the-date/domain').OperatorRepository){}
  hash(token:string){return credentialHash(token,this.config.TOKEN_HASH_KEYS);}
+ hashes(token:string){return credentialHashCandidates(token,this.config.TOKEN_HASH_KEYS);}
  cookie(res:Response,token:string,clear=false){res.cookie('std_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:clear?0:7*24*3600*1000});}
  session(req:Request){return req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_session='))?.slice(12)??'';}
- async actor(req:Request):Promise<Actor>{const actor=await this.store.authenticate(this.hash(this.session(req)));if(!actor)throw new DomainError(401,'UNAUTHENTICATED','Sign in to continue');return actor;}
+ async actor(req:Request):Promise<Actor>{const actor=await this.store.authenticate(this.hashes(this.session(req)));if(!actor)throw new DomainError(401,'UNAUTHENTICATED','Sign in to continue');return actor;}
  binary(req:Request,res:Response,file:{bytes:Buffer;contentType:string}){
   res.setHeader('Content-Type',file.contentType);res.setHeader('Accept-Ranges','bytes');const range=req.headers.range;
   if(range){const match=/^bytes=(\d+)-(\d*)$/.exec(range);const start=Number(match?.[1]),end=match?.[2]?Number(match[2]):file.bytes.length-1;if(!match||start>end||start>=file.bytes.length){res.status(416).setHeader('Content-Range','bytes */'+file.bytes.length);res.end();return;}const last=Math.min(end,file.bytes.length-1);res.status(206).setHeader('Content-Range',`bytes ${start}-${last}/${file.bytes.length}`);res.send(file.bytes.subarray(start,last+1));return;}res.send(file.bytes);
@@ -44,11 +45,11 @@ export class Application {
    const action=parts[1];await this.store.rateLimit('identity:'+action+':'+this.hash(req.ip??'unknown'),action==='session'?120:10);
    if(action==='register'&&method==='POST'){const v=registerSchema.parse(body),token=credential();await this.store.register(v.email,await hashPassword(v.password),this.hash(token),`${this.config.PUBLIC_ORIGIN}/platform?verify=${token}`);res.status(202);return {message:'If this address is available, a verification email is queued'};}
    if(action==='resend-verification'&&method==='POST'){const v=recoverSchema.parse(body),token=credential();await this.store.resendVerification(v.email,this.hash(token),`${this.config.PUBLIC_ORIGIN}/platform?verify=${token}`);res.status(202);return {message:'If the account needs verification, a new link is queued'};}
-   if(action==='verify'&&method==='POST'){await this.store.verify(this.hash(tokenSchema.parse(body).token));return {message:'Email verified. You can now sign in'};}
+   if(action==='verify'&&method==='POST'){await this.store.verify(this.hashes(tokenSchema.parse(body).token));return {message:'Email verified. You can now sign in'};}
    if(action==='login'&&method==='POST'){const v=loginSchema.parse(body),token=credential();const actor=await this.store.login(v.email,h=>checkPassword(v.password,h),this.hash(token));if(!actor)throw new DomainError(401,'INVALID_LOGIN','Email or password is incorrect');this.cookie(res,token);return {email:actor.email,verified:actor.verified};}
    if(action==='recover'&&method==='POST'){const v=recoverSchema.parse(body),token=credential();await this.store.recover(v.email,this.hash(token),`${this.config.PUBLIC_ORIGIN}/platform?reset=${token}`);res.status(202);return {message:'If this account exists, a recovery email is queued'};}
-   if(action==='reset'&&method==='POST'){const v=resetSchema.parse(body);await this.store.reset(this.hash(v.token),await hashPassword(v.password));this.cookie(res,'',true);return {message:'Password updated. All previous sessions are revoked'};}
-   if(action==='logout'&&method==='POST'){await this.store.logout(this.hash(this.session(req)));this.cookie(res,'',true);return {message:'Signed out'};}
+   if(action==='reset'&&method==='POST'){const v=resetSchema.parse(body);await this.store.reset(this.hashes(v.token),await hashPassword(v.password));this.cookie(res,'',true);return {message:'Password updated. All previous sessions are revoked'};}
+   if(action==='logout'&&method==='POST'){await this.store.logout(this.hashes(this.session(req)));this.cookie(res,'',true);return {message:'Signed out'};}
    const actor=await this.actor(req);
    if(action==='session'&&method==='GET')return {userId:actor.userId,email:actor.email,verified:actor.verified,operator:actor.verified&&this.config.OPERATOR_USER_IDS.split(',').map(v=>v.trim()).includes(actor.userId)};
    if(action==='deletion'&&method==='POST'&&this.retention){z.object({confirmation:z.literal('DELETE ACCOUNT')}).strict().parse(body);const result=await this.retention.requestAccountDeletion(actor);this.cookie(res,'',true);return result;}
@@ -56,14 +57,14 @@ export class Application {
   }
   if(parts[0]==='public'&&parts[1]==='weddings'){
    const weddingSlug=slug.parse(parts[2]);const cookieName='std_site_'+weddingSlug;const session=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith(cookieName+'='))?.slice(cookieName.length+1);
-   const guestToken=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_guest_session='))?.slice(18);const guestHash=guestToken?this.hash('guest-session:'+guestToken):undefined;
-   if(parts[3]==='media'&&parts.length===5&&method==='GET'&&this.media){const site=await this.publication.publicSite(weddingSlug,session?this.hash(session):undefined,guestHash);const file=await this.media.readPublic(weddingSlug,uuid.parse(parts[4]),site);this.binary(req,res,file);return undefined;}
-   if(parts.length===3&&method==='GET')return this.publication.publicSite(weddingSlug,session?this.hash(session):undefined,guestHash);
-   if(parts[3]==='access'&&method==='POST'){await this.store.rateLimit('site-access:'+this.hash(req.ip??'unknown'),10);const token=credential();await this.publication.exchangeShared(weddingSlug,this.hash(tokenSchema.parse(body).token),this.hash(token));res.cookie(cookieName,token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:7*24*3600*1000});return {message:'Website access granted. This is shared access, not identity verification'};}
-   if(parts[3]==='posts'&&parts.length===5&&method==='GET')return this.publication.publicPost(weddingSlug,slug.parse(parts[4]),session?this.hash(session):undefined,guestHash);
+   const guestToken=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_guest_session='))?.slice(18);const guestHash=guestToken?this.hashes('guest-session:'+guestToken):undefined;
+   if(parts[3]==='media'&&parts.length===5&&method==='GET'&&this.media){const site=await this.publication.publicSite(weddingSlug,session?this.hashes(session):undefined,guestHash);const file=await this.media.readPublic(weddingSlug,uuid.parse(parts[4]),site);this.binary(req,res,file);return undefined;}
+   if(parts.length===3&&method==='GET')return this.publication.publicSite(weddingSlug,session?this.hashes(session):undefined,guestHash);
+   if(parts[3]==='access'&&method==='POST'){await this.store.rateLimit('site-access:'+this.hash(req.ip??'unknown'),10);const token=credential();await this.publication.exchangeShared(weddingSlug,this.hashes(tokenSchema.parse(body).token),this.hash(token));res.cookie(cookieName,token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:7*24*3600*1000});return {message:'Website access granted. This is shared access, not identity verification'};}
+   if(parts[3]==='posts'&&parts.length===5&&method==='GET')return this.publication.publicPost(weddingSlug,slug.parse(parts[4]),session?this.hashes(session):undefined,guestHash);
   }
   if(parts[0]==='guest'&&this.guests){
-   const sessionToken=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_guest_session='))?.slice(18)??'';const sessionHash=this.hash('guest-session:'+sessionToken);
+   const sessionToken=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_guest_session='))?.slice(18)??'';const sessionHash=this.hashes('guest-session:'+sessionToken);
    if(parts[1]==='access'&&method==='POST'){await this.store.rateLimit('guest-access:'+this.hash(req.ip??'unknown'),10);const v=guestAccessSchema.parse(body),token=credential();await this.guests.exchange(v.slug,v.credential,this.hash('guest-session:'+token));res.cookie('std_guest_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:7*24*3600*1000});return {signedIn:true};}
    if(parts[1]==='request'&&method==='POST'){await this.store.rateLimit('guest-request:'+this.hash(req.ip??'unknown'),5);const v=accessRequestSchema.parse(body);return this.guests.request(v.slug,v);}
    if(parts[1]==='logout'&&method==='POST'){await this.guests.logout(sessionHash);res.cookie('std_guest_session','',{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:0});return {signedOut:true};}
@@ -76,10 +77,10 @@ export class Application {
    if(parts[1]==='events'&&parts[3]==='rsvp'&&method==='POST')return this.guests.submit(sessionHash,uuid.parse(parts[2]),rsvpSchema.parse(body),uuid.parse(req.headers['idempotency-key']));
   }
   if(parts[0]==='uploads'&&this.uploads&&this.media){
-   const raw=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_upload_session='))?.slice(19)??'',sessionHash=this.hash('upload-session:'+raw);
+   const raw=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_upload_session='))?.slice(19)??'',sessionHash=this.hashes('upload-session:'+raw);
    const setCookie=(token:string)=>res.cookie('std_upload_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:86400000});
    if(parts[1]==='access'&&method==='POST'){await this.store.rateLimit('upload-access:'+this.hash(req.ip??'unknown'),10);const v=uploadAccessSchema.parse(body),token=credential();await this.uploads.exchange(v.slug,v.credential,this.hash('upload-session:'+token));setCookie(token);return {signedIn:true};}
-   if(parts[1]==='from-rsvp'&&method==='POST'&&this.guests){await this.store.rateLimit('upload-session:'+this.hash(req.ip??'unknown'),10,3600);const token=credential(),guestToken=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_guest_session='))?.slice(18)??'';await this.uploads.fromGuest(await this.guests.authenticate(this.hash('guest-session:'+guestToken)),this.hash('upload-session:'+token));setCookie(token);return {signedIn:true};}
+   if(parts[1]==='from-rsvp'&&method==='POST'&&this.guests){await this.store.rateLimit('upload-session:'+this.hash(req.ip??'unknown'),10,3600);const token=credential(),guestToken=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_guest_session='))?.slice(18)??'';await this.uploads.fromGuest(await this.guests.authenticate(this.hashes('guest-session:'+guestToken)),this.hash('upload-session:'+token));setCookie(token);return {signedIn:true};}
    if(parts[1]==='logout'&&method==='POST'){await this.uploads.logout(sessionHash);setCookie('');return {signedOut:true};}
    const session=await this.uploads.authenticate(sessionHash),uploader={userId:null,uploadSessionId:session.id} as const;
    if(parts[1]==='session'&&method==='GET')return session;
@@ -88,7 +89,7 @@ export class Application {
    if(parts[1]==='media'&&parts[3]==='bytes'&&method==='PUT'){const id=uuid.parse(parts[2]),max=await this.media.expectedUpload(uploader,session.weddingId,id);if(Number(req.headers['content-length'])>max)throw new DomainError(413,'FILE_TOO_LARGE','Transfer exceeds reserved bytes');if(this.activeUploads>=2)throw new DomainError(429,'UPLOAD_BUSY','Uploads are busy. Retry in a moment');await this.store.rateLimit('upload-bytes:'+session.id,30,3600);this.activeUploads++;req.setTimeout(120000);try{const chunks:Buffer[]=[];let size=0;for await(const chunk of req){const b=Buffer.from(chunk);size+=b.length;if(size>max)throw new DomainError(413,'FILE_TOO_LARGE','Transfer exceeds reserved bytes');chunks.push(b);}res.status(202);return this.media.receive(uploader,session.weddingId,id,Buffer.concat(chunks));}finally{this.activeUploads--;}}
   }
   const actor=await this.actor(req);
-  if(parts[0]==='invites'&&parts[1]==='accept'&&method==='POST')return this.store.acceptInvite(actor,this.hash(tokenSchema.parse(body).token));
+  if(parts[0]==='invites'&&parts[1]==='accept'&&method==='POST')return this.store.acceptInvite(actor,this.hashes(tokenSchema.parse(body).token));
   if(parts[0]==='operator'&&this.operator){
    if(parts.length===1&&method==='GET')return this.operator.dashboard(actor,req.query.cursor===undefined?undefined:uuid.parse(req.query.cursor));
    if(parts[1]==='accounts'&&parts[3]==='recover'&&method==='POST'){const v=operatorReasonSchema.extend({ownershipVerified:z.literal(true)}).strict().parse(body);return this.operator.recoverAccount(actor,uuid.parse(parts[2]),v);}

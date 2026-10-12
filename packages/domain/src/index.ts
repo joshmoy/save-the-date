@@ -16,12 +16,12 @@ export function requireRecentAuthentication(actor: Actor, now = new Date()) {
 }
 export interface IdentityRepository {
  register(email:string,passwordHash:string,tokenHash:string):Promise<void>;
- verify(tokenHash:string):Promise<void>;
+ verify(tokenHash:string|string[]):Promise<void>;
  login(email:string,check:(hash:string)=>Promise<boolean>,sessionHash:string):Promise<Actor|null>;
- authenticate(sessionHash:string):Promise<Actor|null>;
- logout(sessionHash:string):Promise<void>;
+ authenticate(sessionHash:string|string[]):Promise<Actor|null>;
+ logout(sessionHash:string|string[]):Promise<void>;
  recover(email:string,tokenHash:string):Promise<void>;
- reset(tokenHash:string,passwordHash:string):Promise<void>;
+ reset(tokenHash:string|string[],passwordHash:string):Promise<void>;
  reauthenticate(actor:Actor,check:(hash:string)=>Promise<boolean>):Promise<void>;
 }
 export interface WeddingRepository {
@@ -61,7 +61,7 @@ export interface FoundationRepository extends IdentityRepository {
  listEvents(actor:Actor,id:string):Promise<unknown>;
  saveEvent(actor:Actor,id:string,event:import('@save-the-date/contracts').EventInput,eventId?:string,expectedVersion?:number):Promise<unknown>;
  invite(actor:Actor,id:string,input:{email:string;role:Role;eventIds:string[];albumIds:string[]},hash:string,link:string):Promise<unknown>;
- acceptInvite(actor:Actor,hash:string):Promise<unknown>;
+ acceptInvite(actor:Actor,hash:string|string[]):Promise<unknown>;
  members(actor:Actor,id:string):Promise<unknown>;
  removeMember(actor:Actor,id:string,userId:string):Promise<void>;
  revokeInvite(actor:Actor,id:string,inviteId:string):Promise<void>;
@@ -74,9 +74,9 @@ export interface PublicationRepository {
  saveSite(actor:Actor,id:string,config:import('@save-the-date/contracts').SiteConfig,version:number):Promise<unknown>;
  publish(actor:Actor,id:string,version:number,weddingVersion:number):Promise<unknown>;
  rotateShared(actor:Actor,id:string,hash:string):Promise<void>;
- exchangeShared(slug:string,hash:string,sessionHash:string):Promise<void>;
- publicSite(slug:string,sessionHash?:string,guestSessionHash?:string):Promise<unknown>;
- publicPost(slug:string,path:string,sessionHash?:string,guestSessionHash?:string):Promise<unknown>;
+ exchangeShared(slug:string,hash:string|string[],sessionHash:string):Promise<void>;
+ publicSite(slug:string,sessionHash?:string|string[],guestSessionHash?:string|string[]):Promise<unknown>;
+ publicPost(slug:string,path:string,sessionHash?:string|string[],guestSessionHash?:string|string[]):Promise<unknown>;
  listPosts(actor:Actor,id:string):Promise<unknown>;
  savePost(actor:Actor,id:string,post:import('@save-the-date/contracts').PostInput,version:number,postId?:string):Promise<unknown>;
  publishPost(actor:Actor,id:string,postId:string,version:number,publish:boolean):Promise<unknown>;
@@ -100,10 +100,10 @@ export interface GuestRepository {
  issueGrant(actor:Actor,weddingId:string,partyId:string,days:number):Promise<{id:string;code:string;url:string;expiresInDays:number}>;
  revokeGrant(actor:Actor,weddingId:string,grantId:string):Promise<unknown>;
  exchange(slug:string,credential:string,sessionHash:string):Promise<unknown>;
- authenticate(sessionHash:string):Promise<GuestSession>;
- logout(sessionHash:string):Promise<unknown>;
+ authenticate(sessionHash:string|string[]):Promise<GuestSession>;
+ logout(sessionHash:string|string[]):Promise<unknown>;
  party(session:GuestSession):Promise<unknown>;
- submit(sessionHash:string,eventId:string,input:import('@save-the-date/contracts').RsvpInput,key:string):Promise<unknown>;
+ submit(sessionHash:string|string[],eventId:string,input:import('@save-the-date/contracts').RsvpInput,key:string):Promise<unknown>;
  approve(actor:Actor,weddingId:string,eventId:string,attendeeId:string,version:number):Promise<unknown>;
  questions(actor:Actor,weddingId:string,eventId:string,input:{meal:boolean;dietary:boolean;accessibility:boolean;note:boolean;deleteAnswers:boolean}):Promise<unknown>;
  request(slug:string,input:{name:string;email:string;note:string}):Promise<unknown>;
@@ -138,8 +138,8 @@ export interface UploadRepository {
  revoke(actor:Actor,id:string,grantId:string):Promise<unknown>;
  exchange(slug:string,credential:string,sessionHash:string):Promise<unknown>;
  fromGuest(guest:GuestSession,sessionHash:string):Promise<unknown>;
- authenticate(hash:string):Promise<UploadSession>;
- logout(hash:string):Promise<unknown>;
+ authenticate(hash:string|string[]):Promise<UploadSession>;
+ logout(hash:string|string[]):Promise<unknown>;
 }
 export interface CreativeRepository {
  list(actor:Actor,weddingId:string):Promise<unknown>;

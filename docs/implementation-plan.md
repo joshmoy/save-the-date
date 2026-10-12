@@ -28,3 +28,5 @@ Checkpoint 2026-10-12: P01–P04 admission and M03 guest access/invited projecti
 2026-10-12 checkpoint: M05/O02 local retention, streaming archive and recovery-safe erasure verified (84 full tests, real browser TAR). Next O01/O03 support/entitlements/metrics, followed by complete notification and portability/security/restore gates.
 
 2026-10-12 checkpoint: operator support/metrics committed 6d78101. Notification flows/history/retry and stale-link validation locally verified; continue directly into credential hash rotation and portability/restore/security gates.
+
+2026-10-12 checkpoint: notification controls committed 9fbd1e0. Credential-key rolling readers/writers verified with 105 full tests; next portability and complete recovery drills.
