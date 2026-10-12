@@ -22,3 +22,5 @@ Continuation checkpoint: staff media committed c300830. Invitation families/edit
 Household/RSVP checkpoint: connected CRUD/CSV/access requests/private guest sessions/complete responses, capacity and manual approval verified with PostgreSQL/browser evidence. Next: admission lineage/worker tickets/scanner and 100-way redemption/revocation races, followed by guest media grants and invited projections. Complete R2/R3 gates remain open.
 
 Checkpoint 2026-10-12: P01–P04 admission and M03 guest access/invited projections verified with real files, scanner and browser evidence. Next dependent R3 slice: A01–A05 concepts/boards/approval/planner brief; retention/export/support and release gates remain pending.
+
+2026-10-12 checkpoint: creative A01–A05 connected and locally verified (75 full tests, actual files and browser). Continue R3 M05/O02 retention/archive/erasure, then O01/O03 support/metrics and release gates.

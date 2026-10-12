@@ -6,13 +6,13 @@ import {designSchema,catalogue,type ResolvedDesign} from '@save-the-date/templat
 import type {InvitationRepository} from '@save-the-date/domain';
 import { verifyRavenEvent, credential, credentialHash, hashPassword, checkPassword } from '@save-the-date/adapters';
 import { DomainError, type Actor, type FoundationRepository, type MediaRepository, type NotificationRepository, type PublicationRepository } from '@save-the-date/domain';
-import { registerSchema, loginSchema, tokenSchema, recoverSchema, resetSchema, weddingSchema, weddingPatchSchema, eventSchema, eventPatchSchema, inviteSchema, reauthSchema, transferSchema, deleteSchema, uuid, slug, siteSaveSchema, publishSchema, postSaveSchema, revisionSchema, albumSaveSchema, uploadIntentSchema, uploadGrantSchema,uploadAccessSchema,mediaEditSchema, mediaDeleteSchema } from '@save-the-date/contracts';
+import { registerSchema, loginSchema, tokenSchema, recoverSchema, resetSchema, weddingSchema, weddingPatchSchema, eventSchema, eventPatchSchema, inviteSchema, reauthSchema, transferSchema, deleteSchema, uuid, slug, siteSaveSchema, publishSchema, postSaveSchema, revisionSchema, albumSaveSchema, uploadIntentSchema, uploadGrantSchema,uploadAccessSchema,creativeContextSaveSchema,conceptSaveSchema,conceptRevisionSchema,creativeGenerationSchema,mediaEditSchema, mediaDeleteSchema } from '@save-the-date/contracts';
 import type { Config } from '@save-the-date/config';
 import type { Request, Response } from 'express';
 
 export class Application {
  private activeUploads=0;
- constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository,readonly invitations?:InvitationRepository,readonly guests?:GuestRepository,readonly passes?:PassRepository,readonly uploads?:import('@save-the-date/domain').UploadRepository){}
+ constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository,readonly invitations?:InvitationRepository,readonly guests?:GuestRepository,readonly passes?:PassRepository,readonly uploads?:import('@save-the-date/domain').UploadRepository,readonly creative?:import('@save-the-date/domain').CreativeRepository){}
  hash(token:string){return credentialHash(token,this.config.TOKEN_HASH_KEYS);}
  cookie(res:Response,token:string,clear=false){res.cookie('std_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:clear?0:7*24*3600*1000});}
  session(req:Request){return req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_session='))?.slice(12)??'';}
@@ -132,6 +132,23 @@ export class Application {
      if(method==='GET'){res.setHeader('Content-Disposition',`attachment; filename=invitation-${exportId}.${format}`);this.binary(req,res,await this.invitations.download(actor,id,exportId,format));return;}
     }
     if(parts[4]==='export'&&method==='POST'){const v=z.object({expectedVersion:z.number().int().positive(),preview:z.object({events:z.array(z.unknown()),weddingVersion:z.number().int()})}).parse(body);res.status(202);return this.invitations.queue(actor,id,uuid.parse(parts[3]),v.expectedVersion,v.preview as ResolvedDesign,uuid.parse(req.headers['idempotency-key']));}
+   }
+   if(this.creative&&parts[2]==='creative'){
+    if(parts.length===3&&method==='GET')return this.creative.list(actor,id);
+    if(parts[3]==='context'&&method==='PUT'){const v=creativeContextSaveSchema.parse(body);return this.creative.saveContext(actor,id,v.context,v.expectedVersion);}
+    if(parts[3]==='concepts'){
+     if(parts.length===4&&method==='POST'){const v=conceptSaveSchema.parse(body);res.status(201);return this.creative.saveConcept(actor,id,v.concept,v.contextVersion,v.expectedVersion);}
+     const cid=uuid.parse(parts[4]);
+     if(parts.length===5&&method==='PUT'){const v=conceptSaveSchema.parse(body);return this.creative.saveConcept(actor,id,v.concept,v.contextVersion,v.expectedVersion,cid);}
+     if(parts[5]==='approve'&&method==='POST')return this.creative.approve(actor,id,cid,conceptRevisionSchema.parse(body).expectedVersion);
+     if(parts[5]==='theme-diff'&&method==='POST')return this.creative.themeDiff(actor,id,cid,conceptRevisionSchema.parse(body).expectedVersion);
+     if(parts[5]==='apply'&&method==='POST'){const v=z.object({expectedVersion:z.number().int().positive(),weddingVersion:z.number().int().positive(),siteVersion:z.number().int().nonnegative()}).strict().parse(body);return this.creative.applyTheme(actor,id,cid,v.expectedVersion,v.weddingVersion,v.siteVersion);}
+     if(parts[5]==='brief'&&method==='POST'){res.status(202);return this.creative.exportBrief(actor,id,cid,conceptRevisionSchema.parse(body).expectedVersion,uuid.parse(req.headers['idempotency-key']));}
+    }
+    if(parts[3]==='runs'&&parts.length===4&&method==='POST'){res.status(202);return this.creative.generate(actor,id,creativeGenerationSchema.parse(body),uuid.parse(req.headers['idempotency-key']));}
+    if(parts[3]==='runs'&&parts[5]==='cancel'&&method==='POST')return this.creative.cancel(actor,id,uuid.parse(parts[4]));
+    if(parts[3]==='assets'&&method==='GET'){this.binary(req,res,await this.creative.readAsset(actor,id,uuid.parse(parts[4])));return;}
+    if(parts[3]==='briefs'){const briefId=uuid.parse(parts[4]),format=z.enum(['json','pdf']).parse(parts[5]);if(parts[6]==='retry'&&method==='POST')return this.creative.retryBrief(actor,id,briefId,format);if(parts.length===6&&method==='GET'){res.setHeader('Content-Disposition',`attachment; filename=planner-brief.${format}`);this.binary(req,res,await this.creative.downloadBrief(actor,id,briefId,format));return;}}
    }
    if(this.uploads&&parts[2]==='upload-grants'){
     if(parts.length===3&&method==='GET')return this.uploads.list(actor,id);

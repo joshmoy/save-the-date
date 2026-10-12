@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "canonicalUrl": "https://example.test/w/creative-e13eb75c-34e2-4e93-abe1-4892032d5b3d",
+  "budgetMinor": 100000,
+  "currencyMinorDigits": 2,
+  "source": {
+    "conceptId": "65f79a37-5005-4adc-a073-39a00664a78b",
+    "revision": 1,
+    "contextVersion": 1,
+    "approvedAt": "2026-10-12T13:38:11.806Z",
+    "humanReviewRecorded": true
+  },
+  "wedding": {
+    "display_names": "Amélie & O’Connor",
+    "timezone": "UTC",
+    "primary_date": null
+  },
+  "events": [
+    {
+      "id": "2ea5963a-c19a-4038-9faa-f9aed38a7203",
+      "title": "Reception",
+      "type": "reception",
+      "timezone": "UTC",
+      "starts_at": null,
+      "to_be_confirmed": "Date and venue to be confirmed",
+      "venue": "Unknown venue",
+      "dress_code": ""
+    }
+  ],
+  "context": {
+    "schemaVersion": 1,
+    "budget": 1000,
+    "currency": "USD",
+    "guestCount": 40,
+    "stylePreferences": "",
+    "colourPreferences": [],
+    "excludedColours": [
+      "#FF0000"
+    ],
+    "requirements": [
+      "Small footprint"
+    ],
+    "exclusions": [
+      "No hanging decorations"
+    ],
+    "culturalPreferences": "",
+    "references": [],
+    "externalProcessingConsent": true
+  },
+  "concept": {
+    "schemaVersion": 1,
+    "name": "Harbour garden",
+    "rationale": "Quiet blue and ivory with grounded arrangements; vendor costs and availability remain unknown.",
+    "palette": {
+      "background": "#F4F7FA",
+      "primary": "#243449",
+      "secondary": "#2F567C",
+      "accent": "#B8C9DA"
+    },
+    "typography": {
+      "websiteFontPair": "classic",
+      "invitationHeading": "Lora",
+      "notes": "Curated OFL heading; system website fallback."
+    },
+    "eventNotes": [
+      {
+        "eventId": "2ea5963a-c19a-4038-9faa-f9aed38a7203",
+        "note": "Low centrepieces preserve sight lines."
+      }
+    ],
+    "decorDirections": [
+      "Grounded arrangements without hanging decorations"
+    ],
+    "requirements": [
+      "Small footprint"
+    ],
+    "exclusions": [
+      "No hanging decorations"
+    ],
+    "constraintChecks": [
+      {
+        "constraint": "Small footprint",
+        "satisfied": true,
+        "explanation": "Explicitly honoured in this proposed design."
+      },
+      {
+        "constraint": "No hanging decorations",
+        "satisfied": true,
+        "explanation": "Explicitly honoured in this proposed design."
+      },
+      {
+        "constraint": "Exclude colour #FF0000",
+        "satisfied": true,
+        "explanation": "Explicitly honoured in this proposed design."
+      }
+    ],
+    "assumptions": [
+      "Budget is a supplied envelope, not a verified vendor quotation."
+    ],
+    "openQuestions": [
+      "Confirm venue dimensions with a human planner."
+    ],
+    "nextActions": [
+      {
+        "title": "Review grounded arrangements",
+        "dueDate": null,
+        "estimatedCost": null,
+        "currency": null,
+        "assumption": "A proposed draft task only."
+      }
+    ],
+    "board": [
+      {
+        "id": "73511d0f-7c61-4b2a-8a82-56f8fdb5bb32",
+        "type": "note",
+        "assetId": null,
+        "caption": "Grounded floral reference",
+        "designNote": "Use low arrangements and verify circulation.",
+        "source": "Couple-authored note",
+        "licence": "Owned text",
+        "generated": false
+      }
+    ]
+  },
+  "typographyLicences": [
+    {
+      "font": "Lora",
+      "licence": "SIL Open Font License 1.1; self-hosted curated font",
+      "substitution": null
+    },
+    {
+      "font": "Georgia",
+      "licence": "System-provided font; platform licence applies",
+      "substitution": "Source Serif 4 (OFL) in this portable PDF"
+    }
+  ],
+  "images": []
+}

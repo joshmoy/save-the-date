@@ -22,10 +22,10 @@ export const designSchema=z.object({
 }).strict().superRefine((d,c)=>{if(d.layout==='single'&&d.eventIds.length!==1)c.addIssue({code:'custom',path:['eventIds'],message:'Choose one event or use the compact layout'});});
 export type InvitationDesign=z.infer<typeof designSchema>;
 export type ResolvedDesign={design:InvitationDesign;names:string;url:string;events:{id:string;version:number;title:string;date:string;venue:string;dressCode:string}[];colours:Record<typeof colourRoles[number],string>;photo?:{src:string;checksum:string;alt:string};qrDataUrl?:string;qrLabel?:string;purpose?:'invitation'|'admission';weddingVersion:number;rendererVersion:1;fontManifest:typeof fontManifest;resolvedAt:string};
-export function resolveDesign(design:InvitationDesign,context:{names:string;url:string;palette:{background:string;primary:string;secondary:string;accent:string};events:ResolvedDesign['events'];weddingVersion:number}):ResolvedDesign{
+export function resolveDesign(design:InvitationDesign,context:{names:string;url:string;palette:{background:string;primary:string;secondary:string;accent:string};events:ResolvedDesign['events'];weddingVersion:number;headingFont?:'Cormorant'|'Lora'|'Source Serif 4'}):ResolvedDesign{
  const url=new URL(context.url);if(!['http:','https:'].includes(url.protocol)||url.search||url.hash)throw Error('Canonical website URL required');
  const colours={...context.palette,names:context.palette.primary,heading:context.palette.secondary,body:context.palette.primary,footer:context.palette.secondary,border:context.palette.accent,ornament:context.palette.accent,...design.colours};
- return {design,names:design.wording.names??context.names,url:url.toString(),events:context.events,colours,weddingVersion:context.weddingVersion,rendererVersion:1,fontManifest,resolvedAt:new Date().toISOString()};
+ return {design:{...design,fonts:{...design.fonts,heading:design.fonts.heading??context.headingFont}},names:design.wording.names??context.names,url:url.toString(),events:context.events,colours,weddingVersion:context.weddingVersion,rendererVersion:1,fontManifest,resolvedAt:new Date().toISOString()};
 }
 export function InvitationCard({resolved:r}:{resolved:ResolvedDesign}){
  const d=r.design,t=catalogue.find(t=>t.id===d.templateId)!;const c=r.colours;const text=(field:string,fontSize:number,color:string,maxHeight:number,fontFamily:string=d.fonts.body)=>({style:{fontFamily,fontSize,color,maxHeight,fontWeight:400,overflow:'hidden',margin:d.layout==='compact'?'0 0 8px':'0 0 14px',flexShrink:0,lineHeight:1.25},'data-fit':field});

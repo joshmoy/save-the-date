@@ -47,3 +47,4 @@ export * from './media.js';
 export * from './guests.js';
 export * from './passes.js';
 export * from './uploads.js';
+export * from './creative.js';

@@ -94,6 +94,11 @@ test('M03 upload credentials are separate, album-scoped, limited and revocable b
  const asset=(await media.list(owner,weddingId)).assets.find(a=>a.id===intent.id);assert.equal(asset.moderation,'pending');
  await assert.rejects(media.readPublic('media-'+prefix,intent.id,await publication.publicSite('media-'+prefix)));
  assert.equal((await media.uploadStatus(uploader,weddingId)).length,1);
+ await media.edit(owner,weddingId,intent.id,{expectedVersion:asset.version,moderation:'approved'});
+ const {PostgresCreative}=await import('@save-the-date/persistence'),{creativeOptions}=await import('@save-the-date/config'),{creativeContextSchema}=await import('@save-the-date/contracts');
+ const planning=new PostgresCreative(store,storage,'tests',creativeOptions(loadConfig()));
+ await assert.rejects(planning.saveContext(owner,weddingId,creativeContextSchema.parse({references:[{assetId:intent.id,purpose:'Claimed model reference',licence:'Claimed ownership',providerConsent:false}]}),0),/staff-uploaded/);
+
  const next=await uploads.create(owner,weddingId,uploadGrantSchema.parse({eventId:event.id,albumId,expiresAt:new Date(Date.now()+86400000).toISOString()})),nextToken=hashes(randomUUID());
  await uploads.exchange('media-'+prefix,next.code,nextToken);const nextSession=await uploads.authenticate(nextToken),second={userId:null,uploadSessionId:nextSession.id} as const;
  await assert.rejects(media.expectedUpload(second,weddingId,intent.id));

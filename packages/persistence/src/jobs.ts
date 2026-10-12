@@ -1,12 +1,12 @@
 import { type Job, type JobTransportPort, type EmailPort, type EmailMessage } from '@save-the-date/adapters';
-import { EmailAdapterError } from '@save-the-date/adapters';
+import { EmailAdapterError,CreativeProviderError } from '@save-the-date/adapters';
 import { PostgresNotifications } from './notifications.js';
 import { PostgresStore } from './index.js';
 export class PostgresJobs implements JobTransportPort {
  constructor(private store:PostgresStore){}
- async lease(owner:string):Promise<Job|null>{const r=await this.store.pool.query("update std_jobs set state='leased',lease_owner=$1,lease_until=now()+interval '60 seconds',attempts=attempts+1,updated_at=now() where id=(select id from std_jobs where (state='pending' and retry_at<=now()) or (state in ('leased','running') and lease_until<now()) order by created_at for update skip locked limit 1) returning *",[owner]);if(!r.rowCount)return null;const j=r.rows[0];return {id:j.id,weddingId:j.wedding_id,type:j.type,payload:j.payload,attempts:j.attempts,leaseOwner:owner};}
+ async lease(owner:string):Promise<Job|null>{const r=await this.store.pool.query("update std_jobs set state='leased',lease_owner=$1,lease_until=now()+interval '60 seconds',attempts=attempts+1,updated_at=now() where id=(select id from std_jobs where (state='pending' and retry_at<=now()) or (state in ('leased','running') and lease_until<now()) order by created_at for update skip locked limit 1) returning *",[owner]);if(!r.rowCount)return null;const j=r.rows[0];return {id:j.id,weddingId:j.wedding_id,type:j.type,payload:j.payload,attempts:j.attempts,leaseOwner:owner,requestedBy:j.requested_by};}
  async ack(job:Job,result:unknown){await this.store.pool.query("update std_jobs set state='succeeded',result=$3,lease_until=null,updated_at=now() where id=$1 and lease_owner=$2 and state in ('leased','running')",[job.id,job.leaseOwner,JSON.stringify(result)]);}
- async fail(job:Job,code:string,retryable:boolean){await this.store.pool.query("update std_jobs set state=$3,error_code=$4,retry_at=now()+($5*interval '1 second'),lease_until=null,updated_at=now() where id=$1 and lease_owner=$2 and state in ('leased','running')",[job.id,job.leaseOwner,code==='UNCERTAIN_SEND'?'unknown_external':retryable&&job.attempts<5?'pending':'failed',code,Math.min(300,2**job.attempts)]);}
+ async fail(job:Job,code:string,retryable:boolean){await this.store.pool.query("update std_jobs set state=$3,error_code=$4,retry_at=now()+($5*interval '1 second'),lease_until=null,updated_at=now() where id=$1 and lease_owner=$2 and state in ('leased','running')",[job.id,job.leaseOwner,(code==='UNCERTAIN_SEND'||code==='AI_SUBMISSION_UNCERTAIN'||code==='AI_PROVIDER_UNAVAILABLE')?'unknown_external':retryable&&job.attempts<5?'pending':'failed',code,Math.min(300,2**job.attempts)]);}
  async processOne(owner:string,email:EmailPort,handlers:Record<string,(job:Job)=>Promise<unknown>>={}){const job=await this.lease(owner);if(!job)return false;
   try{
    if(job.type!=='email'){const handler=handlers[job.type];if(!handler)throw new Error('UNSUPPORTED_JOB');const heartbeat=setInterval(()=>{void this.store.pool.query("update std_jobs set lease_until=now()+interval '60 seconds' where id=$1 and lease_owner=$2 and state in ('leased','running')",[job.id,owner]).catch(()=>{});},20000);try{await this.ack(job,await handler(job));}finally{clearInterval(heartbeat);}return true;}
@@ -22,7 +22,7 @@ export class PostgresJobs implements JobTransportPort {
     await tx.query("update std_email_messages set state='unknown',updated_at=now() where id=$1",[message.id]);return true;
    });
    if(allowed){const result=await email.send(message);await new PostgresNotifications(this.store).submitted(message.id,result.state,result.providerId);await this.ack(job,result);}else await this.ack(job,{skipped:true});
-  }catch(e){const code=e instanceof Error?e.message:'JOB_FAILED';await this.fail(job,code,e instanceof EmailAdapterError&&e.retryable);if(job.type==='email')await this.store.pool.query('update std_email_messages set state=$2,error_code=$3,updated_at=now() where id=$1',[(job.payload as EmailMessage).id,code==='UNCERTAIN_SEND'||e instanceof EmailAdapterError&&e.retryable?'unknown':'failed',code]);}
+  }catch(e){const code=e instanceof CreativeProviderError&&e.uncertain?'AI_SUBMISSION_UNCERTAIN':e instanceof Error?e.message:'JOB_FAILED';await this.fail(job,code,e instanceof EmailAdapterError&&e.retryable);if(job.type==='email')await this.store.pool.query('update std_email_messages set state=$2,error_code=$3,updated_at=now() where id=$1',[(job.payload as EmailMessage).id,code==='UNCERTAIN_SEND'||e instanceof EmailAdapterError&&e.retryable?'unknown':'failed',code]);}
   return true;
  }
 }

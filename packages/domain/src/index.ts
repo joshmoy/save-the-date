@@ -139,3 +139,18 @@ export interface UploadRepository {
  authenticate(hash:string):Promise<UploadSession>;
  logout(hash:string):Promise<unknown>;
 }
+export interface CreativeRepository {
+ list(actor:Actor,weddingId:string):Promise<unknown>;
+ saveContext(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').CreativeContext,version:number):Promise<unknown>;
+ saveConcept(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').Concept,contextVersion:number,version:number,conceptId?:string):Promise<unknown>;
+ approve(actor:Actor,weddingId:string,conceptId:string,version:number):Promise<unknown>;
+ themeDiff(actor:Actor,weddingId:string,conceptId:string,version:number):Promise<unknown>;
+ applyTheme(actor:Actor,weddingId:string,conceptId:string,version:number,weddingVersion:number,siteVersion:number):Promise<unknown>;
+ generate(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').CreativeGeneration,key:string):Promise<unknown>;
+ cancel(actor:Actor,weddingId:string,runId:string):Promise<unknown>;
+ exportBrief(actor:Actor,weddingId:string,conceptId:string,version:number,key:string):Promise<unknown>;
+ retryBrief(actor:Actor,weddingId:string,briefId:string,format:'json'|'pdf'):Promise<unknown>;
+ downloadBrief(actor:Actor,weddingId:string,briefId:string,format:'json'|'pdf'):Promise<{bytes:Buffer;contentType:string}>;
+ readAsset(actor:Actor,weddingId:string,assetId:string):Promise<{bytes:Buffer;contentType:string}>;
+}
+export * from './creative.js';

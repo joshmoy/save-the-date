@@ -54,10 +54,10 @@ export class MailerooEmail implements EmailPort {
   }catch(e){if(e instanceof Error&&e.message==='EMAIL_REJECTED')throw e;throw new Error('UNCERTAIN_SEND');}
  }
 }
-export interface LanguageModelPort { generate(input:{context:unknown;schemaVersion:number;deadline:Date}):Promise<{output:unknown;provider:string;model:string;usage:unknown}> }
+export interface LanguageModelPort { generate(input:{context:unknown;schemaVersion:number;deadline:Date;task?:'concepts'|'question'}):Promise<{output:unknown;provider:string;model:string;usage:unknown}> }
 export interface ImageGenerationPort { generate(input:{prompt:string;referenceKeys:string[];deadline:Date}):Promise<{key:string;provenance:unknown}> }
 export class DisabledLanguageModel implements LanguageModelPort {async generate():Promise<never>{throw new Error('AI_DISABLED');}}
-export interface Job {id:string;weddingId:string|null;type:string;payload:unknown;attempts:number;leaseOwner:string}
+export interface Job {id:string;weddingId:string|null;type:string;payload:unknown;attempts:number;leaseOwner:string;requestedBy?:string|null}
 export interface JobTransportPort { lease(owner:string):Promise<Job|null>; ack(job:Job,result:unknown):Promise<void>; fail(job:Job,code:string,retryable:boolean):Promise<void> }
 
 // Password and opaque credential primitives remain adapter-owned.
@@ -67,3 +67,5 @@ export * from './media-processing.js';
 export * from './invitation-export.js';
 export * from './encryption.js';
 export * from './malware.js';
+export * from './creative-ai.js';
+export * from './planner-brief.js';
