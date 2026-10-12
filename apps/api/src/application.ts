@@ -1,3 +1,4 @@
+import {supportReportSchema,operatorControlsSchema,operatorRenewalSchema,operatorMediaSchema,operatorReasonSchema} from '@save-the-date/contracts';
 import {Readable} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
 import {passIssueSchema,passActionSchema,redemptionSchema,admissionCorrectionSchema} from '@save-the-date/contracts';
@@ -14,7 +15,7 @@ import type { Request, Response } from 'express';
 
 export class Application {
  private activeUploads=0;
- constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository,readonly invitations?:InvitationRepository,readonly guests?:GuestRepository,readonly passes?:PassRepository,readonly uploads?:import('@save-the-date/domain').UploadRepository,readonly creative?:import('@save-the-date/domain').CreativeRepository,readonly retention?:import('@save-the-date/domain').RetentionRepository){}
+ constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository,readonly invitations?:InvitationRepository,readonly guests?:GuestRepository,readonly passes?:PassRepository,readonly uploads?:import('@save-the-date/domain').UploadRepository,readonly creative?:import('@save-the-date/domain').CreativeRepository,readonly retention?:import('@save-the-date/domain').RetentionRepository,readonly operator?:import('@save-the-date/domain').OperatorRepository){}
  hash(token:string){return credentialHash(token,this.config.TOKEN_HASH_KEYS);}
  cookie(res:Response,token:string,clear=false){res.cookie('std_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:clear?0:7*24*3600*1000});}
  session(req:Request){return req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_session='))?.slice(12)??'';}
@@ -38,6 +39,7 @@ export class Application {
   }
   // Direct API requests use the actual peer IP. Deployment must configure a trusted proxy explicitly.
   await this.store.rateLimit('http:'+this.hash(req.ip??'unknown'),300);
+  if(parts[0]==='support'&&this.operator){if(method==='GET')return {email:this.config.SUPPORT_EMAIL.endsWith('.test')?null:this.config.SUPPORT_EMAIL};if(method==='POST'){await this.store.rateLimit('support:'+this.hash(req.ip??'unknown'),5,86400);return this.operator.submitReport(supportReportSchema.parse(body));}}
   if(parts[0]==='identity'){
    const action=parts[1];await this.store.rateLimit('identity:'+action+':'+this.hash(req.ip??'unknown'),action==='session'?120:10);
    if(action==='register'&&method==='POST'){const v=registerSchema.parse(body),token=credential();await this.store.register(v.email,await hashPassword(v.password),this.hash(token),`${this.config.PUBLIC_ORIGIN}/platform?verify=${token}`);res.status(202);return {message:'If this address is available, a verification email is queued'};}
@@ -48,7 +50,7 @@ export class Application {
    if(action==='reset'&&method==='POST'){const v=resetSchema.parse(body);await this.store.reset(this.hash(v.token),await hashPassword(v.password));this.cookie(res,'',true);return {message:'Password updated. All previous sessions are revoked'};}
    if(action==='logout'&&method==='POST'){await this.store.logout(this.hash(this.session(req)));this.cookie(res,'',true);return {message:'Signed out'};}
    const actor=await this.actor(req);
-   if(action==='session'&&method==='GET')return {userId:actor.userId,email:actor.email,verified:actor.verified};
+   if(action==='session'&&method==='GET')return {userId:actor.userId,email:actor.email,verified:actor.verified,operator:actor.verified&&this.config.OPERATOR_USER_IDS.split(',').map(v=>v.trim()).includes(actor.userId)};
    if(action==='deletion'&&method==='POST'&&this.retention){z.object({confirmation:z.literal('DELETE ACCOUNT')}).strict().parse(body);const result=await this.retention.requestAccountDeletion(actor);this.cookie(res,'',true);return result;}
    if(action==='reauthenticate'&&method==='POST'){const v=reauthSchema.parse(body);await this.store.reauthenticate(actor,h=>checkPassword(v.password,h));return {message:'Identity confirmed for fifteen minutes'};}
   }
@@ -87,6 +89,13 @@ export class Application {
   }
   const actor=await this.actor(req);
   if(parts[0]==='invites'&&parts[1]==='accept'&&method==='POST')return this.store.acceptInvite(actor,this.hash(tokenSchema.parse(body).token));
+  if(parts[0]==='operator'&&this.operator){
+   if(parts.length===1&&method==='GET')return this.operator.dashboard(actor,req.query.cursor===undefined?undefined:uuid.parse(req.query.cursor));
+   if(parts[1]==='accounts'&&parts[3]==='recover'&&method==='POST'){const v=operatorReasonSchema.extend({ownershipVerified:z.literal(true)}).strict().parse(body);return this.operator.recoverAccount(actor,uuid.parse(parts[2]),v);}
+   if(parts[1]==='media'&&method==='GET'){this.binary(req,res,await this.operator.readMedia(actor,uuid.parse(parts[2])));return;}
+   if(parts[1]==='reports'&&method==='POST'){const v=operatorReasonSchema.extend({state:z.enum(['reviewing','resolved'])}).strict().parse(body);return this.operator.resolveReport(actor,uuid.parse(parts[2]),v.state,v.reason);}
+   if(parts[1]==='weddings'){const wid=uuid.parse(parts[2]);if(parts.length===3&&method==='GET')return this.operator.wedding(actor,wid);if(parts[3]==='controls'&&method==='POST')return this.operator.controls(actor,wid,operatorControlsSchema.parse(body));if(parts[3]==='renew'&&method==='POST')return this.operator.renew(actor,wid,operatorRenewalSchema.parse(body));if(parts[3]==='media'&&method==='POST')return this.operator.grantMedia(actor,wid,operatorMediaSchema.parse(body));}
+  }
   if(parts[0]==='weddings'){
    if(parts.length===1){if(method==='GET')return this.store.listWeddings(actor);if(method==='POST'){res.status(201);return this.store.createWedding(actor,weddingSchema.parse(body));}}
    const id=uuid.parse(parts[1]);

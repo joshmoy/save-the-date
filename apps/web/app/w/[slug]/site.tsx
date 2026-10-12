@@ -22,5 +22,5 @@ export function WeddingSite({site,mediaBase}:{site:PublishedSite;mediaBase?:stri
   if(section==='rsvp')return <section id="rsvp" key={section}><h2>Will you join us?</h2><p>Open your private household invitation to respond for your eligible celebrations. Your answers stay private.</p><Link className={styles.cta} href={'/w/'+site.slug+'/rsvp'}>Open private RSVP</Link><p><Link href={'/w/'+site.slug+'/memories'}>Share your wedding memories</Link></p></section>;
   if(section==='gallery'&&site.albums?.some(a=>a.assets.length))return <section id="gallery" key={section}><h2>Our memories</h2>{site.albums.filter(a=>a.assets.length).map(album=><article key={album.id}><h3>{album.title}</h3>{album.description&&<p>{album.description}</p>}<div className={styles.mediaGrid}>{album.assets.map(asset=><figure key={asset.id}><MediaView src={mediaPath+asset.id} alt={asset.alt} video={asset.contentType.startsWith('video/')}/>{asset.caption&&<figcaption>{asset.caption}</figcaption>}</figure>)}</div></article>)}</section>;
   return null;
- })}</div><footer className={styles.footer}><p>{site.displayNames}</p><a href="/platform">Made with Save The Date</a></footer></main>;
+ })}</div><footer className={styles.footer}><p>{site.displayNames}</p><a href="/support">Help & rights</a><a href="/platform">Made with Save The Date</a></footer></main>;
 }

@@ -1,6 +1,6 @@
 import type { Role } from '@save-the-date/contracts';
 export class DomainError extends Error {
-  constructor(public status: number, public code: string, message: string) { super(message); }
+  constructor(public status: number, public code: string, message: string,public retryAfterSeconds?:number) { super(message); }
 }
 export const notFound = () => new DomainError(404,'NOT_FOUND','Resource not found');
 export interface Actor { userId: string; sessionId: string; email: string; verified: boolean; reauthenticatedAt: Date }
@@ -162,4 +162,15 @@ export interface RetentionRepository {
  export(actor:Actor,weddingId:string,sensitive:boolean,operationKey:string):Promise<unknown>;
  retry(actor:Actor,weddingId:string,exportId:string):Promise<unknown>;
  download(actor:Actor,weddingId:string,exportId:string):Promise<{chunks:AsyncIterable<Uint8Array>;bytes:number;contentType:string}>;
+}
+export interface OperatorRepository {
+ recoverAccount(actor:Actor,userId:string,input:{reason:string;ownershipVerified:true}):Promise<unknown>;
+ dashboard(actor:Actor,cursor?:string):Promise<unknown>;
+ wedding(actor:Actor,weddingId:string):Promise<unknown>;
+ controls(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').OperatorControls):Promise<unknown>;
+ renew(actor:Actor,weddingId:string,input:{until:string;reason:string;expectedVersion:number}):Promise<unknown>;
+ grantMedia(actor:Actor,weddingId:string,input:{assetId:string;reason:string}):Promise<unknown>;
+ readMedia(actor:Actor,grantId:string):Promise<{bytes:Buffer;contentType:string}>;
+ submitReport(input:import('@save-the-date/contracts').z.infer<typeof import('@save-the-date/contracts').supportReportSchema>):Promise<unknown>;
+ resolveReport(actor:Actor,reportId:string,state:'reviewing'|'resolved',reason:string):Promise<unknown>;
 }
