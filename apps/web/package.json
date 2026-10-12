@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "next dev --webpack",
-    "build": "next build --webpack && node scripts/prepare-standalone.mjs",
-    "start": "node .next/standalone/apps/web/server.js",
+    "dev": "node --import ./scripts/load-env.mjs node_modules/next/dist/bin/next dev --webpack",
+    "build": "node --import ./scripts/load-env.mjs node_modules/next/dist/bin/next build --webpack && node scripts/prepare-standalone.mjs",
+    "start": "node --import ./scripts/load-env.mjs .next/standalone/apps/web/server.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

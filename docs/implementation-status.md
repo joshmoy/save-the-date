@@ -10,8 +10,10 @@ Current blockers are unfinished engineering, not just credentials: invitation st
 
 Next concrete action: add the private owner-upload/process/authorised-read path (with quota, validation and derivative tests) to enable hero and blog attachments; then implement the four versioned invitation families with one shared preview/export resolver and queued JPEG/PDF renderer. Continue the existing plan into R2 and R3 without repeating R0.
 
-Resume: read this file, requirements-traceability.md, decisions-for-review.md and verification reports. Run existing checks before extending schema. Local synthetic PostgreSQL is at localhost:55439/std_test; configuration is in ignored .env.platform. Stop the background worker before queue tests. Database restore target std_restore_test preserves the R0 drill; no production source was touched.
+Resume: read this file, requirements-traceability.md, decisions-for-review.md and verification reports. Run existing checks before extending schema. Local synthetic PostgreSQL is at localhost:55439/std_test; configuration is in ignored root .env. Stop the background worker before queue tests. Database restore target std_restore_test preserves the R0 drill; no production source was touched.
 
 External checks: live Maileroo/S3 capability checks need synthetic credentials; real phone/browser matrix and complete R3 restore require appropriate devices/runtimes. No real guest email, paid AI, public deployment or production write was performed. SMTP/provider acceptance is never called delivered. Fixed licensed invitation fonts and media codecs remain implementation decisions to resolve before those features ship.
 
 Commit checkpoint: ad3d4ef monorepo; 7fac61c identity/tenant/events; 9fb8cdc connected dashboard; 30134d8 migration/container/restore runbooks; ca1b1d5 website/journal publication and calendar-date fix. Remaining work above is a continuation checkpoint, not an MVP completion report.
+
+Configuration update: root `.env` loads automatically for API/worker/migration commands and web scripts. Use `pnpm dev:api` and `pnpm dev:worker` directly. `DB_CONNECTION` remains separate from legacy `DATABASE_URL`. This replaces the earlier PLATFORM_ENV_FILE setup.

@@ -1,8 +1,10 @@
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
-// Load only explicit platform configuration. Never fall through to a legacy .env.local.
+// Resolve the shared root .env from this package, independent of the process working directory.
+// Existing process environment takes precedence; DB_CONNECTION never falls back to DATABASE_URL.
 export function loadConfig() {
- if(process.env.PLATFORM_ENV_FILE) dotenv.config({path:process.env.PLATFORM_ENV_FILE,quiet:true});
+ dotenv.config({path:fileURLToPath(new URL('../../../.env',import.meta.url)),quiet:true});
  const schema = z.object({ NODE_ENV:z.enum(['development','test','production']).default('development'), DB_ADAPTER:z.literal('postgres').default('postgres'), DB_CONNECTION:z.string().url(), PUBLIC_ORIGIN:z.string().url(), API_INTERNAL_ORIGIN:z.string().url().default('http://127.0.0.1:4000'), TOKEN_HASH_KEYS:z.string().min(32), STORAGE_ADAPTER:z.enum(['filesystem','s3']).default('filesystem'), STORAGE_NAMESPACE:z.string().regex(/^[a-z0-9-]+$/).default('weddings'), STORAGE_ROOT:z.string().default('/tmp/std-storage'), EMAIL_ADAPTER:z.enum(['capture','maileroo','disabled']).default('capture'), EMAIL_CAPTURE_ROOT:z.string().default('/tmp/std-mail'), EMAIL_FROM:z.email().default('local@example.test'), LLM_ADAPTER:z.literal('disabled').default('disabled'), IMAGE_ADAPTER:z.literal('disabled').default('disabled'), JOB_TRANSPORT:z.literal('postgres').default('postgres'), PORT:z.coerce.number().int().min(1024).max(65535).default(4000), RETENTION_POLICY:z.string().optional(), BACKUP_POLICY:z.string().optional() });
  const parsed = schema.safeParse(process.env);
  if(!parsed.success) throw new Error('Invalid platform configuration: '+parsed.error.issues.map(x=>x.path.join('.')+' '+x.message).join('; '));

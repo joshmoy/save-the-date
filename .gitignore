@@ -30,3 +30,8 @@ temp_interactive_push.bat
 *.tsbuildinfo
 .env.platform
 .pnpm-store
+
+# Shared local configuration and secrets
+.env
+.env.*
+!.env.example

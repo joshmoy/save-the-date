@@ -1,6 +1,6 @@
 # Migration and recovery
 
-Platform migration uses only explicit DB_CONNECTION configuration. Legacy scripts use DATABASE_URL and are separate; never run them as platform setup. The migration runner applies ordered SQL with SHA-256 checksums under a PostgreSQL advisory transaction lock. An edited applied migration fails; add an expand migration instead. No destructive migrations are included.
+Platform migration automatically reads the root .env and uses DB_CONNECTION. Legacy scripts use DATABASE_URL and are separate; never run them as platform setup. The migration runner applies ordered SQL with SHA-256 checksums under a PostgreSQL advisory transaction lock. An edited applied migration fails; add an expand migration instead. No destructive migrations are included.
 
 Before an authorised production migration, create an encrypted restore point and restore it into an isolated database. Use pg_dump/pg_restore from the supported PostgreSQL major version. Keep the data backup, object inventory/versions, font/template assets, configuration and keys in a failure-independent recoverable location. Target normal RPO 15 minutes/RTO 4 hours; event-day RPO 1 minute requires continuous recovery and an admission reconciliation runbook. R0 has not proved these service targets.
 

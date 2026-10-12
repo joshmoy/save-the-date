@@ -4,29 +4,29 @@ Requires Node 22.23.x, pnpm 11.8.0 and PostgreSQL 16. Use a new local database; 
 
 ```sh
 pnpm install --frozen-lockfile
-cp .env.platform.example .env.platform
+cp .env.example .env
 # Edit DB_CONNECTION for your local cluster and choose a random TOKEN_HASH_KEYS value.
-PLATFORM_ENV_FILE="$PWD/.env.platform" pnpm db:migrate
+pnpm db:migrate
 pnpm build
 ```
 
 Start three independent terminals from the repository root:
 
 ```sh
-PLATFORM_ENV_FILE="$PWD/.env.platform" pnpm dev:api
-PLATFORM_ENV_FILE="$PWD/.env.platform" pnpm dev:worker
+pnpm dev:api
+pnpm dev:worker
 pnpm dev:web
 ```
 
 Visit http://localhost:3000/platform. Register, then inspect the capture-only verification email JSON under EMAIL_CAPTURE_ROOT (default /tmp/std-mail). The worker must be running to produce this local file. Open its verification link and sign in. Real emails are never sent with capture selected. Unavailable API responses show retry guidance. Registration/recovery never disclose whether an email exists.
 
-The original wedding remains at /. Legacy configuration belongs in apps/web/.env.local after the move. Do not put production database credentials in .env.platform during development.
+The original wedding remains at /. All processes load the root .env. DB_CONNECTION selects the platform database; DATABASE_URL selects the legacy wedding database. Existing apps/web/.env.local remains supported for legacy overrides. Do not put production database credentials in .env during development.
 
 ```sh
 pnpm lint
 pnpm typecheck
 TEST_DB_CONNECTION=postgresql://YOUR_USER@127.0.0.1:YOUR_PORT/std_test \
-  PLATFORM_ENV_FILE="$PWD/.env.platform" pnpm test
+  pnpm test
 pnpm db:legacy-report
 ```
 
@@ -35,7 +35,7 @@ Tests require a localhost database whose name ends in `_test`; test data is synt
 Synthetic browser fixture, only in local `_test` databases:
 
 ```sh
-PLATFORM_ENV_FILE="$PWD/.env.platform" pnpm exec tsx scripts/local-fixture.ts
+pnpm exec tsx scripts/local-fixture.ts
 ```
 
 Fixture email is browser-fixture@example.test; password is synthetic browser password. It is development test data, never production setup.

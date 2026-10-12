@@ -8,29 +8,29 @@ Requires Node 22.23.x, pnpm 11.8.0 and PostgreSQL 16. Do not use a production da
 
 ```sh
 pnpm install --frozen-lockfile
-cp .env.platform.example .env.platform
-# Set DB_CONNECTION to your isolated PostgreSQL database.
-PLATFORM_ENV_FILE="$PWD/.env.platform" pnpm db:migrate
+cp .env.example .env
+# Set DB_CONNECTION to the new database; DATABASE_URL is legacy-only.
+pnpm db:migrate
 pnpm build
 ```
 
 Run each process in a separate terminal from the repository root:
 
 ```sh
-PLATFORM_ENV_FILE="$PWD/.env.platform" pnpm dev:api
-PLATFORM_ENV_FILE="$PWD/.env.platform" pnpm dev:worker
+pnpm dev:api
+pnpm dev:worker
 pnpm dev:web
 ```
 
 Open http://localhost:3000/platform. Local verification/recovery/invitation mail is captured as JSON in EMAIL_CAPTURE_ROOT by the worker. Read its link to complete email verification. Capture is development/test only and never sends real email. The historical wedding remains at /; new sites use /w/{slug}.
 
-After building, production process commands are `pnpm --filter @save-the-date/api start`, `pnpm --filter @save-the-date/worker start`, and `pnpm --filter @save-the-date/web start`, with explicit configuration as above. The web start command uses the prepared standalone server. Production requires HTTPS, protected secret material, a durable storage configuration, a production-capable email adapter or explicit disabled state, and documented backup/retention policies. This checkpoint is not ready for a production pilot.
+After building, production process commands are `pnpm --filter @save-the-date/api start`, `pnpm --filter @save-the-date/worker start`, and `pnpm --filter @save-the-date/web start`, using the root .env or environment variables supplied by the host. The web start command uses the prepared standalone server. Production requires HTTPS, protected secret material, a durable storage configuration, a production-capable email adapter or explicit disabled state, and documented backup/retention policies. This checkpoint is not ready for a production pilot.
 
 ```sh
 pnpm lint
 pnpm typecheck
 TEST_DB_CONNECTION=postgresql://YOUR_USER@127.0.0.1:YOUR_PORT/std_test \
-  PLATFORM_ENV_FILE="$PWD/.env.platform" pnpm test
+  pnpm test
 pnpm audit --prod
 pnpm db:legacy-report
 ```
