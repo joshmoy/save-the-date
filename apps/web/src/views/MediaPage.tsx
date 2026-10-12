@@ -174,11 +174,11 @@ export default function MediaPage({
   return (
     <main className={styles.page}>
       <nav className={styles.nav} aria-label="Main navigation">
-        <Link href="/" className={styles.brand}>
+        <Link href="/couples/adeola-and-joshua" className={styles.brand}>
           A & J
         </Link>
         <div className={styles.navLinks}>
-          <Link href="/" className={styles.navLink}>
+          <Link href="/couples/adeola-and-joshua" className={styles.navLink}>
             Home
           </Link>
           <Link href="/updates" className={styles.navLink}>

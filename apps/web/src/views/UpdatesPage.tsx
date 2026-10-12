@@ -36,7 +36,7 @@ export default function UpdatesPage() {
 
     const nextIndex = currentIndexRef.current + 1;
     if (nextIndex >= updates.length) {
-      router.push("/"); // Go back home after last story
+      router.push("/couples/adeola-and-joshua"); // Go back home after last story
       return;
     }
     setCurrentIndex(nextIndex);
@@ -130,7 +130,7 @@ export default function UpdatesPage() {
         _hover={{ bg: "whiteAlpha.200" }}
         onClick={(e) => {
           e.stopPropagation();
-          router.push("/");
+          router.push("/couples/adeola-and-joshua");
         }}
       >
         <X size={24} />

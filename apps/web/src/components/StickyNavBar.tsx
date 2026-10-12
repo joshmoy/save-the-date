@@ -43,7 +43,7 @@ export function StickyNavBar({ containerProps, ...boxProps }: StickyNavBarProps)
             <ArrowLeft size={20} /> Back to Updates
           </Button>
 
-          <Link href="/" _hover={{ textDecoration: "none" }} _focus={{ outline: "none" }}>
+          <Link href="/couples/adeola-and-joshua" _hover={{ textDecoration: "none" }} _focus={{ outline: "none" }}>
             <Text fontFamily="heading" fontSize="2xl" color="burgundy">
               Adeola & Joshua
             </Text>

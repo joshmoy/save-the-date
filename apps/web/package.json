@@ -14,6 +14,8 @@
     "@chakra-ui/react": "^3.30.0",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
+    "@fontsource/source-serif-4": "^5.3.1",
+    "@save-the-date/contracts": "workspace:*",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "framer-motion": "^12.23.26",
@@ -26,8 +28,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "server-only": "^0.0.1",
-    "sharp": "^0.35.3",
-    "@save-the-date/contracts": "workspace:*"
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

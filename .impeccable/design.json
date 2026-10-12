@@ -1,0 +1,328 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-12T08:15:14.773380+00:00",
+  "title": "Design System: Save The Date \u2014 Harbour",
+  "extensions": {
+    "colorMeta": {
+      "page": {
+        "role": "neutral",
+        "displayName": "Page",
+        "tonalRamp": [
+          "oklch(15% 0.0051 247.88)",
+          "oklch(27% 0.0051 247.88)",
+          "oklch(39% 0.0051 247.88)",
+          "oklch(51% 0.0051 247.88)",
+          "oklch(63% 0.0051 247.88)",
+          "oklch(75% 0.0051 247.88)",
+          "oklch(87% 0.0051 247.88)",
+          "oklch(95% 0.0051 247.88)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(27% 0.0000 89.88)",
+          "oklch(39% 0.0000 89.88)",
+          "oklch(51% 0.0000 89.88)",
+          "oklch(63% 0.0000 89.88)",
+          "oklch(75% 0.0000 89.88)",
+          "oklch(87% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "soft": {
+        "role": "neutral",
+        "displayName": "Soft",
+        "tonalRamp": [
+          "oklch(15% 0.0128 244.26)",
+          "oklch(27% 0.0128 244.26)",
+          "oklch(39% 0.0128 244.26)",
+          "oklch(51% 0.0128 244.26)",
+          "oklch(63% 0.0128 244.26)",
+          "oklch(75% 0.0128 244.26)",
+          "oklch(87% 0.0128 244.26)",
+          "oklch(95% 0.0128 244.26)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0433 255.50)",
+          "oklch(27% 0.0433 255.50)",
+          "oklch(39% 0.0433 255.50)",
+          "oklch(51% 0.0433 255.50)",
+          "oklch(63% 0.0433 255.50)",
+          "oklch(75% 0.0433 255.50)",
+          "oklch(87% 0.0433 255.50)",
+          "oklch(95% 0.0433 255.50)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15% 0.0354 250.01)",
+          "oklch(27% 0.0354 250.01)",
+          "oklch(39% 0.0354 250.01)",
+          "oklch(51% 0.0354 250.01)",
+          "oklch(63% 0.0354 250.01)",
+          "oklch(75% 0.0354 250.01)",
+          "oklch(87% 0.0354 250.01)",
+          "oklch(95% 0.0354 250.01)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "tonalRamp": [
+          "oklch(15% 0.0199 245.66)",
+          "oklch(27% 0.0199 245.66)",
+          "oklch(39% 0.0199 245.66)",
+          "oklch(51% 0.0199 245.66)",
+          "oklch(63% 0.0199 245.66)",
+          "oklch(75% 0.0199 245.66)",
+          "oklch(87% 0.0199 245.66)",
+          "oklch(95% 0.0199 245.66)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Accent",
+        "tonalRamp": [
+          "oklch(15% 0.0771 249.39)",
+          "oklch(27% 0.0771 249.39)",
+          "oklch(39% 0.0771 249.39)",
+          "oklch(51% 0.0771 249.39)",
+          "oklch(63% 0.0771 249.39)",
+          "oklch(75% 0.0771 249.39)",
+          "oklch(87% 0.0771 249.39)",
+          "oklch(95% 0.0771 249.39)"
+        ]
+      },
+      "hover": {
+        "role": "primary",
+        "displayName": "Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0665 250.70)",
+          "oklch(27% 0.0665 250.70)",
+          "oklch(39% 0.0665 250.70)",
+          "oklch(51% 0.0665 250.70)",
+          "oklch(63% 0.0665 250.70)",
+          "oklch(75% 0.0665 250.70)",
+          "oklch(87% 0.0665 250.70)",
+          "oklch(95% 0.0665 250.70)"
+        ]
+      },
+      "tint": {
+        "role": "primary",
+        "displayName": "Tint",
+        "tonalRamp": [
+          "oklch(15% 0.0145 244.72)",
+          "oklch(27% 0.0145 244.72)",
+          "oklch(39% 0.0145 244.72)",
+          "oklch(51% 0.0145 244.72)",
+          "oklch(63% 0.0145 244.72)",
+          "oklch(75% 0.0145 244.72)",
+          "oklch(87% 0.0145 244.72)",
+          "oklch(95% 0.0145 244.72)"
+        ]
+      },
+      "success-bg": {
+        "role": "semantic",
+        "displayName": "Success Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0125 164.80)",
+          "oklch(27% 0.0125 164.80)",
+          "oklch(39% 0.0125 164.80)",
+          "oklch(51% 0.0125 164.80)",
+          "oklch(63% 0.0125 164.80)",
+          "oklch(75% 0.0125 164.80)",
+          "oklch(87% 0.0125 164.80)",
+          "oklch(95% 0.0125 164.80)"
+        ]
+      },
+      "success-ink": {
+        "role": "semantic",
+        "displayName": "Success Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0637 162.07)",
+          "oklch(27% 0.0637 162.07)",
+          "oklch(39% 0.0637 162.07)",
+          "oklch(51% 0.0637 162.07)",
+          "oklch(63% 0.0637 162.07)",
+          "oklch(75% 0.0637 162.07)",
+          "oklch(87% 0.0637 162.07)",
+          "oklch(95% 0.0637 162.07)"
+        ]
+      },
+      "warn-bg": {
+        "role": "semantic",
+        "displayName": "Warn Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0317 82.77)",
+          "oklch(27% 0.0317 82.77)",
+          "oklch(39% 0.0317 82.77)",
+          "oklch(51% 0.0317 82.77)",
+          "oklch(63% 0.0317 82.77)",
+          "oklch(75% 0.0317 82.77)",
+          "oklch(87% 0.0317 82.77)",
+          "oklch(95% 0.0317 82.77)"
+        ]
+      },
+      "warn-ink": {
+        "role": "semantic",
+        "displayName": "Warn Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0878 72.27)",
+          "oklch(27% 0.0878 72.27)",
+          "oklch(39% 0.0878 72.27)",
+          "oklch(51% 0.0878 72.27)",
+          "oklch(63% 0.0878 72.27)",
+          "oklch(75% 0.0878 72.27)",
+          "oklch(87% 0.0878 72.27)",
+          "oklch(95% 0.0878 72.27)"
+        ]
+      },
+      "error-bg": {
+        "role": "semantic",
+        "displayName": "Error Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0186 21.57)",
+          "oklch(27% 0.0186 21.57)",
+          "oklch(39% 0.0186 21.57)",
+          "oklch(51% 0.0186 21.57)",
+          "oklch(63% 0.0186 21.57)",
+          "oklch(75% 0.0186 21.57)",
+          "oklch(87% 0.0186 21.57)",
+          "oklch(95% 0.0186 21.57)"
+        ]
+      },
+      "error-ink": {
+        "role": "semantic",
+        "displayName": "Error Ink",
+        "tonalRamp": [
+          "oklch(15% 0.1225 27.03)",
+          "oklch(27% 0.1225 27.03)",
+          "oklch(39% 0.1225 27.03)",
+          "oklch(51% 0.1225 27.03)",
+          "oklch(63% 0.1225 27.03)",
+          "oklch(75% 0.1225 27.03)",
+          "oklch(87% 0.1225 27.03)",
+          "oklch(95% 0.1225 27.03)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Marketing display",
+        "purpose": "Editorial marketing headlines."
+      },
+      "workspace-title": {
+        "displayName": "Workspace title",
+        "purpose": "Operational page headings."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "action-feedback",
+        "value": "140ms ease",
+        "purpose": "Background and press feedback; .98 press scale, removed with reduced motion."
+      },
+      {
+        "name": "field-feedback",
+        "value": "150ms",
+        "purpose": "Field background and border transitions; removed with reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "single-column",
+        "value": "760px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary action from the implemented Harbour surfaces.",
+      "html": "<button class=\"ds-primary\">Create your wedding</button>",
+      "css": ".ds-primary{background:var(--std-accent,#2F567C);color:white;border:0;border-radius:8px;padding:13px 22px;min-height:50px;font:600 15px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:background-color 140ms ease,transform 140ms ease}.ds-primary:hover{background:var(--std-hover,#244363)}.ds-primary:focus-visible{outline:3px solid var(--std-accent,#2F567C);outline-offset:4px}.ds-primary:active{transform:scale(.98)}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}.ds-primary:active{transform:none}}"
+    },
+    {
+      "name": "Text field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Text field from the implemented Harbour surfaces.",
+      "html": "<label class=\"ds-field\">Wedding name<input placeholder=\"Your wedding name\"></label>",
+      "css": ".ds-field{display:grid;gap:8px;color:var(--std-ink,#243449);font:600 14px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}.ds-field input{padding:12px 14px;border:1px solid var(--std-muted,#566779);border-radius:8px;min-height:46px;background:white;color:var(--std-ink,#243449);font:400 15px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;caret-color:var(--std-accent,#2F567C)}.ds-field input:focus-visible{outline:3px solid var(--std-accent,#2F567C);outline-offset:4px}.ds-field input::placeholder{color:var(--std-muted,#566779)}"
+    },
+    {
+      "name": "Selected workspace navigation",
+      "kind": "nav",
+      "refersTo": "navigation-selected",
+      "description": "Selected workspace navigation from the implemented Harbour surfaces.",
+      "html": "<nav class=\"ds-tabs\" aria-label=\"Workspace\"><button aria-current=\"page\">Website</button><button>Events</button></nav>",
+      "css": ".ds-tabs{display:flex;gap:8px;flex-wrap:wrap}.ds-tabs button{padding:10px 18px;min-height:44px;border:0;border-radius:8px;background:transparent;color:var(--std-muted,#566779);font:400 14px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}.ds-tabs button[aria-current]{background:var(--std-tint,#E4EDF5);color:var(--std-accent,#2F567C);font-weight:600}.ds-tabs button:hover{background:var(--std-soft,#E6EEF5)}.ds-tabs button:focus-visible{outline:3px solid var(--std-accent,#2F567C);outline-offset:4px}"
+    },
+    {
+      "name": "Content panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Content panel from the implemented Harbour surfaces.",
+      "html": "<section class=\"ds-panel\"><h2>Wedding details</h2><p>Save privately and preview before publication.</p></section>",
+      "css": ".ds-panel{padding:28px;background:var(--std-surface,#FFFFFF);border:1px solid var(--std-line,#D1DDE8);border-radius:12px;color:var(--std-ink,#243449);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}.ds-panel h2{font-size:23px;font-weight:600;letter-spacing:-.015em;margin:0 0 12px}.ds-panel p{color:var(--std-muted,#566779);line-height:1.6;margin:0}"
+    },
+    {
+      "name": "FAQ disclosure",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "FAQ disclosure from the implemented Harbour surfaces.",
+      "html": "<details class=\"ds-faq\"><summary>Can our planner help?</summary><p>Invite a planner to edit drafts and organise details.</p></details>",
+      "css": ".ds-faq{padding:20px 0;border-bottom:1px solid var(--std-line,#D1DDE8);color:var(--std-ink,#243449);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}.ds-faq summary{cursor:pointer;font-size:17px;font-weight:550;min-height:44px}.ds-faq summary:hover{color:var(--std-accent,#2F567C)}.ds-faq summary:focus-visible{outline:3px solid var(--std-accent,#2F567C);outline-offset:4px}.ds-faq p{color:var(--std-muted,#566779);font-size:15px;line-height:1.7}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Harbour",
+    "overview": "Harbour is clear and composed: deep blue actions, misty backgrounds and pale blue supporting surfaces. Authentic wedding photography and an editorial serif supply warmth; the workspace stays readable and efficient with system typography.\n\nThis is a record of the implemented marketing and workspace milestone, not a claim of complete MVP delivery. Couple websites and invitation designs keep their chosen template palettes.",
+    "keyCharacteristics": [
+      "Light, composed surfaces.",
+      "Editorial marketing; operational workspace.",
+      "Authentic photography and restrained action feedback."
+    ],
+    "rules": [
+      {
+        "name": "The Action Colour Rule",
+        "body": "Concentrate saturated blue on actions and selection; large content areas stay light.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Voices Rule",
+        "body": "Use serif display for marketing storytelling and system sans for operational work.",
+        "section": "typography"
+      },
+      {
+        "name": "The Quiet Surface Rule",
+        "body": "Establish hierarchy with tone, spacing and borders before adding elevation.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use shared Harbour tokens for application and marketing surfaces.",
+      "Do pair semantic status colours with explicit text and meaningful icons.",
+      "Do retain visible keyboard focus and reduced-motion behaviour.",
+      "Do keep couple website and invitation palettes independent."
+    ],
+    "donts": [
+      "Don't introduce another control or icon system alongside Chakra and Lucide.",
+      "Don't use the pale line token as the only identifying boundary of a field.",
+      "Don't imply that a save, publication or delivery succeeded before confirmation.",
+      "Don't fabricate testimonials, pricing or measured benefits."
+    ]
+  }
+}
