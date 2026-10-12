@@ -6,13 +6,13 @@ import {designSchema,catalogue,type ResolvedDesign} from '@save-the-date/templat
 import type {InvitationRepository} from '@save-the-date/domain';
 import { verifyRavenEvent, credential, credentialHash, hashPassword, checkPassword } from '@save-the-date/adapters';
 import { DomainError, type Actor, type FoundationRepository, type MediaRepository, type NotificationRepository, type PublicationRepository } from '@save-the-date/domain';
-import { registerSchema, loginSchema, tokenSchema, recoverSchema, resetSchema, weddingSchema, weddingPatchSchema, eventSchema, eventPatchSchema, inviteSchema, reauthSchema, transferSchema, deleteSchema, uuid, slug, siteSaveSchema, publishSchema, postSaveSchema, revisionSchema, albumSaveSchema, uploadIntentSchema, mediaEditSchema, mediaDeleteSchema } from '@save-the-date/contracts';
+import { registerSchema, loginSchema, tokenSchema, recoverSchema, resetSchema, weddingSchema, weddingPatchSchema, eventSchema, eventPatchSchema, inviteSchema, reauthSchema, transferSchema, deleteSchema, uuid, slug, siteSaveSchema, publishSchema, postSaveSchema, revisionSchema, albumSaveSchema, uploadIntentSchema, uploadGrantSchema,uploadAccessSchema,mediaEditSchema, mediaDeleteSchema } from '@save-the-date/contracts';
 import type { Config } from '@save-the-date/config';
 import type { Request, Response } from 'express';
 
 export class Application {
  private activeUploads=0;
- constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository,readonly invitations?:InvitationRepository,readonly guests?:GuestRepository,readonly passes?:PassRepository){}
+ constructor(readonly store:FoundationRepository,readonly config:Config,readonly publication:PublicationRepository,readonly notifications?:NotificationRepository,readonly media?:MediaRepository,readonly invitations?:InvitationRepository,readonly guests?:GuestRepository,readonly passes?:PassRepository,readonly uploads?:import('@save-the-date/domain').UploadRepository){}
  hash(token:string){return credentialHash(token,this.config.TOKEN_HASH_KEYS);}
  cookie(res:Response,token:string,clear=false){res.cookie('std_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:clear?0:7*24*3600*1000});}
  session(req:Request){return req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_session='))?.slice(12)??'';}
@@ -32,7 +32,7 @@ export class Application {
   }
   if(!['GET','HEAD'].includes(method)){
    if(req.headers.origin!==this.config.PUBLIC_ORIGIN)throw new DomainError(403,'ORIGIN_REJECTED','Use the configured application origin');
-   if(req.headers['x-std-csrf']!=='1'||!(req.is('application/json')||method==='PUT'&&parts[0]==='weddings'&&parts[2]==='media'&&parts[4]==='bytes'&&req.is('application/octet-stream')))throw new DomainError(403,'CSRF_REJECTED','Reload and retry this request');
+   if(req.headers['x-std-csrf']!=='1'||!(req.is('application/json')||method==='PUT'&&((parts[0]==='weddings'&&parts[2]==='media'&&parts[4]==='bytes')||(parts[0]==='uploads'&&parts[1]==='media'&&parts[3]==='bytes'))&&req.is('application/octet-stream')))throw new DomainError(403,'CSRF_REJECTED','Reload and retry this request');
   }
   // Direct API requests use the actual peer IP. Deployment must configure a trusted proxy explicitly.
   await this.store.rateLimit('http:'+this.hash(req.ip??'unknown'),300);
@@ -51,10 +51,11 @@ export class Application {
   }
   if(parts[0]==='public'&&parts[1]==='weddings'){
    const weddingSlug=slug.parse(parts[2]);const cookieName='std_site_'+weddingSlug;const session=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith(cookieName+'='))?.slice(cookieName.length+1);
-   if(parts[3]==='media'&&parts.length===5&&method==='GET'&&this.media){const site=await this.publication.publicSite(weddingSlug,session?this.hash(session):undefined);const file=await this.media.readPublic(weddingSlug,uuid.parse(parts[4]),site);this.binary(req,res,file);return undefined;}
-   if(parts.length===3&&method==='GET')return this.publication.publicSite(weddingSlug,session?this.hash(session):undefined);
+   const guestToken=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_guest_session='))?.slice(18);const guestHash=guestToken?this.hash('guest-session:'+guestToken):undefined;
+   if(parts[3]==='media'&&parts.length===5&&method==='GET'&&this.media){const site=await this.publication.publicSite(weddingSlug,session?this.hash(session):undefined,guestHash);const file=await this.media.readPublic(weddingSlug,uuid.parse(parts[4]),site);this.binary(req,res,file);return undefined;}
+   if(parts.length===3&&method==='GET')return this.publication.publicSite(weddingSlug,session?this.hash(session):undefined,guestHash);
    if(parts[3]==='access'&&method==='POST'){await this.store.rateLimit('site-access:'+this.hash(req.ip??'unknown'),10);const token=credential();await this.publication.exchangeShared(weddingSlug,this.hash(tokenSchema.parse(body).token),this.hash(token));res.cookie(cookieName,token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:7*24*3600*1000});return {message:'Website access granted. This is shared access, not identity verification'};}
-   if(parts[3]==='posts'&&parts.length===5&&method==='GET')return this.publication.publicPost(weddingSlug,slug.parse(parts[4]),session?this.hash(session):undefined);
+   if(parts[3]==='posts'&&parts.length===5&&method==='GET')return this.publication.publicPost(weddingSlug,slug.parse(parts[4]),session?this.hash(session):undefined,guestHash);
   }
   if(parts[0]==='guest'&&this.guests){
    const sessionToken=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_guest_session='))?.slice(18)??'';const sessionHash=this.hash('guest-session:'+sessionToken);
@@ -68,6 +69,18 @@ export class Application {
    }
    if(parts[1]==='party'&&method==='GET')return this.guests.party(session);
    if(parts[1]==='events'&&parts[3]==='rsvp'&&method==='POST')return this.guests.submit(sessionHash,uuid.parse(parts[2]),rsvpSchema.parse(body),uuid.parse(req.headers['idempotency-key']));
+  }
+  if(parts[0]==='uploads'&&this.uploads&&this.media){
+   const raw=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_upload_session='))?.slice(19)??'',sessionHash=this.hash('upload-session:'+raw);
+   const setCookie=(token:string)=>res.cookie('std_upload_session',token,{httpOnly:true,secure:this.config.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:86400000});
+   if(parts[1]==='access'&&method==='POST'){await this.store.rateLimit('upload-access:'+this.hash(req.ip??'unknown'),10);const v=uploadAccessSchema.parse(body),token=credential();await this.uploads.exchange(v.slug,v.credential,this.hash('upload-session:'+token));setCookie(token);return {signedIn:true};}
+   if(parts[1]==='from-rsvp'&&method==='POST'&&this.guests){await this.store.rateLimit('upload-session:'+this.hash(req.ip??'unknown'),10,3600);const token=credential(),guestToken=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('std_guest_session='))?.slice(18)??'';await this.uploads.fromGuest(await this.guests.authenticate(this.hash('guest-session:'+guestToken)),this.hash('upload-session:'+token));setCookie(token);return {signedIn:true};}
+   if(parts[1]==='logout'&&method==='POST'){await this.uploads.logout(sessionHash);setCookie('');return {signedOut:true};}
+   const session=await this.uploads.authenticate(sessionHash),uploader={userId:null,uploadSessionId:session.id} as const;
+   if(parts[1]==='session'&&method==='GET')return session;
+   if(parts[1]==='media'&&parts.length===2&&method==='GET')return this.media.uploadStatus(uploader,session.weddingId);
+   if(parts[1]==='intents'&&method==='POST'){await this.store.rateLimit('upload-intent:'+session.id,30,3600);const result=await this.media.intent(uploader,session.weddingId,uploadIntentSchema.parse(body)) as {id:string};res.status(201);return {...result,uploadPath:'uploads/media/'+result.id+'/bytes'};}
+   if(parts[1]==='media'&&parts[3]==='bytes'&&method==='PUT'){const id=uuid.parse(parts[2]),max=await this.media.expectedUpload(uploader,session.weddingId,id);if(Number(req.headers['content-length'])>max)throw new DomainError(413,'FILE_TOO_LARGE','Transfer exceeds reserved bytes');if(this.activeUploads>=2)throw new DomainError(429,'UPLOAD_BUSY','Uploads are busy. Retry in a moment');await this.store.rateLimit('upload-bytes:'+session.id,30,3600);this.activeUploads++;req.setTimeout(120000);try{const chunks:Buffer[]=[];let size=0;for await(const chunk of req){const b=Buffer.from(chunk);size+=b.length;if(size>max)throw new DomainError(413,'FILE_TOO_LARGE','Transfer exceeds reserved bytes');chunks.push(b);}res.status(202);return this.media.receive(uploader,session.weddingId,id,Buffer.concat(chunks));}finally{this.activeUploads--;}}
   }
   const actor=await this.actor(req);
   if(parts[0]==='invites'&&parts[1]==='accept'&&method==='POST')return this.store.acceptInvite(actor,this.hash(tokenSchema.parse(body).token));
@@ -119,6 +132,11 @@ export class Application {
      if(method==='GET'){res.setHeader('Content-Disposition',`attachment; filename=invitation-${exportId}.${format}`);this.binary(req,res,await this.invitations.download(actor,id,exportId,format));return;}
     }
     if(parts[4]==='export'&&method==='POST'){const v=z.object({expectedVersion:z.number().int().positive(),preview:z.object({events:z.array(z.unknown()),weddingVersion:z.number().int()})}).parse(body);res.status(202);return this.invitations.queue(actor,id,uuid.parse(parts[3]),v.expectedVersion,v.preview as ResolvedDesign,uuid.parse(req.headers['idempotency-key']));}
+   }
+   if(this.uploads&&parts[2]==='upload-grants'){
+    if(parts.length===3&&method==='GET')return this.uploads.list(actor,id);
+    if(parts.length===3&&method==='POST'){res.status(201);return this.uploads.create(actor,id,uploadGrantSchema.parse(body));}
+    if(parts.length===4&&method==='DELETE')return this.uploads.revoke(actor,id,uuid.parse(parts[3]));
    }
    if(this.media&&parts[2]==='albums'){
     if(parts.length===3&&method==='POST'){const v=albumSaveSchema.parse(body);res.status(201);return this.media.saveAlbum(actor,id,v.album,v.expectedVersion);}

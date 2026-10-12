@@ -39,3 +39,5 @@ pnpm exec tsx scripts/local-fixture.ts
 ```
 
 Fixture email is browser-fixture@example.test; password is synthetic browser password. It is development test data, never production setup.
+
+Web uses WEB_PORT (default 3000); API uses API_PORT (default 4000, legacy PORT supported). The root .env is loaded automatically; no PLATFORM_ENV_FILE is needed. An inherited deployment PORT overrides the web default. Guest media scanner setup: [guest uploads](guest-uploads.md).

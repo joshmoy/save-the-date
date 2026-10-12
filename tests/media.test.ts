@@ -8,7 +8,7 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {PostgresStore,PostgresMedia,PostgresPublication} from '@save-the-date/persistence';
 import {FilesystemStorage,NativeMediaProcessor,credential,credentialHash,type Job} from '@save-the-date/adapters';
-import {weddingSchema,albumSchema,uploadIntentSchema,siteConfigSchema} from '@save-the-date/contracts';
+import {weddingSchema,eventSchema,albumSchema,uploadIntentSchema,siteConfigSchema} from '@save-the-date/contracts';
 import {type Actor,DomainError} from '@save-the-date/domain';
 import {loadConfig} from '@save-the-date/config';
 import {createServer} from '../apps/api/src/server.js';
@@ -27,9 +27,9 @@ test('M01/M02 private image processing, metadata, quota and publication boundari
  const listing=await media.list(owner,weddingId),asset=listing.assets.find(a=>a.id===intent.id);assert.equal(asset.processing,'ready');assert.equal(asset.moderation,'approved');assert.equal(Number(listing.usage.reserved_bytes),0);assert.ok(Number(listing.usage.stored_bytes)>png.length);
  assert.equal((await media.read(owner,weddingId,intent.id)).contentType,'image/webp');assert.deepEqual((await media.read(owner,weddingId,intent.id,true)).bytes,png);await assert.rejects(media.read(other,weddingId,intent.id));await assert.rejects(media.read(owner,foreignId,intent.id));
  const site=siteConfigSchema.parse({visibility:'public',heroAssetId:intent.id});await publication.saveSite(owner,weddingId,site,0);const wedding=await store.readWedding(owner,weddingId);await assert.rejects(publication.publish(owner,weddingId,1,wedding.version),(e:DomainError)=>e.code==='MEDIA_PRIVATE');
- const album=listing.albums.find(a=>a.id===albumId);await media.saveAlbum(owner,weddingId,albumSchema.parse({title:album.title,visibility:'inherit',published:true}),album.version,albumId);await publication.publish(owner,weddingId,1,wedding.version);assert.equal((await media.readPublic('media-'+prefix,intent.id,{})).contentType,'image/webp');
+ const album=listing.albums.find(a=>a.id===albumId);await media.saveAlbum(owner,weddingId,albumSchema.parse({title:album.title,visibility:'inherit',published:true}),album.version,albumId);await publication.publish(owner,weddingId,1,wedding.version);assert.equal((await media.readPublic('media-'+prefix,intent.id,await publication.publicSite('media-'+prefix))).contentType,'image/webp');
  await assert.rejects(media.readPublic('media-'+prefix,intent.id,{archived:true}));
- await assert.rejects(media.remove(owner,weddingId,intent.id,asset.version,false),(e:DomainError)=>e.code==='PUBLISHED_REFERENCE');await media.remove(owner,weddingId,intent.id,asset.version,true);await assert.rejects(media.readPublic('media-'+prefix,intent.id,{}));await media.process(await job(intent.id,'media-delete'),processor);
+ await assert.rejects(media.remove(owner,weddingId,intent.id,asset.version,false),(e:DomainError)=>e.code==='PUBLISHED_REFERENCE');await media.remove(owner,weddingId,intent.id,asset.version,true);await assert.rejects(media.readPublic('media-'+prefix,intent.id,await publication.publicSite('media-'+prefix)));await media.process(await job(intent.id,'media-delete'),processor);
  assert.equal(Number((await media.list(owner,weddingId)).usage.stored_bytes),0);
 });
 test('M02 concurrent reservations never exceed quota and expired uploads release it',async()=>{
@@ -42,7 +42,7 @@ test('M02 spoofed, corrupt and oversized input rejected without permanent quota'
  await assert.rejects(processor.process(Buffer.from('<script>alert(1)</script>'),'image/jpeg'));
 });
 test('M04 planner uploads require approval and revoked membership stops worker output',async()=>{
- const intent=await media.intent(planner,weddingId,input());await media.receive(planner,weddingId,intent.id,png);await media.process(await job(intent.id),processor);let asset=(await media.list(owner,weddingId)).assets.find(a=>a.id===intent.id);assert.equal(asset.moderation,'pending');await assert.rejects(media.readPublic('media-'+prefix,intent.id,{}));await assert.rejects(media.edit(planner,weddingId,intent.id,{expectedVersion:asset.version,moderation:'approved'}));asset=await media.edit(owner,weddingId,intent.id,{expectedVersion:asset.version,moderation:'approved'});assert.equal((await media.readPublic('media-'+prefix,intent.id,{})).contentType,'image/webp');
+ const intent=await media.intent(planner,weddingId,input());await media.receive(planner,weddingId,intent.id,png);await media.process(await job(intent.id),processor);let asset=(await media.list(owner,weddingId)).assets.find(a=>a.id===intent.id);assert.equal(asset.moderation,'pending');await assert.rejects(media.readPublic('media-'+prefix,intent.id,await publication.publicSite('media-'+prefix)));await assert.rejects(media.edit(planner,weddingId,intent.id,{expectedVersion:asset.version,moderation:'approved'}));asset=await media.edit(owner,weddingId,intent.id,{expectedVersion:asset.version,moderation:'approved'});assert.equal((await media.readPublic('media-'+prefix,intent.id,await publication.publicSite('media-'+prefix))).contentType,'image/webp');
  const pending=await media.intent(planner,weddingId,input());await media.receive(planner,weddingId,pending.id,png);const staleJob=await job(pending.id);await store.removeMember(owner,weddingId,planner.userId);await assert.rejects(media.process(staleJob,processor));assert.equal((await media.list(owner,weddingId)).assets.find(a=>a.id===pending.id).processing,'expired');
 });
 test('M02 duplicate upload completion has one winner and preserves its original',async()=>{
@@ -80,4 +80,49 @@ test('M01 ordering, cover ownership and moving assets preserve album invariants'
  const album=listing.albums.find(a=>a.id===albumId);await media.saveAlbum(owner,weddingId,albumSchema.parse({title:album.title,visibility:'inherit',published:true,coverAssetId:ids[0]}),album.version,albumId);
  const target=await media.saveAlbum(owner,weddingId,albumSchema.parse({title:'Moved memories'}),0);const asset=(await media.list(owner,weddingId)).assets.find(a=>a.id===ids[0]);await media.edit(owner,weddingId,asset.id,{expectedVersion:asset.version,albumId:target.id});assert.equal((await media.list(owner,weddingId)).albums.find(a=>a.id===albumId).cover_asset_id,null);
  await assert.rejects(media.saveAlbum(owner,weddingId,albumSchema.parse({title:'Wrong cover',coverAssetId:ids[0]}),0));
+});
+test('M03 upload credentials are separate, album-scoped, limited and revocable before worker output',async()=>{
+ const {PostgresUploads}=await import('@save-the-date/persistence'),{credentialHash}=await import('@save-the-date/adapters'),{uploadGrantSchema}=await import('@save-the-date/contracts');
+ const hashes=(v:string)=>credentialHash(v,'upload-test-key'.repeat(4)),uploads=new PostgresUploads(store,hashes,'https://example.test');
+ const event=await store.saveEvent(owner,weddingId,eventSchema.parse({title:'Memories',type:'reception',timezone:'UTC'}));
+ const grant=await uploads.create(owner,weddingId,uploadGrantSchema.parse({eventId:event.id,albumId,expiresAt:new Date(Date.now()+86400000).toISOString(),sessionFileLimit:1}));
+ const token=hashes('upload-session:'+randomUUID());await uploads.exchange('media-'+prefix,grant.code,token);
+ const session=await uploads.authenticate(token),uploader={userId:null,uploadSessionId:session.id} as const;
+ await assert.rejects(uploads.exchange('wrong-wedding',grant.code,hashes(randomUUID())));
+ const concurrent=await Promise.allSettled([media.intent(uploader,weddingId,input()),media.intent(uploader,weddingId,input())]);assert.equal(concurrent.filter(r=>r.status==='fulfilled').length,1);const accepted=concurrent.find(r=>r.status==='fulfilled');assert.ok(accepted&&accepted.status==='fulfilled');const intent=accepted.value;await assert.rejects(media.intent(uploader,weddingId,input()),/allowance/);
+ await media.receive(uploader,weddingId,intent.id,png);await media.process(await job(intent.id),processor,{scan:async()=>{}});
+ const asset=(await media.list(owner,weddingId)).assets.find(a=>a.id===intent.id);assert.equal(asset.moderation,'pending');
+ await assert.rejects(media.readPublic('media-'+prefix,intent.id,await publication.publicSite('media-'+prefix)));
+ assert.equal((await media.uploadStatus(uploader,weddingId)).length,1);
+ const next=await uploads.create(owner,weddingId,uploadGrantSchema.parse({eventId:event.id,albumId,expiresAt:new Date(Date.now()+86400000).toISOString()})),nextToken=hashes(randomUUID());
+ await uploads.exchange('media-'+prefix,next.code,nextToken);const nextSession=await uploads.authenticate(nextToken),second={userId:null,uploadSessionId:nextSession.id} as const;
+ await assert.rejects(media.expectedUpload(second,weddingId,intent.id));
+ const pending=await media.intent(second,weddingId,input());await media.receive(second,weddingId,pending.id,png);
+ await uploads.revoke(owner,weddingId,next.id);await assert.rejects(uploads.authenticate(nextToken));await assert.rejects(media.process(await job(pending.id),processor));
+ assert.equal((await media.list(owner,weddingId)).assets.find(a=>a.id===pending.id).processing,'rejected');
+});
+test('M03/S03 HTTP upload-only access cannot RSVP or view invited media; RSVP uploads remain owner moderated',async()=>{
+ const {PostgresUploads,PostgresGuests}=await import('@save-the-date/persistence'),{uploadGrantSchema,guestSchema,eventSchema}=await import('@save-the-date/contracts');
+ const key='test-upload-http-key'.repeat(3),hash=(v:string)=>credentialHash(v,key),uploads=new PostgresUploads(store,hash,'http://localhost:3000'),guests=new PostgresGuests(store,hash,'http://localhost:3000');
+ const event=await store.saveEvent(owner,weddingId,eventSchema.parse({title:'Private memory audience',type:'custom',timezone:'UTC'}));
+ const album=await media.saveAlbum(owner,weddingId,albumSchema.parse({title:'Invited memories',visibility:'invited',published:true,guestUploads:true}),0);
+ const ownInput={...input(),albumId:album.id},own=await media.intent(owner,weddingId,ownInput);await media.receive(owner,weddingId,own.id,png);await media.process(await job(own.id),processor);
+ const attendee=await guests.save(owner,weddingId,guestSchema.parse({name:'Invited photographer',household:'Photographer',eventIds:[event.id]}),0),rsvp=await guests.issueGrant(owner,weddingId,attendee.party_id,180),guestHash=hash('guest-session:'+credential());await guests.exchange('media-'+prefix,rsvp.code,guestHash);
+ const anon=await publication.publicSite('media-'+prefix);assert.ok(!JSON.stringify(anon).includes(own.id));await assert.rejects(media.readPublic('media-'+prefix,own.id,anon));
+ const invited=await publication.publicSite('media-'+prefix,undefined,guestHash);assert.ok(JSON.stringify(invited).includes(own.id));assert.equal((await media.readPublic('media-'+prefix,own.id,invited)).contentType,'image/webp');
+ const grant=await uploads.create(owner,weddingId,uploadGrantSchema.parse({eventId:event.id,albumId:album.id,expiresAt:new Date(Date.now()+86400000).toISOString()}));
+ await assert.rejects(guests.exchange('media-'+prefix,grant.code,hash(credential())));
+ const config=loadConfig(),server=await createServer({...config,DB_CONNECTION:connection!,TOKEN_HASH_KEYS:key,STORAGE_ADAPTER:'filesystem',STORAGE_ROOT:root});await server.app.listen(0,'127.0.0.1');
+ try{const base='http://127.0.0.1:'+server.app.getHttpServer().address().port+'/api/v1',headers={Origin:config.PUBLIC_ORIGIN,'x-std-csrf':'1','Content-Type':'application/json'};
+  assert.equal((await fetch(base+'/uploads/session')).status,401);
+  const access=await fetch(base+'/uploads/access',{method:'POST',headers,body:JSON.stringify({slug:'media-'+prefix,credential:grant.code})});assert.equal(access.status,200);const cookie=access.headers.get('set-cookie')!.split(';')[0];assert.ok(cookie.startsWith('std_upload_session='));
+  assert.equal((await fetch(base+'/guest/party',{headers:{Cookie:cookie}})).status,401);const publicResult=await fetch(base+'/public/weddings/media-'+prefix,{headers:{Cookie:cookie}});assert.ok(!JSON.stringify(await publicResult.json()).includes(own.id));
+  const intentResponse=await fetch(base+'/uploads/intents',{method:'POST',headers:{...headers,Cookie:cookie},body:JSON.stringify(ownInput)});assert.equal(intentResponse.status,201);const intent=await intentResponse.json();
+  const received=await fetch(base+'/'+intent.uploadPath,{method:'PUT',headers:{...headers,Cookie:cookie,'Content-Type':'application/octet-stream'},body:png});assert.equal(received.status,202);
+  await assert.rejects(media.process(await job(intent.id),processor),/MEDIA_SAFETY_UNAVAILABLE/);
+  assert.equal((await media.list(owner,weddingId)).assets.find(a=>a.id===intent.id).moderation,'pending');
+  await uploads.revoke(owner,weddingId,grant.id);assert.equal((await fetch(base+'/uploads/session',{headers:{Cookie:cookie}})).status,401);
+ }finally{await server.app.close();await server.store.close();}
+ const session=await guests.authenticate(guestHash),uploadHash=hash(credential());await uploads.fromGuest(session,uploadHash);const transferred=await uploads.authenticate(uploadHash);assert.ok(transferred.albumIds.includes(album.id));
+ await guests.revokeGrant(owner,weddingId,rsvp.id);await assert.rejects(uploads.authenticate(uploadHash));await assert.rejects(media.readPublic('media-'+prefix,own.id,await publication.publicSite('media-'+prefix,undefined,guestHash)));
 });

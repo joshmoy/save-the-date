@@ -70,3 +70,10 @@ Use explicit household membership and owner-allocated attendee slots; groups do 
 - Scanner retries retain the same operation UUID after an uncertain response and require explicit next-guest action. Offline rosters assist people but cannot authorise admission.
 - Raven pass notices link to private guest access; undocumented attachment support is not invented. Delivery is blocked if pass version or requester authority changes.
 - UUID inputs are normalised to lowercase so equivalent representations preserve tenant-bound encryption and idempotency.
+
+## Guest uploads and invited audience — 2026-10-12
+- Dedicated event/album upload grants expire within 180 days and issue one-day sessions; private RSVP access can issue upload sessions only for owner-enabled guest albums. No fake user accounts are created.
+- Failed attempts count against per-session allowances to constrain abuse; rejected/expired media releases wedding storage quota. Owner approval and album publication remain separate.
+- Guest media requires configurable private ClamAV scanning. Disabled/unavailable scanning fails closed, while other core workflows remain usable. Local official scanner checks were performed under AMD64 emulation because the stable image lacks ARM64 support.
+- Valid household sessions grant invited journal/album access and only eligible published private events. Shared and upload credentials do not impersonate household identity.
+- Separate API_PORT and WEB_PORT names prevent shared .env settings from making the standalone web process bind the API port; inherited deployment PORT remains supported.

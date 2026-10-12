@@ -46,3 +46,4 @@ export const revisionSchema=z.object({expectedVersion:z.number().int().positive(
 export * from './media.js';
 export * from './guests.js';
 export * from './passes.js';
+export * from './uploads.js';

@@ -66,3 +66,4 @@ export * from './raven-relay.js';
 export * from './media-processing.js';
 export * from './invitation-export.js';
 export * from './encryption.js';
+export * from './malware.js';

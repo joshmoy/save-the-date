@@ -11,3 +11,7 @@
 .cameraView{max-width:480px;margin:20px auto;border-radius:12px;overflow:hidden}.cameraView:empty{display:none}@media print{.root *{visibility:hidden}.printRoster,.printRoster *{visibility:visible}.printRoster{position:absolute;left:24px;top:24px;right:24px}.printRoster p{color:#000;max-width:none}}
 
 .scanError{display:grid;gap:12px}.scanResult{display:flex;gap:14px;align-items:flex-start}.scanResult>div{min-width:0}.scanResult>svg{flex-shrink:0}
+
+.checkbox{display:flex;align-items:flex-start;gap:10px;line-height:1.6;margin:16px 0}.checkbox input{flex:none;width:20px;height:20px;margin-top:3px}.root progress{display:block;width:min(100%,360px);accent-color:var(--std-accent)}
+
+.srOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

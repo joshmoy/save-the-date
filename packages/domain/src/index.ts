@@ -33,10 +33,11 @@ export interface NotificationRepository {
 }
 export interface MediaRepository {
  list(actor:Actor,weddingId:string):Promise<unknown>;
+ uploadStatus(actor:{userId:null;uploadSessionId:string},weddingId:string):Promise<unknown>;
  saveAlbum(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').AlbumInput,version:number,albumId?:string):Promise<unknown>;
- intent(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').UploadIntent):Promise<unknown>;
- expectedUpload(actor:Actor,weddingId:string,id:string):Promise<number>;
- receive(actor:Actor,weddingId:string,id:string,bytes:Buffer):Promise<unknown>;
+ intent(actor:MediaUploadActor,weddingId:string,input:import('@save-the-date/contracts').UploadIntent):Promise<unknown>;
+ expectedUpload(actor:MediaUploadActor,weddingId:string,id:string):Promise<number>;
+ receive(actor:MediaUploadActor,weddingId:string,id:string,bytes:Buffer):Promise<unknown>;
  read(actor:Actor,weddingId:string,id:string,original?:boolean):Promise<{bytes:Buffer;contentType:string}>;
  readPublic(weddingId:string,id:string,publication:unknown):Promise<{bytes:Buffer;contentType:string}>;
  edit(actor:Actor,weddingId:string,id:string,input:import('@save-the-date/contracts').MediaEdit):Promise<unknown>;
@@ -72,8 +73,8 @@ export interface PublicationRepository {
  publish(actor:Actor,id:string,version:number,weddingVersion:number):Promise<unknown>;
  rotateShared(actor:Actor,id:string,hash:string):Promise<void>;
  exchangeShared(slug:string,hash:string,sessionHash:string):Promise<void>;
- publicSite(slug:string,sessionHash?:string):Promise<unknown>;
- publicPost(slug:string,path:string,sessionHash?:string):Promise<unknown>;
+ publicSite(slug:string,sessionHash?:string,guestSessionHash?:string):Promise<unknown>;
+ publicPost(slug:string,path:string,sessionHash?:string,guestSessionHash?:string):Promise<unknown>;
  listPosts(actor:Actor,id:string):Promise<unknown>;
  savePost(actor:Actor,id:string,post:import('@save-the-date/contracts').PostInput,version:number,postId?:string):Promise<unknown>;
  publishPost(actor:Actor,id:string,postId:string,version:number,publish:boolean):Promise<unknown>;
@@ -126,4 +127,15 @@ export interface PassRepository {
  deliveryRecipients(actor:Actor,weddingId:string,passId:string):Promise<string[]>;
  send(actor:Actor,weddingId:string,passId:string,version:number,recipients:string[],key:string):Promise<unknown>;
  retryTicket(actor:Actor,weddingId:string,passId:string,format:'jpeg'|'pdf'):Promise<unknown>;
+}
+export type UploadSession={id:string;weddingId:string;slug:string;albumIds:string[];albums:{id:string;title:string}[];filesUsed:number;bytesUsed:number;fileLimit:number;byteLimit:number};
+export type MediaUploadActor=Actor|{userId:null;uploadSessionId:string};
+export interface UploadRepository {
+ list(actor:Actor,id:string):Promise<unknown>;
+ create(actor:Actor,id:string,input:import('@save-the-date/contracts').UploadGrantInput):Promise<unknown>;
+ revoke(actor:Actor,id:string,grantId:string):Promise<unknown>;
+ exchange(slug:string,credential:string,sessionHash:string):Promise<unknown>;
+ fromGuest(guest:GuestSession,sessionHash:string):Promise<unknown>;
+ authenticate(hash:string):Promise<UploadSession>;
+ logout(hash:string):Promise<unknown>;
 }
