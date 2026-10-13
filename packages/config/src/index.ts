@@ -19,6 +19,7 @@ export function loadConfig() {
  if((c.LLM_ADAPTER==='openai'||c.IMAGE_ADAPTER==='openai')&&!c.OPENAI_API_URL.startsWith('https://'))throw Error('OpenAI adapter endpoint requires HTTPS');
  if(!!c.API_TLS_CERT_PATH!==!!c.API_TLS_KEY_PATH)throw Error('Supply both API TLS certificate and key paths');
  if(c.NODE_ENV==='production'){
+  const database=new URL(c.DB_CONNECTION);if(!['postgres:','postgresql:'].includes(database.protocol)||database.searchParams.get('sslmode')!=='verify-full')throw Error('Production PostgreSQL requires explicit sslmode=verify-full');
   if(!c.API_INTERNAL_ORIGIN.startsWith('https://'))throw Error('Production internal API origin requires HTTPS');
   if(c.STORAGE_ADAPTER==='s3'&&(!c.DELETION_LEDGER_S3_BUCKET||c.DELETION_LEDGER_S3_BUCKET===c.S3_BUCKET))throw Error('Production requires a separate private deletion ledger bucket');
   if(!c.PUBLIC_ORIGIN.startsWith('https://'))throw new Error('Production PUBLIC_ORIGIN requires HTTPS');

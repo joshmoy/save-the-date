@@ -5,7 +5,7 @@ import {PostgresStore} from '@save-the-date/persistence';
 import {credential,credentialHash} from '@save-the-date/adapters';
 import {weddingSchema} from '@save-the-date/contracts';
 
-test('W03 event pages preserve dated/null order and current security assignments',async()=>{
+test('W02 event pages preserve dated/null order and current security assignments',async()=>{
  const store=new PostgresStore(process.env.TEST_DB_CONNECTION!),prefix=randomUUID(),hash=(value:string)=>credentialHash(value,'event-pagination-test-key'.repeat(3));
  async function user(label:string){const token=credential(),email=prefix+label+'@example.test';await store.register(email,'fixture',hash(token));await store.verify(hash(token));const actor=await store.login(email,async()=>true,hash(credential()));assert.ok(actor);return actor;}
  try{
