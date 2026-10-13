@@ -1,4 +1,5 @@
-import {randomUUID,randomBytes} from 'node:crypto';
+import {credential,manualCredential} from '@save-the-date/adapters';
+import {randomUUID} from 'node:crypto';
 import type {PoolClient} from 'pg';
 import type {Actor,GuestSession,UploadSession,UploadRepository} from '@save-the-date/domain';
 import {DomainError,requireCapability,notFound} from '@save-the-date/domain';
@@ -11,7 +12,7 @@ export class PostgresUploads implements UploadRepository {
   requireCapability(await this.store.tenant(actor,id,tx),'publish');
   const expiry=Date.parse(input.expiresAt);if(expiry<=Date.now()||expiry>Date.now()+180*86400000)throw new DomainError(400,'GRANT_EXPIRY','Choose an expiry within the next 180 days');
   const target=await tx.query("select w.slug from std_weddings w join std_events e on e.wedding_id=w.id join std_albums a on a.wedding_id=w.id where w.id=$1 and e.id=$2 and a.id=$3 and a.deleted_at is null and w.lifecycle<>'archived' and w.uploads_enabled and w.service_expires_at>now()",[id,input.eventId,input.albumId]);if(!target.rowCount)throw notFound();
-  const token=randomBytes(32).toString('base64url'),code=randomBytes(8).toString('hex').toUpperCase(),grantId=randomUUID();
+  const token=credential(),code=manualCredential(),grantId=randomUUID();
   await tx.query('insert into std_upload_grants(id,wedding_id,event_id,album_id,token_hash,code_hash,expires_at,session_file_limit,session_byte_limit,created_by) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[grantId,id,input.eventId,input.albumId,this.hash('upload:'+token),this.hash('upload:'+code),input.expiresAt,input.sessionFileLimit,input.sessionByteLimit,actor.userId]);
   await this.store.audit(tx,id,actor.userId,'upload.grant_created',grantId);
   return {id:grantId,code,url:this.origin+'/w/'+target.rows[0].slug+'/memories#upload='+token,expiresAt:input.expiresAt};

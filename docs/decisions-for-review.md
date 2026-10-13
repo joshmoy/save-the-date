@@ -103,3 +103,6 @@ The next-day Debian repository no longer offered the exact Chromium package used
 - Restore conservatively: revoke prior credentials/unused passes, hold publication, require owner review, keep uncertain email/AI submissions from retrying. Verify restored ownership against current case evidence before opening identity recovery.
 - Replay individual deletions and erase affected server invitation/brief/archive copies. Downloaded immutable snapshots remain outside server control.
 - Do not claim the production 15-minute/4-hour or one-minute event-day recovery tier from the small local fixture. ADR018 and the recovery runbook describe the needed deployment-specific checks.
+
+## Manual credential compliance
+New RSVP, upload and admission manual credentials use sixteen random unambiguous Base32 characters (80 bits), excluding 0/1/I/O. Existing stored hexadecimal hashes remain accepted; no existing grants are rewritten. Link credentials remain separate thirty-two-byte secrets. Full suite 114 passes including old RSVP/admission code compatibility.
