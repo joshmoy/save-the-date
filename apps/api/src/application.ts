@@ -213,7 +213,7 @@ export class Application {
     if(['publish','unpublish'].includes(parts[4])&&method==='POST')return this.publication.publishPost(actor,id,postId,revisionSchema.parse(body).expectedVersion,parts[4]==='publish');
    }
    if(parts[2]==='events'){
-    if(parts.length===3&&method==='GET')return this.store.listEvents(actor,id);
+    if(parts.length===3&&method==='GET')return this.store.listEventPage(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
     if(parts.length===3&&method==='POST'){res.status(201);return this.store.saveEvent(actor,id,eventSchema.parse(body));}
     if(parts.length===4&&method==='PATCH'){const v=eventPatchSchema.parse(body);return this.store.saveEvent(actor,id,v.event,uuid.parse(parts[3]),v.expectedVersion);}
    }

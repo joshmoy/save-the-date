@@ -61,6 +61,7 @@ export interface FoundationRepository extends IdentityRepository {
  createWedding(actor:Actor,input:import('@save-the-date/contracts').WeddingInput):Promise<unknown>;
  readWedding(actor:Actor,id:string):Promise<unknown>;
  patchWedding(actor:Actor,id:string,input:{expectedVersion:number;displayNames?:string;timezone?:string;primaryDate?:string|null;locale?:string;palette?:unknown;lifecycle?:string}):Promise<unknown>;
+ listEventPage(actor:Actor,id:string,cursor?:string):Promise<unknown>;
  listEvents(actor:Actor,id:string):Promise<unknown>;
  saveEvent(actor:Actor,id:string,event:import('@save-the-date/contracts').EventInput,eventId?:string,expectedVersion?:number):Promise<unknown>;
  invite(actor:Actor,id:string,input:{email:string;role:Role;eventIds:string[];albumIds:string[]},hash:string,link:string):Promise<unknown>;

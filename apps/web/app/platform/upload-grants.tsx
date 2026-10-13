@@ -1,4 +1,5 @@
 'use client';
+import {eventOptions} from './event-options';
 import {useState,useEffect,useCallback} from 'react';
 import {Button} from '@chakra-ui/react';
 import styles from './platform.module.css';
@@ -9,8 +10,8 @@ async function api<T>(path:string,method='GET',body?:unknown):Promise<T>{const r
 export function UploadGrants({weddingId,albums}:{weddingId:string;albums:{id:string;title:string}[]}){
  const [nextCursor,setNextCursor]=useState<string|null>(null);
  const [grants,setGrants]=useState<Grant[]>([]),[events,setEvents]=useState<Event[]>([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[created,setCreated]=useState<{code:string;url:string;expiresAt:string}|null>(null);
- const refresh=useCallback(async()=>{const [g,e]=await Promise.all([api<GrantPage>('weddings/'+weddingId+'/upload-grants'),api<Event[]>('weddings/'+weddingId+'/events')]);setGrants(g.grants);setNextCursor(g.nextCursor);setEvents(e);},[weddingId]);
- useEffect(()=>{let done=false;void Promise.all([api<GrantPage>('weddings/'+weddingId+'/upload-grants'),api<Event[]>('weddings/'+weddingId+'/events')]).then(([g,e])=>{if(!done){setGrants(g.grants);setNextCursor(g.nextCursor);setEvents(e);}}).catch(e=>{if(!done)setError(e.message);}).finally(()=>{if(!done)setLoading(false);});return()=>{done=true;};},[weddingId]);
+ const refresh=useCallback(async()=>{const [g,e]=await Promise.all([api<GrantPage>('weddings/'+weddingId+'/upload-grants'),eventOptions<Event>('weddings/'+weddingId+'/events')]);setGrants(g.grants);setNextCursor(g.nextCursor);setEvents(e);},[weddingId]);
+ useEffect(()=>{let done=false;void Promise.all([api<GrantPage>('weddings/'+weddingId+'/upload-grants'),eventOptions<Event>('weddings/'+weddingId+'/events')]).then(([g,e])=>{if(!done){setGrants(g.grants);setNextCursor(g.nextCursor);setEvents(e);}}).catch(e=>{if(!done)setError(e.message);}).finally(()=>{if(!done)setLoading(false);});return()=>{done=true;};},[weddingId]);
  async function older(){setBusy(true);setError('');try{const page=await api<GrantPage>('weddings/'+weddingId+'/upload-grants?cursor='+encodeURIComponent(nextCursor!));setGrants(previous=>[...previous,...page.grants.filter(g=>!previous.some(old=>old.id===g.id))]);setNextCursor(page.nextCursor);setNotice(page.grants.length+' older upload access records loaded.');}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
  async function act(fn:()=>Promise<void>){setBusy(true);setError('');try{await fn();await refresh();}catch(e){setError(e instanceof Error?e.message:'Could not complete this action.');}finally{setBusy(false);setLoading(false);}}
  return <section className={styles.panel}><h3>Guest upload access</h3><p>Create an event upload code for people without RSVP access. It permits uploads to one album; it cannot open private responses or admit anyone.</p><p role="status" aria-live="polite">{notice}</p>{error&&<p role="alert" className={styles.error}>{error}<Button variant="ghost" onClick={()=>act(refresh)}>Retry</Button></p>}
