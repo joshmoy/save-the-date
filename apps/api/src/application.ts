@@ -109,7 +109,7 @@ export class Application {
    if(parts.length===2){if(method==='GET')return this.store.readWedding(actor,id);if(method==='PATCH')return this.store.patchWedding(actor,id,weddingPatchSchema.parse(body));if(method==='DELETE'){deleteSchema.parse(body);await this.store.deleteWedding(actor,id);return {message:'Workspace deleted. Recovery available for thirty days',weddingId:id};}}
    if(this.notifications&&parts[2]==='notifications'){if(parts.length===3&&method==='GET')return this.notifications.list(actor,id,req.query.cursor===undefined?undefined:uuid.parse(req.query.cursor));if(parts[4]==='retry'&&method==='POST'){const v=apiSchemas.retryNotification.parse(body);res.status(202);return this.queued(actor,id,'email',await this.notifications.retry(actor,id,uuid.parse(parts[3]),v.recipient,uuid.parse(req.headers['idempotency-key'])));}}
    if(this.retention&&parts[2]==='retention'){
-    if(parts.length===3&&method==='GET')return this.retention.status(actor,id);
+    if(parts.length===3&&method==='GET')return this.retention.status(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
     if(parts[3]==='review'&&method==='POST')return this.retention.review(actor,id);
     if(parts[3]==='exports'&&parts.length===4&&method==='POST'){const input=apiSchemas.archiveExport.parse(body);res.status(202);return this.queued(actor,id,'archive-export',await this.retention.export(actor,id,input.includeSensitive,uuid.parse(req.headers['idempotency-key'])));}
     if(parts[3]==='exports'&&parts[5]==='retry'&&method==='POST'){res.status(202);return this.retention.retry(actor,id,uuid.parse(parts[4]));}

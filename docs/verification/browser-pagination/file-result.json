@@ -10,5 +10,11 @@
     "pages": 1,
     "width": 360,
     "height": 504
+  },
+  "archive": {
+    "source": "authenticated CUA browser download",
+    "bytes": 270336,
+    "originalsChecksumVerified": 19,
+    "privateGuestTablesExcluded": true
   }
 }

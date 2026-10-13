@@ -150,3 +150,6 @@ Page one hundred complete households in name/UUID order, returning only their at
 
 ## Browser history acceptance fixture
 Use one new synthetic workspace rather than modifying existing wedding resources. Real privately processed/scanned/approved media and one protected rendered invitation cover file flows; failed export/revoked grant/pass history is explicit metadata to exercise navigation, not fake integrations. Require a local_test database and verified example.test fixture owner. Browser downloads are independent evidence. Add assertions so a missing job-type handler cannot silently count as a completed export. No real email/AI or account permission changes.
+
+## Private archive history
+Use fifty-row timestamp/UUID cursors, returning only status metadata and preserving loaded extent through polling. Clear stale load errors after recovery. Keep file access checks independent of history pagination and require recent authentication for sensitive archives. Extend the existing separate synthetic browser workspace with explicitly failed history metadata and one actual archive; no original wedding resources or account grants are changed. API retention/operator dependencies already use domain interfaces, so no redundant rewrite is needed.

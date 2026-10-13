@@ -165,7 +165,7 @@ export * from './creative.js';
 
 export interface RetentionRepository {
  requestAccountDeletion(actor:Actor):Promise<unknown>;
- status(actor:Actor,weddingId:string):Promise<unknown>;
+ status(actor:Actor,weddingId:string,cursor?:string):Promise<unknown>;
  review(actor:Actor,weddingId:string):Promise<unknown>;
  export(actor:Actor,weddingId:string,sensitive:boolean,operationKey:string):Promise<unknown>;
  retry(actor:Actor,weddingId:string,exportId:string):Promise<unknown>;
