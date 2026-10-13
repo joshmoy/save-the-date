@@ -1,0 +1,12 @@
+import {readFile} from 'node:fs/promises';
+import {spawn} from 'node:child_process';
+import assert from 'node:assert/strict';
+import {loadConfig} from '@save-the-date/config';
+loadConfig();
+const file=process.argv[2];assert.ok(file,'Pass the generated checkpoint JSON');const checkpoint=JSON.parse(await readFile(file,'utf8')),connection=(await readFile(checkpoint.root+'/connection.txt','utf8')).trim(),url=new URL(connection);
+assert.ok(['localhost','127.0.0.1'].includes(url.hostname)&&/^std_navigation_[a-f0-9]{32}_test$/.test(url.pathname.slice(1)));
+const env={...process.env,NODE_ENV:'test',PLATFORM_RUNTIME_ENV:'test',DB_CONNECTION:connection,DATABASE_URL:'',PUBLIC_ORIGIN:checkpoint.origin,API_INTERNAL_ORIGIN:checkpoint.apiOrigin,API_PORT:'4007',EMAIL_ADAPTER:'disabled',LLM_ADAPTER:'disabled',IMAGE_ADAPTER:'disabled',STORAGE_ADAPTER:'filesystem',STORAGE_ROOT:checkpoint.root+'/storage',DELETION_LEDGER_ROOT:checkpoint.root+'/ledger',OPERATOR_USER_IDS:'',API_TLS_CERT_PATH:'',API_TLS_KEY_PATH:'',API_TLS_CA_PATH:'',RENDER_BROWSER_ENDPOINT:''};
+const apiCode="import {loadConfig} from '@save-the-date/config';import {createServer} from './apps/api/dist/server.js';const {app,store}=await createServer(loadConfig());await app.listen(4007,'127.0.0.1');for(const signal of ['SIGINT','SIGTERM'])process.on(signal,async()=>{await app.close();await store.close();process.exit(0);});";
+const api=spawn(process.execPath,['--input-type=module','-e',apiCode],{env,stdio:'inherit'}),web=spawn(process.execPath,['--import','./scripts/load-env.mjs','.next/standalone/apps/web/server.js'],{cwd:'apps/web',env:{...env,PORT:'3007',WEB_PORT:'3007',HOSTNAME:'127.0.0.1'},stdio:'inherit'});
+for(const signal of ['SIGINT','SIGTERM'] as const)process.on(signal,()=>{api.kill(signal);web.kill(signal);});
+await Promise.all([new Promise(resolve=>api.once('exit',code=>{if(code!==0)web.kill('SIGTERM');resolve(code);})),new Promise(resolve=>web.once('exit',code=>{if(code!==0)api.kill('SIGTERM');resolve(code);}))]);

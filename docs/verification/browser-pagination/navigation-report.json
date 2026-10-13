@@ -1,0 +1,32 @@
+{
+  "browser": "Chrome extension, real password authentication with existing synthetic credential",
+  "fixture": "dedicated std_navigation database; no source wedding records copied",
+  "workspaces": [
+    50,
+    100,
+    105
+  ],
+  "eventCards": [
+    50,
+    100,
+    105
+  ],
+  "members": [
+    100,
+    105
+  ],
+  "invites": [
+    100,
+    105
+  ],
+  "independentListsPreserved": true,
+  "eventAssignmentChoices": 105,
+  "albumAssignmentChoices": 105,
+  "albumSections": 105,
+  "uploadAlbumChoices": 105,
+  "mobileWidth": 360,
+  "bodyWidth": 345,
+  "horizontalOverflow": false,
+  "errors": 0,
+  "scope": "metadata navigation and responsive controls only; not physical-device, email-delivery or full accessibility evidence"
+}
