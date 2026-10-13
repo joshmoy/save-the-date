@@ -135,3 +135,6 @@ Use stable creation-time/UUID cursors for a hundred editable drafts per page, re
 
 ## Page response security
 Apply no-referrer to all pages so private query/fragment journeys do not leak through outgoing navigation; deny embedding and unused browser device features while preserving same-origin scanner camera use. Use a document CSP compatible with the existing Next/Chakra runtime; do not claim nonce-based script protection. TLS/HSTS and validated proxy attribution require the actual deployment contract. Verify actual built HTTP responses, not configuration snapshots.
+
+## Gateway client attribution
+Retain no proxy trust by default. Add explicit ingress-overwritten single-IP header configuration on web and exact gateway IP/CIDR trust on API, instead of trusting arbitrary browser forwarding or hop counts. Reject missing/malformed configured headers; validate IPv4/IPv6 and reject trust-all CIDRs. Production must restrict ingress→web→API paths. No existing .env/trust settings changed. Standard Express address trust follows its official behind-proxies documentation.
