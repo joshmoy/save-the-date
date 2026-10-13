@@ -112,3 +112,6 @@ New RSVP, upload and admission manual credentials use sixteen random unambiguous
 - Log only generated/validated correlation UUIDs, route families, timing, status, operation UUIDs and keyed pseudonymous tenant IDs. Never raw paths/queries/cookies or request bodies.
 - Media cursors preserve position, PostgreSQL microsecond time and UUID ties and recheck authorisation each page. Concurrent edits require a first-page refresh; cursors grant no access.
 - Display recovery timestamps in deterministic UTC to avoid server/browser timezone hydration drift.
+
+## Older histories and photographs
+Use explicit load-older controls for invitation exports and planning activity so unsaved designs/context remain intact. Polling refreshes the extent already loaded. Paginated photograph selection retains the current saved asset option until its name is loaded. Historical pagination fixtures remain failed/queued metadata, never invented completed integrations. The connector cannot launch a separate Chrome browser here; cross-browser/device acceptance remains documented.

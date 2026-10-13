@@ -54,3 +54,5 @@ Recovery milestone: migration023, persistence/recovery + recovery-snapshot + med
 Manual credentials: adapter-owned unbiased 16-character Base32 generator used by RSVP/upload/pass issuance and reissue. Old hexadecimal hashes still redeem; 114-test regression includes backward compatibility. No existing grant was rotated.
 
 API protocol checkpoint: 119 documented paths from validated request schemas, correlated redacted HTTP logs, gateway request-ID propagation and stable parser errors. Media cursor pages and UI connected; 405 tied-time/position rows retrieved once with tenant/album revocation assertions. 117 full tests; actual first-page desktop/mobile captures in verification/api/report.md. Other growing-list pagination and explicit async transport job IDs remain pending.
+
+History extension: invitation-export and creative-run cursors/API/UI connected; 205 tied-time rows each retrieved once, rejected cross-list/foreign cursors. Saved drafts survive older-history loading; later photo pages are reachable. 117 full tests and build/type/lint pass. Cross-browser acceptance remains an open release gate.

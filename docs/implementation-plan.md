@@ -36,3 +36,5 @@ Checkpoint 2026-10-12: P01–P04 admission and M03 guest access/invited projecti
 2026-10-13 recovery checkpoint: authenticated encrypted PG16/object/font replicas and complete isolated deletion/admission restore passed. Migration023 and audited uncertain-admission controls connected. Next dependency: security/manual-code compliance, pagination/API documentation and release load/browser gates; production recovery guarantees remain bounded by deployment validation.
 
 API checkpoint: schema-derived OpenAPI/correlated redacted logs/media cursor pages connected; 117 full regressions and focused HTTP/parser checks. Continue older invitation/planning histories and explicit asynchronous job IDs, then load/security/browser matrix.
+
+History checkpoint: older invitation/planning runs and photograph pages connected; 117 tests pass. Continue explicit async job identifiers, remaining growing lists and HTTP admission/export performance, then security/browser release matrix.

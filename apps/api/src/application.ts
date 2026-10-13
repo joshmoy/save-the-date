@@ -147,7 +147,7 @@ export class Application {
    if(this.invitations&&parts[2]==='invitations'){
     if(parts[3]==='catalogue'&&method==='GET'){await this.store.readWedding(actor,id);return catalogue;}
     if(parts[3]==='preview'&&method==='POST')return this.invitations.preview(actor,id,designSchema.parse(body));
-    if(parts.length===3&&method==='GET')return this.invitations.list(actor,id);
+    if(parts.length===3&&method==='GET')return this.invitations.list(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
     if((parts.length===3&&method==='POST')||(parts.length===4&&method==='PATCH')){const v=apiSchemas.invitationSave.parse(body);return this.invitations.save(actor,id,v.title,v.design,v.expectedVersion,parts[3]?uuid.parse(parts[3]):undefined);}
     if(parts[3]==='exports'){
      const exportId=uuid.parse(parts[4]),format=z.enum(['jpeg','pdf']).parse(parts[5]);
@@ -157,7 +157,7 @@ export class Application {
     if(parts[4]==='export'&&method==='POST'){const v=apiSchemas.invitationExport.parse(body);res.status(202);return this.invitations.queue(actor,id,uuid.parse(parts[3]),v.expectedVersion,v.preview as ResolvedDesign,uuid.parse(req.headers['idempotency-key']));}
    }
    if(this.creative&&parts[2]==='creative'){
-    if(parts.length===3&&method==='GET')return this.creative.list(actor,id);
+    if(parts.length===3&&method==='GET')return this.creative.list(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
     if(parts[3]==='context'&&method==='PUT'){const v=creativeContextSaveSchema.parse(body);return this.creative.saveContext(actor,id,v.context,v.expectedVersion);}
     if(parts[3]==='concepts'){
      if(parts.length===4&&method==='POST'){const v=conceptSaveSchema.parse(body);res.status(201);return this.creative.saveConcept(actor,id,v.concept,v.contextVersion,v.expectedVersion);}
