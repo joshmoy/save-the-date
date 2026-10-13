@@ -15,7 +15,7 @@ Recovery remains verified at69 tables/19 objects/40 fonts, with encrypted replic
 
 ## Current work and next action
 
-Commit the patched runtime build/security evidence and validate final current-source compose startup. Then audit/rehearse the remaining legacy operational migration preparation, run the declared100-wedding/1000-attendee/100-public-read-per-second profile, and complete browser/accessibility review. Resume from current verified code rather than restarting R0.
+Patched runtime build/security evidence is committed as af9eb87; final current-source capture/publication/private export compose smoke passed. Next audit/rehearse the remaining legacy operational migration preparation, run the declared100-wedding/1000-attendee/100-public-read-per-second profile, and complete browser/accessibility review. Resume from current verified code rather than restarting R0.
 
 External release evidence remains owner-reviewed copy/human usability/planner acceptance, physical phone/camera checks, authorised provider smoke, production failure-independent recovery/failover and deployment review. Missing external approval does not block independent engineering.
 
@@ -52,3 +52,5 @@ Current public transport checkpoint: actual Next/Nest private-CA wedding/blog re
 Video processing checkpoint: real encoded dimensions replace estimates; supported MOV/MP4 demuxing forced. Independent geometry test and current Linux runtime pass. Combined suite136/no skips. No security scan finding was hidden by these parser constraints.
 
 Latest UI checkpoint: event end time is editable/clearable; staff/published schedules show timezone-correct ranges. Actual Chrome save/error journey passes;136 full tests/no skips and build/lint/typecheck pass. Next concrete actions: final current-image/processing evidence commit, legacy operational transition rehearsal and declared pilot load/accessibility review; external owner/device/provider/production recovery evidence remains open.
+
+Continuity checkpoint2026-10-14: repository clean after feature commits;136 full tests/no skips. Final current-source compose smoke passes with capture-only email and actual private JPEG/PDF downloads. Temporary Chrome tab closed and viewport reset; navigation test processes stopped. Disposable navigation database/root remain recorded in /tmp/std-navigation-checkpoint.json for further UI checks. Next concrete action is legacy operational export/import rehearsal, then declared pilot load and accessibility review. Goal active and incomplete; external owner/device/provider/production recovery checks remain unverified.
