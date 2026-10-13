@@ -45,7 +45,12 @@ try {
     if (process.env.PAGINATION_REPAIR_WEDDING_ID) {
         const wid = process.env.PAGINATION_REPAIR_WEDDING_ID, fixture = (await store.pool.query("select id from std_weddings where id=$1 and primary_owner_id=$2 and slug like 'browser-pages-%' and display_names='Pagination verification couple'", [wid, actor.userId])).rows[0];
         assert.ok(fixture, 'Only this owned synthetic fixture may be repaired');
-        if (process.env.PAGINATION_REFRESH_BRIEF_METADATA === '1') {
+        if (process.env.PAGINATION_APPEND_DESIGNS === '1') {
+            assert.equal((await store.pool.query("select id from std_invitation_designs where wedding_id=$1 and title like 'Pagination design %'",[wid])).rowCount,0,'Design fixture already exists');
+            const base=(await store.pool.query('select config from std_invitation_designs where wedding_id=$1 order by created_at,id limit 1',[wid])).rows[0];assert.ok(base);
+            for(let n=0;n<104;n++)await invitations.save(actor,wid,'Pagination design '+String(n).padStart(3,'0'),designSchema.parse(base.config),0);
+            console.log(JSON.stringify({weddingId:wid,realSavedDrafts:104,existingSnapshots:'preserved',realGuestEmails:0,paidAI:0}));
+        } else if (process.env.PAGINATION_REFRESH_BRIEF_METADATA === '1') {
             const creative = new PostgresCreative(store, storage, config.STORAGE_NAMESPACE, { conceptLimit: 3, boardLimit: 1, conceptCredits: 1, boardCredits: 5, conceptEstimate: 0.1, boardEstimate: 0.2, llmEnabled: false, imageEnabled: false, storageLimit: config.MEDIA_STORAGE_BYTES, publicOrigin: config.PUBLIC_ORIGIN });
             const approved = (await store.pool.query("select id,approved_revision from std_concepts where wedding_id=$1 and state='approved' order by created_at,id limit 1", [wid])).rows[0];
             assert.ok(approved);

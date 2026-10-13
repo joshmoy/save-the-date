@@ -151,6 +151,7 @@ export class Application {
    if(this.guests&&parts[2]==='events'&&parts[4]==='questions'&&method==='PATCH')return this.guests.questions(actor,id,uuid.parse(parts[3]),questionPolicySchema.parse(body));
    if(this.guests&&parts[2]==='events'&&parts[4]==='rsvp'&&parts[6]==='approve'&&method==='POST')return this.guests.approve(actor,id,uuid.parse(parts[3]),uuid.parse(parts[5]),revisionSchema.parse(body).expectedVersion);
    if(this.invitations&&parts[2]==='invitations'){
+    if(parts.length===4&&parts[3]==='designs'&&method==='GET')return this.invitations.listDesigns(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
     if(parts[3]==='catalogue'&&method==='GET'){await this.store.readWedding(actor,id);return catalogue;}
     if(parts[3]==='preview'&&method==='POST')return this.invitations.preview(actor,id,designSchema.parse(body));
     if(parts.length===3&&method==='GET')return this.invitations.list(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
