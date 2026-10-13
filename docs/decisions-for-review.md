@@ -156,3 +156,9 @@ Use fifty-row timestamp/UUID cursors, returning only status metadata and preserv
 
 ## Shared journal access ordering
 Check current website access before looking up a journal path, preventing unauthorised visitors from distinguishing existing and missing posts on a shared wedding. Recheck the specific post audience afterwards. No public endpoint exposes the internal access-only projection.
+
+## Isolated verification startup
+Build the tested dependency graph before execution, preventing stale dist packages from validating older source. Root .env selects a guarded local_test administrator endpoint; each run creates its own named database and private files, forces capture/disabled AI/filesystem test adapters, and preserves application data. Full mode requires real licensed HEIC and sandboxed rendering inputs. Successful disposable resources are removed; failed evidence is retained. No secret or connection URL is logged.
+
+## Development request secrecy
+Disable framework incoming URL logs because verification/reset/invite links may contain one-use credentials. Keep authoritative API correlation and database audit records. Three actual development requests with synthetic markers were absent from output; installed Next16.4 logging behavior was checked directly.
