@@ -65,7 +65,7 @@ export interface FoundationRepository extends IdentityRepository {
  saveEvent(actor:Actor,id:string,event:import('@save-the-date/contracts').EventInput,eventId?:string,expectedVersion?:number):Promise<unknown>;
  invite(actor:Actor,id:string,input:{email:string;role:Role;eventIds:string[];albumIds:string[]},hash:string,link:string):Promise<unknown>;
  acceptInvite(actor:Actor,hash:string|string[]):Promise<unknown>;
- members(actor:Actor,id:string):Promise<unknown>;
+ members(actor:Actor,id:string,options?:{memberCursor?:string;inviteCursor?:string}):Promise<unknown>;
  removeMember(actor:Actor,id:string,userId:string):Promise<void>;
  revokeInvite(actor:Actor,id:string,inviteId:string):Promise<void>;
  transfer(actor:Actor,id:string,userId:string):Promise<void>;

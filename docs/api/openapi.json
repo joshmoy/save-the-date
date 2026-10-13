@@ -3465,6 +3465,24 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "memberCursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "inviteCursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 2048
+            }
           }
         ],
         "responses": {

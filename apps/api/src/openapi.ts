@@ -4,6 +4,7 @@ import {z} from '@save-the-date/contracts';
 const {uuid}=c;
 /** Shared by dispatch validation and schema-generated API documentation. */
 export const apiSchemas={
+ memberListQuery:z.object({memberCursor:z.string().max(2048).optional(),inviteCursor:z.string().max(2048).optional()}).strict(),
  guestListQuery:z.object({cursor:z.string().max(2048).optional(),search:z.string().trim().max(300).optional(),eventId:uuid.optional(),state:z.enum(['unanswered','pending','confirmed','declined','waitlisted']).optional()}).strict(),
  asyncResult:z.object({id:uuid,jobId:uuid,jobIds:z.array(uuid).min(1),statusPath:z.string().optional()}).passthrough(),
  accountDeletion:z.object({confirmation:z.literal('DELETE ACCOUNT')}).strict(),
@@ -28,7 +29,7 @@ for(const [action,schema,status] of [['register',c.registerSchema,202],['resend-
 route('/identity/session','GET');route('/identity/logout','POST');route('/identity/reauthenticate','POST',c.reauthSchema);route('/identity/deletion','POST',apiSchemas.accountDeletion);route('/invites/accept','POST',c.tokenSchema);
 route('/provider-events/ravenrelay','POST',undefined,{auth:'provider'});route('/support','GET',undefined,{auth:'public'});route('/support','POST',c.supportReportSchema,{auth:'public'});
 const w='/weddings/{weddingId}';route('/weddings','GET',undefined,{cursor:true});route('/weddings','POST',c.weddingSchema,{status:201});route(w,'GET');route(w+'/jobs/{jobId}','GET');route(w,'PATCH',c.weddingPatchSchema);route(w,'DELETE',c.deleteSchema);route(w+'/recover','POST');route(w+'/transfer','POST',c.transferSchema);
-route(w+'/members','GET');route(w+'/members/{userId}','DELETE');route(w+'/invites','POST',c.inviteSchema,{status:201});route(w+'/invites/{inviteId}','DELETE');
+route(w+'/members','GET',undefined,{query:apiSchemas.memberListQuery});route(w+'/members/{userId}','DELETE');route(w+'/invites','POST',c.inviteSchema,{status:201});route(w+'/invites/{inviteId}','DELETE');
 route(w+'/events','GET');route(w+'/events','POST',c.eventSchema,{status:201});route(w+'/events/{eventId}','PATCH',c.eventPatchSchema);
 route(w+'/site','GET');route(w+'/site','PATCH',c.siteSaveSchema);route(w+'/site/publish','POST',c.publishSchema);route(w+'/site/shared-code','POST');
 route(w+'/posts','GET',undefined,{cursor:true});route(w+'/posts','POST',c.postSaveSchema,{status:201});route(w+'/posts/{postId}','PATCH',c.postSaveSchema);route(w+'/posts/{postId}','DELETE',c.revisionSchema);for(const action of ['publish','unpublish'])route(w+'/posts/{postId}/'+action,'POST',c.revisionSchema);

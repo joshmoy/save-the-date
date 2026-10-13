@@ -218,7 +218,7 @@ export class Application {
     if(parts.length===4&&method==='PATCH'){const v=eventPatchSchema.parse(body);return this.store.saveEvent(actor,id,v.event,uuid.parse(parts[3]),v.expectedVersion);}
    }
    if(parts[2]==='members'){
-    if(parts.length===3&&method==='GET')return this.store.members(actor,id);
+    if(parts.length===3&&method==='GET')return this.store.members(actor,id,apiSchemas.memberListQuery.parse(req.query));
     if(parts.length===4&&method==='DELETE'){await this.store.removeMember(actor,id,uuid.parse(parts[3]));return {message:'Member removed'};}
    }
    if(parts[2]==='invites'){
