@@ -1,0 +1,11 @@
+# API and media pagination verification — 2026-10-13
+
+117 full regression tests passed without skips. Two API contract tests verify unique documented method/path pairs, shared strict input schemas, separate cookies, actual HTTP schema publication, request-ID propagation and redacted logs. A focused HTTP rerun after parser hardening also passed malformed JSON with a stable error and no echoed credential body.
+
+One PostgreSQL cursor test created a separate synthetic wedding, 405 scoped metadata rows with identical microsecond timestamps and tied positions, and one inaccessible album row. Three pages included the 405 authorised IDs exactly once in order. Foreign users, cross-wedding cursors and a removed planner were denied. No original/processed byte fixture is labelled as working media by that test.
+
+Actual CUA journey used the existing browser verification workspace: selected wedding → media library → live API projection and first-page count (four items). Desktop 1440/mobile 360 widths had body widths 1425/345. Captures show loading/moderation/failure copy and existing real processed files. First-page browser behaviour is verified; later-page boundary and permissions are proved by the database test. Full release browser pagination acceptance remains part of the broader matrix.
+
+The initial browser check hit a stale development build/gateway HTML response. Restarting the development service after the build restored live JSON/API reads. A separate operator timestamp hydration mismatch was corrected with explicit deterministic UTC rendering. Do not run verification builds against a live development server's build artifacts; stop/restart that verification service between builds.
+
+Legacy-code tests initially reused constant globally unique hashes across repeated suite runs. Random isolated hexadecimal fixtures now verify compatibility without colliding with earlier test records. Existing wedding/grant data were not altered to repair tests.

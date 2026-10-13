@@ -106,3 +106,9 @@ The next-day Debian repository no longer offered the exact Chromium package used
 
 ## Manual credential compliance
 New RSVP, upload and admission manual credentials use sixteen random unambiguous Base32 characters (80 bits), excluding 0/1/I/O. Existing stored hexadecimal hashes remain accepted; no existing grants are rewritten. Link credentials remain separate thirty-two-byte secrets. Full suite 114 passes including old RSVP/admission code compatibility.
+
+## API protocol decisions
+- Share inline request schemas between dispatch and generated OpenAPI; publish documentation through the existing same-origin gateway without credentials. Business invariants remain authoritative server checks.
+- Log only generated/validated correlation UUIDs, route families, timing, status, operation UUIDs and keyed pseudonymous tenant IDs. Never raw paths/queries/cookies or request bodies.
+- Media cursors preserve position, PostgreSQL microsecond time and UUID ties and recheck authorisation each page. Concurrent edits require a first-page refresh; cursors grant no access.
+- Display recovery timestamps in deterministic UTC to avoid server/browser timezone hydration drift.

@@ -1,3 +1,4 @@
+import {randomUUID} from 'node:crypto';
 import 'reflect-metadata';
 import { Module, Controller, All, Req, Res } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
@@ -20,7 +21,7 @@ export async function createServer(config:Config){
   try{const result=await service.dispatch(req,res);if(!res.headersSent)res.json(result);}catch(e){if(res.headersSent){res.destroy();return;}
    if(e instanceof z.ZodError)res.status(400).json({code:'VALIDATION_ERROR',message:'Check the highlighted fields',fields:e.issues.map(v=>({path:v.path,message:v.message}))});
    else if(e instanceof DomainError){if(e.status===429)res.setHeader('Retry-After',String(e.retryAfterSeconds??60));res.status(e.status).json({code:e.code,message:e.message});}
-   else{console.error(JSON.stringify({event:'request.failed',code:(e as {code?:string}).code??'INTERNAL'}));res.status(500).json({code:'INTERNAL_ERROR',message:'The request could not be completed. Please retry'});}
+   else{console.error(JSON.stringify({event:'request.failed',requestId:res.getHeader('X-Request-Id'),code:(e as {code?:string}).code??'INTERNAL'}));res.status(500).json({code:'INTERNAL_ERROR',message:'The request could not be completed. Please retry'});}
   }
  }
  // Feature modules share application policy ports; Nest owns route registration and request parsing.
@@ -33,9 +34,10 @@ export async function createServer(config:Config){
   class FeatureModule {} Module({controllers:[FeatureController]})(FeatureModule);return FeatureModule;
  });
  class HealthController {async health(req:Request,res:Response){await handle(req,res);}}
- Controller('api/v1')(HealthController);All('health')(HealthController.prototype,'health',Object.getOwnPropertyDescriptor(HealthController.prototype,'health')!);Req()(HealthController.prototype,'health',0);Res()(HealthController.prototype,'health',1);
+ Controller('api/v1')(HealthController);All(['health','openapi.json'])(HealthController.prototype,'health',Object.getOwnPropertyDescriptor(HealthController.prototype,'health')!);Req()(HealthController.prototype,'health',0);Res()(HealthController.prototype,'health',1);
  class ApiModule {} Module({imports:modules,controllers:[HealthController]})(ApiModule);
  const app=await NestFactory.create<NestExpressApplication>(ApiModule,{logger:['error','warn'],bodyParser:false,rawBody:true});// The provider route consumes bounded raw bytes before any JSON parser runs.
+ app.use((req:Request,res:Response,next:()=>void)=>{const started=performance.now(),provided=req.headers['x-request-id'],requestId=typeof provided==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(provided)?provided.toLowerCase():randomUUID();res.setHeader('X-Request-Id',requestId);res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');const parts=req.path.split('/'),family=['identity','weddings','invites','public','guest','uploads','operator','support','provider-events','health'].includes(parts[3])?parts[3]:'unknown',wid=family==='weddings'&&/^[a-f0-9-]{36}$/i.test(parts[4]??'')?parts[4]:null,operation=req.headers['idempotency-key'];res.on('finish',()=>console.info(JSON.stringify({event:'http.completed',requestId,method:req.method,family,status:res.statusCode,durationMs:Math.round((performance.now()-started)*100)/100,...(wid?{tenant:credentialHash('telemetry:'+wid.toLowerCase(),config.TOKEN_HASH_KEYS).slice(0,24)}:{}),...(typeof operation==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(operation)?{operationId:operation.toLowerCase()}:{})})));next();});
  app.use('/api/v1/provider-events/ravenrelay',(req:Request,res:Response,next:()=>void)=>{if(req.method!=='POST'){next();return;}void (async()=>{try{const chunks:Buffer[]=[];let size=0;for await(const chunk of req){const bytes=Buffer.from(chunk);size+=bytes.length;if(size>1024*1024){res.status(413).json({code:'WEBHOOK_TOO_LARGE',message:'Provider event exceeds the byte limit'});return;}chunks.push(bytes);}(req as Request&{rawBody?:Buffer}).rawBody=Buffer.concat(chunks);req.body={};next();}catch{if(!res.headersSent)res.status(400).json({code:'INVALID_WEBHOOK_BODY',message:'Provider event could not be read'});}})();});
- app.useBodyParser('json',{limit:'1mb'});await app.init();return {app,store,service};
+ app.useBodyParser('json',{limit:'1mb'});app.use((error:{type?:string},_req:Request,res:Response,next:(error:unknown)=>void)=>{if(error.type==='entity.parse.failed'){res.status(400).json({code:'INVALID_JSON',message:'Request body is not valid JSON. Check it and retry'});return;}if(error.type==='entity.too.large'){res.status(413).json({code:'BODY_TOO_LARGE',message:'JSON request exceeds the one MiB limit'});return;}next(error);});await app.init();return {app,store,service};
 }

@@ -1,4 +1,5 @@
-import {supportReportSchema,operatorControlsSchema,operatorRenewalSchema,operatorMediaSchema,operatorReasonSchema} from '@save-the-date/contracts';
+import {apiSchemas,openApiDocument} from './openapi.js';
+import {supportReportSchema,operatorControlsSchema,operatorRenewalSchema,operatorMediaSchema} from '@save-the-date/contracts';
 import {Readable} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
 import {passIssueSchema,passActionSchema,redemptionSchema,admissionCorrectionSchema} from '@save-the-date/contracts';
@@ -28,6 +29,7 @@ export class Application {
  async dispatch(req:Request,res:Response){
   res.setHeader('Cache-Control','no-store');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Content-Type-Options','nosniff');
   const method=req.method;const parts=req.path.replace(/^\/api\/v1\/?/,'').split('/').filter(Boolean);const body=req.body??{};
+  if(method==='GET'&&parts[0]==='openapi.json')return openApiDocument();
   if(method==='GET'&&parts[0]==='health'){await this.store.ping();return {status:'ok',database:'postgres',ai:'disabled'};}
   if(parts[0]==='provider-events'&&parts[1]==='ravenrelay'&&method==='POST'){
    if(!this.config.RAVENRELAY_WEBHOOK_SECRET||!this.config.RAVENRELAY_PROJECT_ID||!this.notifications)throw new DomainError(503,'WEBHOOK_DISABLED','Provider callback is not configured');
@@ -52,7 +54,7 @@ export class Application {
    if(action==='logout'&&method==='POST'){await this.store.logout(this.hashes(this.session(req)));this.cookie(res,'',true);return {message:'Signed out'};}
    const actor=await this.actor(req);
    if(action==='session'&&method==='GET')return {userId:actor.userId,email:actor.email,verified:actor.verified,operator:actor.verified&&this.config.OPERATOR_USER_IDS.split(',').map(v=>v.trim()).includes(actor.userId)};
-   if(action==='deletion'&&method==='POST'&&this.retention){z.object({confirmation:z.literal('DELETE ACCOUNT')}).strict().parse(body);const result=await this.retention.requestAccountDeletion(actor);this.cookie(res,'',true);return result;}
+   if(action==='deletion'&&method==='POST'&&this.retention){apiSchemas.accountDeletion.parse(body);const result=await this.retention.requestAccountDeletion(actor);this.cookie(res,'',true);return result;}
    if(action==='reauthenticate'&&method==='POST'){const v=reauthSchema.parse(body);await this.store.reauthenticate(actor,h=>checkPassword(v.password,h));return {message:'Identity confirmed for fifteen minutes'};}
   }
   if(parts[0]==='public'&&parts[1]==='weddings'){
@@ -92,20 +94,20 @@ export class Application {
   if(parts[0]==='invites'&&parts[1]==='accept'&&method==='POST')return this.store.acceptInvite(actor,this.hashes(tokenSchema.parse(body).token));
   if(parts[0]==='operator'&&this.operator){
    if(parts.length===1&&method==='GET')return this.operator.dashboard(actor,req.query.cursor===undefined?undefined:uuid.parse(req.query.cursor));
-   if(parts[1]==='accounts'&&parts[3]==='recover'&&method==='POST'){const v=operatorReasonSchema.extend({ownershipVerified:z.literal(true)}).strict().parse(body);return this.operator.recoverAccount(actor,uuid.parse(parts[2]),v);}
+   if(parts[1]==='accounts'&&parts[3]==='recover'&&method==='POST'){const v=apiSchemas.accountRecovery.parse(body);return this.operator.recoverAccount(actor,uuid.parse(parts[2]),v);}
    if(parts[1]==='media'&&method==='GET'){this.binary(req,res,await this.operator.readMedia(actor,uuid.parse(parts[2])));return;}
-   if(parts[1]==='reports'&&method==='POST'){const v=operatorReasonSchema.extend({state:z.enum(['reviewing','resolved'])}).strict().parse(body);return this.operator.resolveReport(actor,uuid.parse(parts[2]),v.state,v.reason);}
-   if(parts[1]==='weddings'){const wid=uuid.parse(parts[2]);if(parts.length===3&&method==='GET')return this.operator.wedding(actor,wid);if(parts[3]==='admission-holds'&&parts[5]==='resolve'&&method==='POST'){const v=operatorReasonSchema.extend({notAdmittedConfirmed:z.literal(true)}).strict().parse(body);return this.operator.resolveAdmissionHold(actor,wid,uuid.parse(parts[4]),v.reason,v.notAdmittedConfirmed);}if(parts[3]==='controls'&&method==='POST')return this.operator.controls(actor,wid,operatorControlsSchema.parse(body));if(parts[3]==='renew'&&method==='POST')return this.operator.renew(actor,wid,operatorRenewalSchema.parse(body));if(parts[3]==='media'&&method==='POST')return this.operator.grantMedia(actor,wid,operatorMediaSchema.parse(body));}
+   if(parts[1]==='reports'&&method==='POST'){const v=apiSchemas.reportState.parse(body);return this.operator.resolveReport(actor,uuid.parse(parts[2]),v.state,v.reason);}
+   if(parts[1]==='weddings'){const wid=uuid.parse(parts[2]);if(parts.length===3&&method==='GET')return this.operator.wedding(actor,wid);if(parts[3]==='admission-holds'&&parts[5]==='resolve'&&method==='POST'){const v=apiSchemas.resolveHold.parse(body);return this.operator.resolveAdmissionHold(actor,wid,uuid.parse(parts[4]),v.reason,v.notAdmittedConfirmed);}if(parts[3]==='controls'&&method==='POST')return this.operator.controls(actor,wid,operatorControlsSchema.parse(body));if(parts[3]==='renew'&&method==='POST')return this.operator.renew(actor,wid,operatorRenewalSchema.parse(body));if(parts[3]==='media'&&method==='POST')return this.operator.grantMedia(actor,wid,operatorMediaSchema.parse(body));}
   }
   if(parts[0]==='weddings'){
    if(parts.length===1){if(method==='GET')return this.store.listWeddings(actor);if(method==='POST'){res.status(201);return this.store.createWedding(actor,weddingSchema.parse(body));}}
    const id=uuid.parse(parts[1]);
    if(parts.length===2){if(method==='GET')return this.store.readWedding(actor,id);if(method==='PATCH')return this.store.patchWedding(actor,id,weddingPatchSchema.parse(body));if(method==='DELETE'){deleteSchema.parse(body);await this.store.deleteWedding(actor,id);return {message:'Workspace deleted. Recovery available for thirty days',weddingId:id};}}
-   if(this.notifications&&parts[2]==='notifications'){if(parts.length===3&&method==='GET')return this.notifications.list(actor,id,req.query.cursor===undefined?undefined:uuid.parse(req.query.cursor));if(parts[4]==='retry'&&method==='POST'){const v=z.object({recipient:z.email()}).strict().parse(body);return this.notifications.retry(actor,id,uuid.parse(parts[3]),v.recipient,uuid.parse(req.headers['idempotency-key']));}}
+   if(this.notifications&&parts[2]==='notifications'){if(parts.length===3&&method==='GET')return this.notifications.list(actor,id,req.query.cursor===undefined?undefined:uuid.parse(req.query.cursor));if(parts[4]==='retry'&&method==='POST'){const v=apiSchemas.retryNotification.parse(body);return this.notifications.retry(actor,id,uuid.parse(parts[3]),v.recipient,uuid.parse(req.headers['idempotency-key']));}}
    if(this.retention&&parts[2]==='retention'){
     if(parts.length===3&&method==='GET')return this.retention.status(actor,id);
     if(parts[3]==='review'&&method==='POST')return this.retention.review(actor,id);
-    if(parts[3]==='exports'&&parts.length===4&&method==='POST'){const input=z.object({includeSensitive:z.boolean().default(false)}).strict().parse(body);return this.retention.export(actor,id,input.includeSensitive,uuid.parse(req.headers['idempotency-key']));}
+    if(parts[3]==='exports'&&parts.length===4&&method==='POST'){const input=apiSchemas.archiveExport.parse(body);return this.retention.export(actor,id,input.includeSensitive,uuid.parse(req.headers['idempotency-key']));}
     if(parts[3]==='exports'&&parts[5]==='retry'&&method==='POST')return this.retention.retry(actor,id,uuid.parse(parts[4]));
     if(parts[3]==='exports'&&parts[5]==='access'&&method==='GET'){await this.retention.download(actor,id,uuid.parse(parts[4]));return {ready:true};}
     if(parts[3]==='exports'&&parts.length===5&&method==='GET'){const file=await this.retention.download(actor,id,uuid.parse(parts[4]));res.setHeader('Content-Type',file.contentType);res.setHeader('Content-Length',String(file.bytes));res.setHeader('Content-Disposition','attachment; filename="wedding-archive.tar"');await pipeline(Readable.from(file.chunks),res);return;}
@@ -117,7 +119,7 @@ export class Application {
     if(parts.length===3&&method==='POST'){const v=passIssueSchema.parse(body);res.status(201);return this.passes.issue(actor,id,v.attendeeId,v.eventId,uuid.parse(req.headers['idempotency-key']));}
     const passId=uuid.parse(parts[3]);
     if(parts[4]==='recipients'&&method==='GET')return this.passes.deliveryRecipients(actor,id,passId);
-    if(parts[4]==='send'&&method==='POST'){const v=z.object({expectedVersion:z.number().int().positive(),recipients:z.array(z.email()).min(1).max(100)}).strict().parse(body);return this.passes.send(actor,id,passId,v.expectedVersion,v.recipients,uuid.parse(req.headers['idempotency-key']));}
+    if(parts[4]==='send'&&method==='POST'){const v=apiSchemas.passSend.parse(body);return this.passes.send(actor,id,passId,v.expectedVersion,v.recipients,uuid.parse(req.headers['idempotency-key']));}
     if(parts[4]==='revoke'&&method==='POST'){const v=passActionSchema.parse(body);return this.passes.revoke(actor,id,passId,v.expectedVersion,v.reason,uuid.parse(req.headers['idempotency-key']));}
     if(parts[4]==='reissue'&&method==='POST'){const v=passActionSchema.parse(body);return this.passes.reissue(actor,id,passId,v.expectedVersion,v.reason,uuid.parse(req.headers['idempotency-key']));}
     if(parts[5]==='retry'&&method==='POST')return this.passes.retryTicket(actor,id,passId,z.enum(['jpeg','pdf']).parse(parts[4]));
@@ -131,10 +133,10 @@ export class Application {
     if(parts[3]==='responses'&&parts[4]==='export'&&method==='GET'){res.setHeader('Content-Disposition','attachment; filename=responses.csv');res.setHeader('Content-Type','text/csv; charset=utf-8');res.send(await this.guests.rsvpExport(actor,id,req.query.sensitive==='true'));return;}
     if(parts[3]==='export'&&method==='GET'){res.setHeader('Content-Disposition','attachment; filename=guests.csv');res.setHeader('Content-Type','text/csv; charset=utf-8');res.send(await this.guests.csvExport(actor,id));return;}
     if(parts[3]==='import'&&method==='POST'){const v=importSchema.parse(body);return parts[4]==='preview'?this.guests.importPreview(actor,id,v.csv):this.guests.importCommit(actor,id,v.csv,v.decisions);}
-    if(parts[3]==='requests'&&parts[4]&&method==='POST'){const v=z.object({approve:z.boolean(),eventIds:z.array(uuid).max(50)}).strict().parse(body);const r=await this.guests.resolveRequest(actor,id,uuid.parse(parts[4]),v.approve,v.eventIds);return r.partyId?{...r,grant:await this.guests.issueGrant(actor,id,r.partyId,180)}:r;}
+    if(parts[3]==='requests'&&parts[4]&&method==='POST'){const v=apiSchemas.guestRequestDecision.parse(body);const r=await this.guests.resolveRequest(actor,id,uuid.parse(parts[4]),v.approve,v.eventIds);return r.partyId?{...r,grant:await this.guests.issueGrant(actor,id,r.partyId,180)}:r;}
     if(parts[3]==='grants'&&parts[4]&&method==='DELETE')return this.guests.revokeGrant(actor,id,uuid.parse(parts[4]));
     if(parts[3]==='parties'&&parts[4]&&parts[5]==='grant'&&method==='POST')return this.guests.issueGrant(actor,id,uuid.parse(parts[4]),guestGrantSchema.parse(body).days);
-    if(parts[3]==='parties'&&parts[4]&&parts[5]==='send'&&method==='POST'){const v=z.object({grant:z.object({url:z.url(),code:z.string().max(128)}),recipients:z.array(z.email()).min(1).max(100)}).strict().parse(body);return this.guests.sendAccess(actor,id,uuid.parse(parts[4]),v.grant,v.recipients,uuid.parse(req.headers['idempotency-key']));}
+    if(parts[3]==='parties'&&parts[4]&&parts[5]==='send'&&method==='POST'){const v=apiSchemas.guestSend.parse(body);return this.guests.sendAccess(actor,id,uuid.parse(parts[4]),v.grant,v.recipients,uuid.parse(req.headers['idempotency-key']));}
     if(parts.length===3&&method==='POST'){res.status(201);const v=guestSaveSchema.parse(body);return this.guests.save(actor,id,v.guest,v.expectedVersion);}
     if(parts.length===4&&method==='PATCH'){const v=guestSaveSchema.parse(body);return this.guests.save(actor,id,v.guest,v.expectedVersion,uuid.parse(parts[3]));}
     if(parts.length===4&&method==='DELETE')return this.guests.remove(actor,id,uuid.parse(parts[3]),revisionSchema.parse(body).expectedVersion);
@@ -143,17 +145,16 @@ export class Application {
    if(this.guests&&parts[2]==='events'&&parts[4]==='questions'&&method==='PATCH')return this.guests.questions(actor,id,uuid.parse(parts[3]),questionPolicySchema.parse(body));
    if(this.guests&&parts[2]==='events'&&parts[4]==='rsvp'&&parts[6]==='approve'&&method==='POST')return this.guests.approve(actor,id,uuid.parse(parts[3]),uuid.parse(parts[5]),revisionSchema.parse(body).expectedVersion);
    if(this.invitations&&parts[2]==='invitations'){
-    const z=(await import('@save-the-date/contracts')).z;
     if(parts[3]==='catalogue'&&method==='GET'){await this.store.readWedding(actor,id);return catalogue;}
     if(parts[3]==='preview'&&method==='POST')return this.invitations.preview(actor,id,designSchema.parse(body));
     if(parts.length===3&&method==='GET')return this.invitations.list(actor,id);
-    if((parts.length===3&&method==='POST')||(parts.length===4&&method==='PATCH')){const v=z.object({title:z.string().trim().min(1).max(100),design:designSchema,expectedVersion:z.number().int().min(0)}).strict().parse(body);return this.invitations.save(actor,id,v.title,v.design,v.expectedVersion,parts[3]?uuid.parse(parts[3]):undefined);}
+    if((parts.length===3&&method==='POST')||(parts.length===4&&method==='PATCH')){const v=apiSchemas.invitationSave.parse(body);return this.invitations.save(actor,id,v.title,v.design,v.expectedVersion,parts[3]?uuid.parse(parts[3]):undefined);}
     if(parts[3]==='exports'){
      const exportId=uuid.parse(parts[4]),format=z.enum(['jpeg','pdf']).parse(parts[5]);
      if(parts[6]==='retry'&&method==='POST')return this.invitations.retry(actor,id,exportId,format);
      if(method==='GET'){res.setHeader('Content-Disposition',`attachment; filename=invitation-${exportId}.${format}`);this.binary(req,res,await this.invitations.download(actor,id,exportId,format));return;}
     }
-    if(parts[4]==='export'&&method==='POST'){const v=z.object({expectedVersion:z.number().int().positive(),preview:z.object({events:z.array(z.unknown()),weddingVersion:z.number().int()})}).parse(body);res.status(202);return this.invitations.queue(actor,id,uuid.parse(parts[3]),v.expectedVersion,v.preview as ResolvedDesign,uuid.parse(req.headers['idempotency-key']));}
+    if(parts[4]==='export'&&method==='POST'){const v=apiSchemas.invitationExport.parse(body);res.status(202);return this.invitations.queue(actor,id,uuid.parse(parts[3]),v.expectedVersion,v.preview as ResolvedDesign,uuid.parse(req.headers['idempotency-key']));}
    }
    if(this.creative&&parts[2]==='creative'){
     if(parts.length===3&&method==='GET')return this.creative.list(actor,id);
@@ -164,7 +165,7 @@ export class Application {
      if(parts.length===5&&method==='PUT'){const v=conceptSaveSchema.parse(body);return this.creative.saveConcept(actor,id,v.concept,v.contextVersion,v.expectedVersion,cid);}
      if(parts[5]==='approve'&&method==='POST')return this.creative.approve(actor,id,cid,conceptRevisionSchema.parse(body).expectedVersion);
      if(parts[5]==='theme-diff'&&method==='POST')return this.creative.themeDiff(actor,id,cid,conceptRevisionSchema.parse(body).expectedVersion);
-     if(parts[5]==='apply'&&method==='POST'){const v=z.object({expectedVersion:z.number().int().positive(),weddingVersion:z.number().int().positive(),siteVersion:z.number().int().nonnegative()}).strict().parse(body);return this.creative.applyTheme(actor,id,cid,v.expectedVersion,v.weddingVersion,v.siteVersion);}
+     if(parts[5]==='apply'&&method==='POST'){const v=apiSchemas.themeApply.parse(body);return this.creative.applyTheme(actor,id,cid,v.expectedVersion,v.weddingVersion,v.siteVersion);}
      if(parts[5]==='brief'&&method==='POST'){res.status(202);return this.creative.exportBrief(actor,id,cid,conceptRevisionSchema.parse(body).expectedVersion,uuid.parse(req.headers['idempotency-key']));}
     }
     if(parts[3]==='runs'&&parts.length===4&&method==='POST'){res.status(202);return this.creative.generate(actor,id,creativeGenerationSchema.parse(body),uuid.parse(req.headers['idempotency-key']));}
@@ -182,7 +183,7 @@ export class Application {
     if(parts.length===4&&method==='PATCH'){const v=albumSaveSchema.parse(body);return this.media.saveAlbum(actor,id,v.album,v.expectedVersion,uuid.parse(parts[3]));}
    }
    if(this.media&&parts[2]==='media'){
-    if(parts.length===3&&method==='GET')return this.media.list(actor,id);
+    if(parts.length===3&&method==='GET')return this.media.list(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
     if(parts[3]==='intents'&&method==='POST'){res.status(201);return this.media.intent(actor,id,uploadIntentSchema.parse(body));}
     const assetId=uuid.parse(parts[3]);
     if(parts[4]==='bytes'&&method==='PUT'){const max=await this.media.expectedUpload(actor,id,assetId);const length=Number(req.headers['content-length']);if(Number.isFinite(length)&&length>max)throw new DomainError(413,'FILE_TOO_LARGE','Transfer exceeds the reserved file size');if(this.activeUploads>=2)throw new DomainError(429,'UPLOAD_BUSY','Uploads are busy. Retry this file in a moment');await this.store.rateLimit('upload:'+actor.userId,20,3600);this.activeUploads++;req.setTimeout(120000);try{const chunks:Buffer[]=[];let size=0;for await(const chunk of req){const bytes=Buffer.from(chunk);size+=bytes.length;if(size>max)throw new DomainError(413,'FILE_TOO_LARGE','Transfer exceeds the reserved file size');chunks.push(bytes);}res.status(202);return await this.media.receive(actor,id,assetId,Buffer.concat(chunks));}finally{this.activeUploads--;}}

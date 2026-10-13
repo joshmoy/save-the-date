@@ -52,3 +52,5 @@ Cross-cutting R3 gates pending: full mobile/browser/a11y matrix, load/security/d
 Recovery milestone: migration023, persistence/recovery + recovery-snapshot + media-erasure, three independent ledger adapters, backup encryption/TAR/PG tools and operational CLI. 113-test full suite; seven focused recovery tests; 69-table/19-object/40-font replica restore and physical generated-copy deletion evidence in verification/recovery/report.md.
 
 Manual credentials: adapter-owned unbiased 16-character Base32 generator used by RSVP/upload/pass issuance and reissue. Old hexadecimal hashes still redeem; 114-test regression includes backward compatibility. No existing grant was rotated.
+
+API protocol checkpoint: 119 documented paths from validated request schemas, correlated redacted HTTP logs, gateway request-ID propagation and stable parser errors. Media cursor pages and UI connected; 405 tied-time/position rows retrieved once with tenant/album revocation assertions. 117 full tests; actual first-page desktop/mobile captures in verification/api/report.md. Other growing-list pagination and explicit async transport job IDs remain pending.

@@ -34,7 +34,7 @@ export interface NotificationRepository {
  receive(event:{id:string;type:string;created_at:string;data:{email_id:string;project_id:string;status:string;recipients:string[];failure_code?:string;error_code?:string}}):Promise<void>;
 }
 export interface MediaRepository {
- list(actor:Actor,weddingId:string):Promise<unknown>;
+ list(actor:Actor,weddingId:string,cursor?:string):Promise<unknown>;
  uploadStatus(actor:{userId:null;uploadSessionId:string},weddingId:string):Promise<unknown>;
  saveAlbum(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').AlbumInput,version:number,albumId?:string):Promise<unknown>;
  intent(actor:MediaUploadActor,weddingId:string,input:import('@save-the-date/contracts').UploadIntent):Promise<unknown>;
