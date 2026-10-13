@@ -1,0 +1,34 @@
+{
+  "imageId": "sha256:dbd7b7d6b8c00d590a975fcc85e8c706e173d1842fb3900fe5e34da61cc9c1ca",
+  "os": {
+    "Family": "debian",
+    "Name": "12.15"
+  },
+  "createdAt": "2026-10-13T15:10:00.383488094Z",
+  "reportSha256": "8575b68ede36bd7610c2ba91bedd09f77edd7e2ef8984d2a3478eed095be46b1",
+  "scanner": "Trivy0.75.0",
+  "scannerImage": "aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa",
+  "collections": [
+    {
+      "type": "debian",
+      "target": "/input/worker.tar (debian 12.15)",
+      "counts": {
+        "LOW": 470,
+        "HIGH": 476,
+        "MEDIUM": 887,
+        "CRITICAL": 17,
+        "UNKNOWN": 42
+      }
+    },
+    {
+      "type": "node-pkg",
+      "target": "Node.js",
+      "counts": {
+        "MEDIUM": 12,
+        "HIGH": 13,
+        "LOW": 1,
+        "CRITICAL": 1
+      }
+    }
+  ]
+}

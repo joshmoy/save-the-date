@@ -1,17 +1,23 @@
 # Implementation status
 
-Updated 2026-10-13. MVP is incomplete; no external credential blocks the next engineering milestone.
+Updated 2026-10-14. MVP is incomplete; no external credential blocks the next engineering milestone.
 
 ## Verified and committed
 R0 identity, tenancy, memberships, events, canonical website publication and recovery foundation. Raven Relay durable delivery adapter/callback. Harbour marketing landing page and workspace redesign. Staff private media processing, quotas, moderation and albums. Four invitation families with real immutable JPEG/PDF exports. Households, CSV, private guest credentials and transactional RSVP capacity.
 
 ## Latest verified milestone
-R3 recovery: 69 PostgreSQL tables, 19 objects and 40 fonts restored from an authenticated encrypted replica, with terminal/individual erasure and post-backup admission replay. Committed 2c67207. Credential Base32 compatibility committed 457a90f; API/media contracts 88f4826; older invitation/planning/photo navigation 95f2aae.
 
-Current verified feature: explicit asynchronous job IDs and protected state, immediate embedded-photo export permission/deletion checks, scoped expiry verification and local release load evidence. **125 full tests pass without skips; build, lint and all workspace type checks pass.** Actual twenty-concurrent HTTP admission p95 is 378.28 ms; eight real JPEG/PDF bundles p95 is 1,089.64 ms on the recorded local profile. Registry production audit reports zero known vulnerabilities. Existing secrets and wedding data remain preserved.
+As of2026-10-14, **136 full tests pass with no skips; build, lint and all nine type checks pass**. Current work includes bounded tenant/account lists and actual Chrome105-record navigation,360px layouts, verified API/public-page/database transport, encoded video geometry and editable event end times. Original weddings and secrets are preserved. No public deployment, real guest messages or paid AI usage was authorised or performed.
+
+Patched Linux ARM64 Node22.23.3 passes real PNG/HEIC/video processing and all four invitation families' actual JPEG/PDF/QR variants. Capture-only compose registration/publication/private exports pass. Runtime scan improved from18 critical/489 high to1 critical/219 high; full findings remain visible, including Debian's minor/no-DSA classification of libxml2 CVE-2026-6653. This is not a complete security or production readiness claim.
+
+Recovery remains verified at69 tables/19 objects/40 fonts, with encrypted replica restore, erasure/admission replay and migration023→025 expansion. Declared local admission/export measurements remain in verification/performance; they do not satisfy the full pilot load/mobile profile.
 
 ## Current work and next action
-Async/status/security committed 0697d4c. Restored ownership review and older-schema expansion are implemented and verified with 119 full tests and a complete encrypted replica drill. Ownership recovery is committed as f0cef1d. Public album/media/journal cursor navigation committed666a7ef; staff draft navigation committed098519c; web response policy committed22b44e4, trusted attribution b166652, upload history786c92c and pass/eligible history committed05d9689 and wedding-wide guest/search/request pagination verified; Guest pagination committed6a55df3; latest migration023→025 encrypted restore passes. Current-code isolated compose startup/capture/publication/real exports passed through migration025; actual later-page browser journeys now pass with independent file downloads, including private archive history and verified TAR originals. Isolated pnpm test:full startup passes124 tests/no skips; shared journal access ordering and development URL secrecy verified. Polite pagination status announcements are implemented and verified in the running journal. Creative concept/brief/reference pagination and actual browser/file checks pass with125 tests. Next: finish remaining workspace/member/event lists, verify production transport security, then security/browser/accessibility release gates. No credential blocks that engineering work. No public deployment, real guest messages or paid AI use is authorised.
+
+Commit the patched runtime build/security evidence and validate final current-source compose startup. Then audit/rehearse the remaining legacy operational migration preparation, run the declared100-wedding/1000-attendee/100-public-read-per-second profile, and complete browser/accessibility review. Resume from current verified code rather than restarting R0.
+
+External release evidence remains owner-reviewed copy/human usability/planner acceptance, physical phone/camera checks, authorised provider smoke, production failure-independent recovery/failover and deployment review. Missing external approval does not block independent engineering.
 
 ## Remaining mandatory scope
 API documentation/pagination; production failure-domain recovery validation; R3 security/load/accessibility/browser/device and human pilot gates.

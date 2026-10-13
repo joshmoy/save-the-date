@@ -1,0 +1,10 @@
+{
+  "profile": "std-r3-verification",
+  "weddingId": "1f1de7b7-2452-4fe9-9b82-b4b0584c098e",
+  "website": "http://localhost:3002/w/portable-ab1cad8a-4a8d-4f87-9405-ea26121e9da1",
+  "email": "captured only",
+  "publication": "passed",
+  "workerExports": "actual JPEG/PDF passed",
+  "privateDownloads": "unauthenticated access denied",
+  "output": "/tmp/std-compose-verification"
+}

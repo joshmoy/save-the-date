@@ -36,7 +36,7 @@ services:
       LLM_ADAPTER: disabled
       IMAGE_ADAPTER: disabled
       JOB_TRANSPORT: postgres
-    command: ["pnpm", "db:migrate"]
+    command: ["node", "--import", "tsx", "scripts/platform-migrate.ts"]
     depends_on: {db: {condition: service_healthy}}
   api:
     build: {context: ., target: api}

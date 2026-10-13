@@ -1,0 +1,30 @@
+{
+  "scanner": "Trivy0.75.0",
+  "imageId": "sha256:97ac427b6ac34994df039c5ae31e063d02a570f47e0fc8cf74fa3742db2363c1",
+  "os": {
+    "Family": "debian",
+    "Name": "13.7"
+  },
+  "createdAt": "2026-10-13T22:24:59.915131503Z",
+  "reportSha256": "a8b526fc830c60bcc17c8e9e3cc534b6874157abd973fdd44bed745c7ca0e429",
+  "results": [
+    {
+      "type": "debian",
+      "counts": {
+        "LOW": 223,
+        "HIGH": 219,
+        "MEDIUM": 340,
+        "UNKNOWN": 27,
+        "CRITICAL": 1
+      },
+      "fixableHighCritical": 0
+    }
+  ],
+  "criticalFinding": {
+    "id": "CVE-2026-6653",
+    "package": "libxml2",
+    "debianStatus": "vulnerable; trixie no-dsa/minor issue; fixed in unstable",
+    "source": "https://security-tracker.debian.org/tracker/CVE-2026-6653"
+  },
+  "scope": "runtime package scan, not proof of full application security or deployment approval"
+}
