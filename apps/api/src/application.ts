@@ -119,7 +119,8 @@ export class Application {
    if(parts[2]==='recover'&&method==='POST'){await this.store.recoverWedding(actor,id);return {message:'Workspace recovered'};}
    if(parts[2]==='transfer'&&method==='POST'){await this.store.transfer(actor,id,transferSchema.parse(body).userId);return {message:'Ownership transferred'};}
    if(this.passes&&parts[2]==='passes'){
-    if(parts.length===3&&method==='GET')return this.passes.list(actor,id);
+    if(parts[3]==='eligible'&&parts.length===4&&method==='GET')return this.passes.listEligible(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
+    if(parts.length===3&&method==='GET')return this.passes.list(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
     if(parts.length===3&&method==='POST'){const v=passIssueSchema.parse(body);res.status(201);return this.passes.issue(actor,id,v.attendeeId,v.eventId,uuid.parse(req.headers['idempotency-key']));}
     const passId=uuid.parse(parts[3]);
     if(parts[4]==='recipients'&&method==='GET')return this.passes.deliveryRecipients(actor,id,passId);

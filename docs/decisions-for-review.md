@@ -141,3 +141,6 @@ Retain no proxy trust by default. Add explicit ingress-overwritten single-IP hea
 
 ## Upload access history
 Return one hundred grants per scoped timestamp/UUID page without credential hashes. Load-older retains the displayed history; issuing or revoking refreshes the current first page and retains one-time credentials only in current component state. Expired/revoked pagination fixtures do not create functional guest access.
+
+## Pass and confirmed-attendee history
+Use independent200-row cursors for issued passes and eligible attendee/event pairs. Pair cursors retain event UUID ties. Server has_pass includes any existing lineage, preventing false issue buttons when older passes are outside the loaded page. Preserve loaded extent while polling file state; history pages never expose encrypted payloads or credential hashes. Offline operational exports remain complete human-only snapshots.
