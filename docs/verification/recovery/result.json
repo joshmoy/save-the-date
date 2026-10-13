@@ -1,13 +1,13 @@
 {
-  "verifiedAt": "2026-10-13T08:44:41.829Z",
-  "sourceDatabase": "std_dr_source_c3c68d1428df43b6893384423d35ba56_test",
-  "restoredDatabase": "std_dr_restore_c3c68d1428df43b6893384423d35ba56_test",
+  "verifiedAt": "2026-10-13T10:18:19.693Z",
+  "sourceDatabase": "std_dr_source_b7bd7c228d5048709175f677d13db6fe_test",
+  "restoredDatabase": "std_dr_restore_b7bd7c228d5048709175f677d13db6fe_test",
   "tablesVerified": 69,
   "objectsRestored": 19,
   "fontAssetsVerified": 40,
-  "backupMilliseconds": 419,
-  "restoreMilliseconds": 1396,
-  "totalMilliseconds": 7815,
+  "backupMilliseconds": 448,
+  "restoreMilliseconds": 1289,
+  "totalMilliseconds": 10265,
   "encryption": "AES-256-GCM, authenticated before extraction",
   "migration": "older migration-023 snapshot verified then expanded to current schema before access resumes",
   "replica": "ciphertext bytes/checksum matched",
@@ -16,5 +16,6 @@
   "deletion": "workspace/account/media/generated invitation/brief/archive/guest/post/member replay passed",
   "admission": "post-backup admission replayed; no second admission",
   "publication": "held until owner review and republish",
-  "expiry": "both encrypted copies removed after 30-day horizon"
+  "expiry": "both encrypted copies removed after 30-day horizon",
+  "root": "/var/folders/v9/mgl3k18x3gx1b7vm3qgn9rxw0000gn/T/std-recovery-drill-UKgLm0"
 }
