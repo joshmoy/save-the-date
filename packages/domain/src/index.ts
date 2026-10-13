@@ -148,6 +148,7 @@ export interface UploadRepository {
  logout(hash:string|string[]):Promise<unknown>;
 }
 export interface CreativeRepository {
+ listPage(actor:Actor,weddingId:string,kind:'concepts'|'briefs'|'references',cursor?:string):Promise<unknown>;
  list(actor:Actor,weddingId:string,cursor?:string):Promise<unknown>;
  saveContext(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').CreativeContext,version:number):Promise<unknown>;
  saveConcept(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').Concept,contextVersion:number,version:number,conceptId?:string):Promise<unknown>;

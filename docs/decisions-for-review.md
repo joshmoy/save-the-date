@@ -165,3 +165,6 @@ Disable framework incoming URL logs because verification/reset/invite links may 
 
 ## Asynchronous accessibility feedback
 Announce completed load-more operations through existing or explicit polite status regions. Messages report actual loaded counts or completed history changes; errors retain alert semantics. Do not force focus away from the user’s current task. Actual journal status update was verified in the browser; full assistive-device acceptance remains separate.
+
+## Creative history and references
+Use independent100-row timestamp/UUID cursors for manual concepts, approved-revision briefs and approved staff reference choices. Recheck tenant/assigned-album permissions and exclude deleted albums. Poll/refresh retains loaded extent without replacing unsaved context/concept editors; a saved older reference remains selected until its name loads. Future briefs describe the actual self-hosted Source Serif4/Work Sans website fonts and any portable-PDF substitution; existing immutable files are retained. Browser fixtures use real private scanned pixels/manual proposals/brief rendering and clearly failed historical metadata, with no paid model calls or fabricated human-pilot score.

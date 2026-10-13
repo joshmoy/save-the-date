@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "canonicalUrl": "http://localhost:3000/w/browser-pages-ff722582",
+  "budgetMinor": null,
+  "currencyMinorDigits": 2,
+  "source": {
+    "conceptId": "89749c72-e98b-42d1-8ebc-55fcb0c466ab",
+    "revision": 1,
+    "contextVersion": 1,
+    "approvedAt": "2026-10-13T13:11:52.770Z",
+    "humanReviewRecorded": true
+  },
+  "wedding": {
+    "display_names": "Pagination verification couple",
+    "timezone": "UTC",
+    "primary_date": null
+  },
+  "events": [
+    {
+      "id": "34a0879f-4458-4a99-a936-1ad5ac1f1384",
+      "title": "Synthetic reception",
+      "type": "reception",
+      "timezone": "UTC",
+      "starts_at": "2027-08-14T14:00:00.000Z",
+      "to_be_confirmed": "Date and venue to be confirmed",
+      "venue": "Synthetic Harbour House",
+      "dress_code": ""
+    }
+  ],
+  "context": {
+    "schemaVersion": 1,
+    "budget": null,
+    "currency": null,
+    "guestCount": null,
+    "stylePreferences": "",
+    "colourPreferences": [],
+    "excludedColours": [],
+    "requirements": [],
+    "exclusions": [],
+    "culturalPreferences": "",
+    "references": [
+      {
+        "assetId": "06b50820-5790-4e4d-b307-68e368f6ff15",
+        "purpose": "Owned synthetic verification image",
+        "licence": "Owned generated pixels",
+        "providerConsent": false
+      }
+    ],
+    "externalProcessingConsent": false
+  },
+  "concept": {
+    "schemaVersion": 1,
+    "name": "Verification manual concept 000",
+    "rationale": "Couple-authored synthetic planning proposal.",
+    "palette": {
+      "background": "#F4F7FA",
+      "primary": "#243449",
+      "secondary": "#2F567C",
+      "accent": "#B8C9DA"
+    },
+    "typography": {
+      "websiteFontPair": "classic",
+      "invitationHeading": "Lora",
+      "notes": "OFL fonts."
+    },
+    "eventNotes": [],
+    "decorDirections": [],
+    "requirements": [],
+    "exclusions": [],
+    "constraintChecks": [],
+    "assumptions": [
+      "Verification proposal only."
+    ],
+    "openQuestions": [
+      "Human planner evaluation remains separate."
+    ],
+    "nextActions": [],
+    "board": [
+      {
+        "id": "d096c892-f555-4b97-b102-585caeb0f8f4",
+        "type": "note",
+        "assetId": null,
+        "caption": "Owned verification note",
+        "designNote": "Synthetic reference-board text.",
+        "source": "Couple-authored verification text",
+        "licence": "Owned text",
+        "generated": false
+      }
+    ]
+  },
+  "typographyLicences": [
+    {
+      "font": "Lora",
+      "licence": "SIL Open Font License 1.1; self-hosted curated font",
+      "substitution": null
+    },
+    {
+      "font": "Source Serif 4",
+      "licence": "SIL Open Font License 1.1; self-hosted website font",
+      "substitution": null
+    }
+  ],
+  "images": []
+}

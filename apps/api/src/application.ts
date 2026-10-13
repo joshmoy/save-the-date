@@ -163,6 +163,7 @@ export class Application {
     if(parts[4]==='export'&&method==='POST'){const v=apiSchemas.invitationExport.parse(body);res.status(202);return this.queued(actor,id,'invitation-export',await this.invitations.queue(actor,id,uuid.parse(parts[3]),v.expectedVersion,v.preview as ResolvedDesign,uuid.parse(req.headers['idempotency-key'])));}
    }
    if(this.creative&&parts[2]==='creative'){
+    if(parts[3]==='history'&&parts.length===5&&method==='GET')return this.creative.listPage(actor,id,z.enum(['concepts','briefs','references']).parse(parts[4]),req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
     if(parts.length===3&&method==='GET')return this.creative.list(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
     if(parts[3]==='context'&&method==='PUT'){const v=creativeContextSaveSchema.parse(body);return this.creative.saveContext(actor,id,v.context,v.expectedVersion);}
     if(parts[3]==='concepts'){
