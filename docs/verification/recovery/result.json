@@ -1,0 +1,18 @@
+{
+  "verifiedAt": "2026-10-13T02:22:16.566Z",
+  "sourceDatabase": "std_dr_source_98079f39d2d64c5eac58971167027f28_test",
+  "restoredDatabase": "std_dr_restore_98079f39d2d64c5eac58971167027f28_test",
+  "tablesVerified": 69,
+  "objectsRestored": 19,
+  "fontAssetsVerified": 40,
+  "backupMilliseconds": 350,
+  "restoreMilliseconds": 1142,
+  "totalMilliseconds": 8100,
+  "encryption": "AES-256-GCM, authenticated before extraction",
+  "replica": "ciphertext bytes/checksum matched",
+  "credentials": "prior passwords/sessions/grants quarantined",
+  "deletion": "workspace/account/media/generated invitation/brief/archive/guest/post/member replay passed",
+  "admission": "post-backup admission replayed; no second admission",
+  "publication": "held until owner review and republish",
+  "expiry": "both encrypted copies removed after 30-day horizon"
+}

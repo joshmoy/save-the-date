@@ -166,6 +166,7 @@ export interface RetentionRepository {
  download(actor:Actor,weddingId:string,exportId:string):Promise<{chunks:AsyncIterable<Uint8Array>;bytes:number;contentType:string}>;
 }
 export interface OperatorRepository {
+ resolveAdmissionHold(actor:Actor,weddingId:string,passId:string,reason:string,notAdmittedConfirmed:true):Promise<unknown>;
  recoverAccount(actor:Actor,userId:string,input:{reason:string;ownershipVerified:true}):Promise<unknown>;
  dashboard(actor:Actor,cursor?:string):Promise<unknown>;
  wedding(actor:Actor,weddingId:string):Promise<unknown>;

@@ -96,3 +96,10 @@ Credential hashing keeps existing HMAC bytes and adds an explicit-active, maximu
 The Docker Desktop host denies Chromium sandbox namespaces. Keep the sandbox enabled; support a private dedicated browser on a sandbox-capable host with an isolated context per rendering job. The local worker's native PNG, HEIC and video checks pass. A Linux-worker/dedicated-browser rehearsal must be recorded separately from successful Linux-local Chromium. The S3 demonstration uses a locally compiled upstream MinIO security release solely for synthetic compatibility tests; archived upstream is not a production storage recommendation.
 
 The next-day Debian repository no longer offered the exact Chromium package used by the preceding image. Development builds resolve available packages; production releases must retain their apt mirror/snapshot, verify specific browser/tool build arguments and pin the resulting image digest. No silent renderer-version compatibility claim is made.
+
+## 2026-10-13 recovery decisions
+- Use AES-256-GCM bundles with a retained-key ring, full PG16 fingerprints and checked private objects/fonts. Production backup replicas must be failure-independent; separate local directories only prove byte conformance.
+- Add independent admission intent/commit state before acknowledging a scan. Uncertain recovery pauses scanning and requires an audited recent operator reconciliation; acknowledged admissions can never be cleared.
+- Restore conservatively: revoke prior credentials/unused passes, hold publication, require owner review, keep uncertain email/AI submissions from retrying. Verify restored ownership against current case evidence before opening identity recovery.
+- Replay individual deletions and erase affected server invitation/brief/archive copies. Downloaded immutable snapshots remain outside server control.
+- Do not claim the production 15-minute/4-hour or one-minute event-day recovery tier from the small local fixture. ADR018 and the recovery runbook describe the needed deployment-specific checks.

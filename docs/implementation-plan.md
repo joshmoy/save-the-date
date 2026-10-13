@@ -32,3 +32,5 @@ Checkpoint 2026-10-12: P01–P04 admission and M03 guest access/invited projecti
 2026-10-12 checkpoint: notification controls committed 9fbd1e0. Credential-key rolling readers/writers verified with 105 full tests; next portability and complete recovery drills.
 
 2026-10-13 checkpoint: real two-adapter storage, Linux media/dedicated rendering and full capture-only compose journey passed; 106 full regression tests. Continue directly to complete encrypted database/object/deletion/admission restore and the remaining release gates.
+
+2026-10-13 recovery checkpoint: authenticated encrypted PG16/object/font replicas and complete isolated deletion/admission restore passed. Migration023 and audited uncertain-admission controls connected. Next dependency: security/manual-code compliance, pagination/API documentation and release load/browser gates; production recovery guarantees remain bounded by deployment validation.

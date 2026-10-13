@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, writeFile, rename, rm, stat, mkdtemp } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, rename, rm, stat, mkdtemp, open } from 'node:fs/promises';
 import path from 'node:path';
 import {createReadStream,createWriteStream} from 'node:fs';
 import {Readable} from 'node:stream';
@@ -22,17 +22,18 @@ export function storageKey(namespace:string,weddingId:string,assetId:string){
  return `${namespace}/${weddingId}/${assetId}`;
 }
 function safeKey(key:string){if(!/^[a-zA-Z0-9/_-]+$/.test(key)||key.includes('..')||key.startsWith('/'))throw new Error('Unsafe object key');return key;}
+async function persistDirectories(directory:string,created?:string){const stop=created?path.dirname(path.resolve(created)):path.resolve(directory);let current=path.resolve(directory);for(;;){const handle=await open(current,'r');try{await handle.sync();}finally{await handle.close();}if(current===stop)break;const parent=path.dirname(current);if(parent===current)break;current=parent;}}
 export class FilesystemStorage implements StoragePort {
  readonly capabilities={privateObjects:true,immediateGatewayRevocation:true};
  constructor(private root:string){}
  async *readChunks(key:string){yield* createReadStream(this.file(key));}
- async writeChunks(key:string,chunks:AsyncIterable<Uint8Array>,contentType:string){const f=this.file(key);await mkdir(path.dirname(f),{recursive:true,mode:0o700});const tmp=f+'.tmp-'+crypto.randomUUID(),hash=createHash('sha256');let bytes=0;async function* counted(){for await(const c of chunks){bytes+=c.length;hash.update(c);yield c;}}try{await pipeline(Readable.from(counted()),createWriteStream(tmp,{mode:0o600}));await rename(tmp,f);const meta={bytes,checksum:hash.digest('hex'),contentType};await writeFile(f+'.metadata',JSON.stringify(meta),{mode:0o600});return meta;}catch(e){await rm(tmp,{force:true});throw e;}}
+ async writeChunks(key:string,chunks:AsyncIterable<Uint8Array>,contentType:string){const f=this.file(key);const created=await mkdir(path.dirname(f),{recursive:true,mode:0o700});const tmp=f+'.tmp-'+crypto.randomUUID(),hash=createHash('sha256');let bytes=0;async function* counted(){for await(const c of chunks){bytes+=c.length;hash.update(c);yield c;}}try{await pipeline(Readable.from(counted()),createWriteStream(tmp,{mode:0o600,flush:true}));await rename(tmp,f);const meta={bytes,checksum:hash.digest('hex'),contentType};await writeFile(f+'.metadata',JSON.stringify(meta),{mode:0o600,flush:true});await persistDirectories(path.dirname(f),created);return meta;}catch(e){await rm(tmp,{force:true});throw e;}}
  async *list(prefix:string){safeKey(prefix);const {readdir}=await import('node:fs/promises');const root=this.root;async function* walk(dir:string):AsyncIterable<string>{let entries;try{entries=await readdir(path.join(root,dir),{withFileTypes:true});}catch(e){if((e as {code?:string}).code==='ENOENT')return;throw e;}for(const entry of entries){const key=dir+'/'+entry.name;if(entry.isDirectory())yield* walk(key);else if(entry.isFile()&&!key.endsWith('.metadata')&&!key.includes('.tmp-'))yield key;}}yield* walk(prefix.replace(/\/$/,''));}
  private file(key:string){return path.join(this.root,safeKey(key));}
- async write(key:string,bytes:Buffer,contentType:string){const f=this.file(key);await mkdir(path.dirname(f),{recursive:true,mode:0o700});const tmp=f+'.tmp-'+crypto.randomUUID();await writeFile(tmp,bytes,{mode:0o600});await rename(tmp,f);const metadata={bytes:bytes.length,checksum:createHash('sha256').update(bytes).digest('hex'),contentType};await writeFile(f+'.metadata',JSON.stringify(metadata),{mode:0o600});return metadata;}
+ async write(key:string,bytes:Buffer,contentType:string){const f=this.file(key);const created=await mkdir(path.dirname(f),{recursive:true,mode:0o700});const tmp=f+'.tmp-'+crypto.randomUUID();await writeFile(tmp,bytes,{mode:0o600,flush:true});await rename(tmp,f);const metadata={bytes:bytes.length,checksum:createHash('sha256').update(bytes).digest('hex'),contentType};await writeFile(f+'.metadata',JSON.stringify(metadata),{mode:0o600,flush:true});await persistDirectories(path.dirname(f),created);return metadata;}
  async read(key:string){return readFile(this.file(key));}
  async inspect(key:string){const m=JSON.parse(await readFile(this.file(key)+'.metadata','utf8')) as ObjectMetadata;const s=await stat(this.file(key));if(s.size!==m.bytes)throw new Error('Object metadata mismatch');return m;}
- async delete(key:string){await rm(this.file(key),{force:true});await rm(this.file(key)+'.metadata',{force:true});}
+ async delete(key:string){await rm(this.file(key),{force:true});await rm(this.file(key)+'.metadata',{force:true});try{await persistDirectories(path.dirname(this.file(key)));}catch(error){if((error as {code?:string}).code!=='ENOENT')throw error;}}
 }
 export class S3Storage implements StoragePort {
  readonly capabilities={privateObjects:true,immediateGatewayRevocation:true};
@@ -89,3 +90,8 @@ export * from './archive.js';
 export * from './deletion-ledger.js';
 export {localS3Verification} from './local-s3-verification.js';
 export {startDedicatedRenderBrowser} from './render-browser.js';
+export {AesGcmBackupEncryption,type BackupEncryptionPort} from './backup-encryption.js';
+export {SafeTarReader,type ExtractedArchiveEntry} from './archive-reader.js';
+export {PostgresBackupTools} from './postgres-backup-tools.js';
+export {ObjectAdmissionLedger,type AdmissionLedgerPort,type AdmissionLedgerRecord} from './admission-ledger.js';
+export {ObjectResourceErasureLedger,type ResourceErasureLedgerPort,type ResourceErasureRecord} from './resource-erasure-ledger.js';

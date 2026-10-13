@@ -1,19 +1,44 @@
-# Migration and recovery
+# Migrations, backup and recovery
 
-Platform migration automatically reads the root .env and uses DB_CONNECTION. Legacy scripts use DATABASE_URL and are separate; never run them as platform setup. The migration runner applies ordered SQL with SHA-256 checksums under a PostgreSQL advisory transaction lock. An edited applied migration fails; add an expand migration instead. No destructive migrations are included.
+Root `.env` loads automatically. Platform uses `DB_CONNECTION`; legacy scripts use `DATABASE_URL`. Apply platform migrations with `pnpm db:migrate`. Ordered SQL checksums are immutable and run under an advisory transaction lock; add new migrations rather than editing applied files. Migration 023 adds publication review and admission recovery holds.
 
-Before an authorised production migration, create an encrypted restore point and restore it into an isolated database. Use pg_dump/pg_restore from the supported PostgreSQL major version. Keep the data backup, object inventory/versions, font/template assets, configuration and keys in a failure-independent recoverable location. Target normal RPO 15 minutes/RTO 4 hours; event-day RPO 1 minute requires continuous recovery and an admission reconciliation runbook. R0 has not proved these service targets.
+## Configure recovery
 
-R0 rehearsal:
+Set `BACKUP_ROOT` and `BACKUP_REPLICA_ROOT` to distinct private filesystem volumes; production must put the replica in a separate failure domain. Set `BACKUP_ENCRYPTION_KEYS` to `{"active":"key-id","keys":{"key-id":"BASE64_32_RANDOM_BYTES"}}`. Generate a key with `openssl rand -base64 32` and retain retired keys while corresponding bundles exist. These keys are separate from admission encryption and token hashing. Optional `PG_DUMP_PATH`/`PG_RESTORE_PATH` select PostgreSQL 16 tools (defaults `pg_dump`/`pg_restore`). Never commit secrets or backup plaintext.
+
+`DELETION_LEDGER_ROOT` or `DELETION_LEDGER_S3_BUCKET` must be independent private durable recovery storage. It now holds workspace/account/resource erasure markers and admission intent/commit records. Preserve its current state across database restores; do not replace it with an older snapshot. Filesystem writes fsync files/directories. Verify production storage durability and replication, including S3 version-deletion policies. Run encrypted-volume/secret/config/template/font/image recovery separately; the bundle contains fonts, not production configuration/secrets.
+
+Quiesce API/worker writers during a full snapshot; source changes cause backup failure. Run:
 
 ```sh
-pg_dump --format=custom --file=/tmp/std-r0-backup.dump "$TEST_DB_CONNECTION"
-createdb --host=127.0.0.1 --port=YOUR_PORT std_restore_test
-pg_restore --dbname=postgresql://YOUR_USER@127.0.0.1:YOUR_PORT/std_restore_test /tmp/std-r0-backup.dump
+node --import tsx scripts/platform-backup.ts create
+node --import tsx scripts/platform-backup.ts expire
 ```
 
-Inspect tenant membership, events, opaque session states, migration checksums and deletion tombstones on the isolated restore. Never reopen scanning from an old snapshot without reconciling admissions committed after it. R2 adds pass-history assertions; R3 adds object/deletion replay checks. R0 restore evidence is separate from the mandatory complete R3 drill.
+The first command returns an opaque backup ID only after ciphertext checksum matches on both copies. The second deletes both copies past thirty days. Schedule normal recoverable points at most fifteen minutes apart; event-day recovery requires continuous database recovery/replication and durable replicated admission state. Full quiesced dumps alone do not provide that service guarantee. Monitor backup failure, age, replication lag and expiry.
 
-Legacy transition: run `pnpm db:legacy-report` for source-only counts/checksum/exceptions. For a reviewed local rehearsal only, supply LEGACY_APPLY=1 and LEGACY_OWNER_EMAIL identifying a verified platform account. This creates a draft seed and preserved snapshot; it refuses an existing seed. It does not alter old passes/users/settings, publish new content, contact providers or silently reinterpret old admission flags. Before live cutover, map staff/event identities explicitly and retain rollback to the legacy writer.
+## Restore into isolation
 
-Workspace recovery: use the primary owner's password and workspace identifier at /platform within thirty days. Invitations revoked on deletion remain revoked. Privacy erasure and expired hard deletion are R3 work; do not advertise R0 soft deletion as completed erasure.
+Fence/stop the original API and workers. Preserve current independent ledgers and protect the target from all ingress until replay finishes. Create an empty PostgreSQL 16 database and empty private object directory. Set `RESTORE_DB_CONNECTION` and `RESTORE_STORAGE_ROOT` to these distinct targets, then:
+
+```sh
+node --import tsx scripts/platform-backup.ts restore BACKUP_ID
+```
+
+This reference CLI restores filesystem object storage. S3 production recovery needs the same checked streaming copies and an isolated target bucket, covered by the storage conformance rehearsal; do not expose a provider-console restore without invariant verification. PostgreSQL tables and every restored object must match the authenticated manifest before recovery mutations. Authentication reset, erasure replay, generated-copy removal and admission reconciliation run before a successful restore report. Partial/failed targets remain isolated; recreate empty targets for a retry.
+
+All prior passwords, sessions and access grants are quarantined; unused passes are revoked. Previously acknowledged admissions remain used. Old email/AI attempts stay uncertain and are not automatically resubmitted. Owners use fresh password recovery, review pending media and explicitly republish the website/blog/albums. Owner republish clears only the recovery hold, not operator support holds. Issue fresh unused passes after review. Review restored ownership/collaborators against current case records before password recovery is opened.
+
+Open admission recovery holds pause all scanning for that wedding. Reconcile the independent ledger and event team. In `/operator`, an explicitly allowlisted, recently authenticated operator may resolve only an uncertain attempt with recorded evidence and confirmation that the guest was never admitted. Committed admissions cannot be cleared. Missing/mismatched lineage requires restoring the authoritative records. Never use an offline list to authorise electronic admission or reopen two competing writers.
+
+Run a complete isolated drill monthly during the pilot and before authorised production migrations:
+
+```sh
+TEST_DB_CONNECTION="$DB_CONNECTION" TEST_INVITATION_BROWSER_PATH="/path/to/chrome" \
+PG_DUMP_PATH="/path/to/postgresql16/pg_dump" PG_RESTORE_PATH="/path/to/postgresql16/pg_restore" \
+node --import tsx scripts/verify-recovery.ts
+```
+
+The connection must be localhost and a `_test` database with permission to create two disposable test databases. The script creates fresh source/restore databases, capture-only synthetic records and private temporary directories. It never writes existing wedding data or contacts guests. Preserve its JSON report; remove only the named disposable databases and directory after review. `docs/verification/recovery/report.md` records the local rehearsal and limits. Target RPO fifteen minutes/RTO four hours and event-day RPO one minute remain unadvertised until proved at production scale/failure domains.
+
+Legacy transition: `pnpm db:legacy-report` is read-only. Only a reviewed local `LEGACY_APPLY=1 LEGACY_OWNER_EMAIL=...` rehearsal creates a draft platform seed. It preserves legacy passes/settings/data and does not publish or contact providers. Map staff/event authority explicitly before a live cutover.
