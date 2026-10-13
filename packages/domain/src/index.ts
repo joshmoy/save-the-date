@@ -136,7 +136,7 @@ export interface PassRepository {
 export type UploadSession={id:string;weddingId:string;slug:string;albumIds:string[];albums:{id:string;title:string}[];filesUsed:number;bytesUsed:number;fileLimit:number;byteLimit:number};
 export type MediaUploadActor=Actor|{userId:null;uploadSessionId:string};
 export interface UploadRepository {
- list(actor:Actor,id:string):Promise<unknown>;
+ list(actor:Actor,id:string,cursor?:string):Promise<unknown>;
  create(actor:Actor,id:string,input:import('@save-the-date/contracts').UploadGrantInput):Promise<unknown>;
  revoke(actor:Actor,id:string,grantId:string):Promise<unknown>;
  exchange(slug:string,credential:string,sessionHash:string):Promise<unknown>;

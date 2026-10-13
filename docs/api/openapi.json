@@ -8321,6 +8321,14 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {

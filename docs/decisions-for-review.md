@@ -138,3 +138,6 @@ Apply no-referrer to all pages so private query/fragment journeys do not leak th
 
 ## Gateway client attribution
 Retain no proxy trust by default. Add explicit ingress-overwritten single-IP header configuration on web and exact gateway IP/CIDR trust on API, instead of trusting arbitrary browser forwarding or hop counts. Reject missing/malformed configured headers; validate IPv4/IPv6 and reject trust-all CIDRs. Production must restrict ingress→web→API paths. No existing .env/trust settings changed. Standard Express address trust follows its official behind-proxies documentation.
+
+## Upload access history
+Return one hundred grants per scoped timestamp/UUID page without credential hashes. Load-older retains the displayed history; issuing or revoking refreshes the current first page and retains one-time credentials only in current component state. Expired/revoked pagination fixtures do not create functional guest access.

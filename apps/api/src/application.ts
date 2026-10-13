@@ -178,7 +178,7 @@ export class Application {
     if(parts[3]==='briefs'){const briefId=uuid.parse(parts[4]),format=z.enum(['json','pdf']).parse(parts[5]);if(parts[6]==='retry'&&method==='POST'){res.status(202);return this.creative.retryBrief(actor,id,briefId,format);}if(parts.length===6&&method==='GET'){res.setHeader('Content-Disposition',`attachment; filename=planner-brief.${format}`);this.binary(req,res,await this.creative.downloadBrief(actor,id,briefId,format));return;}}
    }
    if(this.uploads&&parts[2]==='upload-grants'){
-    if(parts.length===3&&method==='GET')return this.uploads.list(actor,id);
+    if(parts.length===3&&method==='GET')return this.uploads.list(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
     if(parts.length===3&&method==='POST'){res.status(201);return this.uploads.create(actor,id,uploadGrantSchema.parse(body));}
     if(parts.length===4&&method==='DELETE')return this.uploads.revoke(actor,id,uuid.parse(parts[3]));
    }

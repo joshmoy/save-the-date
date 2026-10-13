@@ -1,3 +1,4 @@
+import {decodeCursor,encodeCursor} from './cursors.js';
 import {credential,manualCredential} from '@save-the-date/adapters';
 import {randomUUID} from 'node:crypto';
 import type {PoolClient} from 'pg';
@@ -7,7 +8,7 @@ import type {UploadGrantInput} from '@save-the-date/contracts';
 import {PostgresStore,lookupHashes} from './index.js';
 export class PostgresUploads implements UploadRepository {
  constructor(private store:PostgresStore,private hash:(v:string)=>string,private origin:string,private candidates:(value:string)=>string[]=value=>[hash(value)]){}
- async list(actor:Actor,id:string){requireCapability(await this.store.tenant(actor,id),'publish');return (await this.store.pool.query('select id,event_id,album_id,expires_at,expires_at<=now() as expired,revoked_at,session_file_limit,session_byte_limit,created_at from std_upload_grants where wedding_id=$1 order by created_at desc',[id])).rows;}
+ async list(actor:Actor,id:string,cursor?:string){requireCapability(await this.store.tenant(actor,id),'publish');const after=decodeCursor(cursor,'upload-grants',id),result=await this.store.pool.query(`select id,event_id,album_id,expires_at,expires_at<=now() as expired,revoked_at,session_file_limit,session_byte_limit,created_at,to_char(created_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as cursor_time from std_upload_grants where wedding_id=$1 and ($2::timestamptz is null or (created_at,id)<($2,$3::uuid)) order by created_at desc,id desc limit 101`,[id,after?.createdAt??null,after?.id??null]),grants=result.rows.slice(0,100),last=grants.at(-1);return {grants:grants.map(g=>({id:g.id,event_id:g.event_id,album_id:g.album_id,expires_at:g.expires_at,expired:g.expired,revoked_at:g.revoked_at,session_file_limit:g.session_file_limit,session_byte_limit:g.session_byte_limit,created_at:g.created_at})),nextCursor:result.rows.length>100&&last?encodeCursor({version:1,kind:'upload-grants',weddingId:id,id:last.id,createdAt:last.cursor_time}):null};}
  async create(actor:Actor,id:string,input:UploadGrantInput){return this.store.transaction(async tx=>{
   requireCapability(await this.store.tenant(actor,id,tx),'publish');
   const expiry=Date.parse(input.expiresAt);if(expiry<=Date.now()||expiry>Date.now()+180*86400000)throw new DomainError(400,'GRANT_EXPIRY','Choose an expiry within the next 180 days');
