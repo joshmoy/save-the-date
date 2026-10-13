@@ -22,3 +22,5 @@ Live Raven delivery/callback, optional AI provider smoke checks and production s
 Protocol checkpoint: schema-derived 120-path OpenAPI, redacted correlated HTTP logs/gateway headers, stable malformed-body errors and scoped media cursor pages. Wider pagination and browser acceptance remain open; see runbooks/api-contract.md and verification/api/report.md.
 
 Load checkpoint: twenty real concurrent journalled HTTP admissions p95 378.28 ms; eight actual JPEG/PDF bundles p95 1,089.64 ms excluding queue wait. Registry production dependency audit reports zero known vulnerabilities. Mobile throttled LCP, container package audit and production-scale/device/browser checks remain open.
+
+Verified checkpoint 2026-10-13: production API/gateway TLS implemented;128 full isolated tests/no skips, build/lint/typecheck pass, current web authenticated workspace smoke passed. Native web runs current build on3000; native worker remains stopped to avoid real email/paid AI. Next concrete action: workspace/member/event list navigation and remaining release evidence. Production deployment and physical/human gates are not claimed complete.

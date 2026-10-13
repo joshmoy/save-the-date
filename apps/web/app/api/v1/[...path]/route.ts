@@ -1,13 +1,14 @@
 import { NextRequest } from 'next/server';
 import {gatewayClientIp} from '../../../../src/gateway-client-ip';
+import {gatewayOrigin,gatewayRequest} from '../../../../src/gateway-transport';
 export const dynamic='force-dynamic';
 async function gateway(request:NextRequest,{params}:{params:Promise<{path:string[]}>}){
  const {path}=await params;
- const origin=process.env.API_INTERNAL_ORIGIN??'http://127.0.0.1:4000';
  const headers=new Headers();for(const key of ['content-type','cookie','origin','x-std-csrf','idempotency-key','x-request-id','range']){const v=request.headers.get(key);if(v)headers.set(key,v);}
  try{const ip=gatewayClientIp(request.headers,process.env.WEB_CLIENT_IP_HEADER);if(ip)headers.set('x-forwarded-for',ip);}catch{return Response.json({code:'INGRESS_CLIENT_REQUIRED',message:'The service ingress could not verify this request. Please retry.'},{status:503});}
  try{
-  const response=await fetch(`${origin}/api/v1/${path.map(encodeURIComponent).join('/')}${request.nextUrl.search}`,{method:request.method,headers,...(['GET','HEAD'].includes(request.method)?{}:{body:request.body,duplex:'half' as const}),cache:'no-store',redirect:'manual',signal:AbortSignal.timeout(request.method==='PUT'?120000:15000)});
+  const origin=gatewayOrigin(process.env);
+  const response=await gatewayRequest(`${origin}/api/v1/${path.map(encodeURIComponent).join('/')}${request.nextUrl.search}`,{method:request.method,headers,body:['GET','HEAD'].includes(request.method)?null:request.body,caPath:process.env.API_TLS_CA_PATH||undefined,signal:AbortSignal.timeout(request.method==='PUT'?120000:15000)});
   const out=new Headers({'Content-Type':response.headers.get('content-type')??'application/json','Cache-Control':'no-store','Referrer-Policy':'no-referrer'});
   for(const cookie of response.headers.getSetCookie())out.append('Set-Cookie',cookie);
   for(const name of ['content-range','accept-ranges','content-disposition','x-content-type-options','x-request-id']){const value=response.headers.get(name);if(value)out.set(name,value);}

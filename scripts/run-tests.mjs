@@ -13,7 +13,7 @@ const connection=process.env.TEST_DB_CONNECTION&&process.env.TEST_DB_CONNECTION!
 let endpoint;
 try{endpoint=new URL(connection);}catch{throw Error('Set DB_CONNECTION or TEST_DB_CONNECTION to a local PostgreSQL _test database. No legacy DATABASE_URL fallback is used.');}
 if(!['postgres:','postgresql:'].includes(endpoint.protocol)||!['localhost','127.0.0.1'].includes(endpoint.hostname)||!endpoint.pathname.endsWith('_test'))throw Error('Verification requires a local PostgreSQL _test administrator endpoint. Existing application records are never the test target.');
-const full=process.argv.includes('--full'),env={...process.env,NODE_ENV:'test',EMAIL_ADAPTER:'capture',LLM_ADAPTER:'disabled',IMAGE_ADAPTER:'disabled',STORAGE_ADAPTER:'filesystem'};
+const full=process.argv.includes('--full'),env={...process.env,NODE_ENV:'test',PLATFORM_RUNTIME_ENV:'test',API_TLS_CERT_PATH:'',API_TLS_KEY_PATH:'',API_TLS_CA_PATH:'',EMAIL_ADAPTER:'capture',LLM_ADAPTER:'disabled',IMAGE_ADAPTER:'disabled',STORAGE_ADAPTER:'filesystem'};
 env.TEST_INVITATION_BROWSER_PATH??=env.INVITATION_BROWSER_PATH;
 for(const name of ['TEST_HEIC_FIXTURE','TEST_INVITATION_BROWSER_PATH'])if(full){if(!env[name])throw Error('Full verification requires '+name+' in .env.');try{await access(env[name]);}catch{throw Error(name+' is not a readable local verification file.');}}
 const name='std_suite_'+randomUUID().replaceAll('-','')+'_test',scratch=await mkdtemp(tmpdir()+'/std-suite-'),target=new URL(endpoint);target.pathname='/'+name;
