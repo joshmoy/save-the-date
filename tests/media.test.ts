@@ -34,7 +34,7 @@ test('M01/M02 private image processing, metadata, quota and publication boundari
 });
 test('M02 concurrent reservations never exceed quota and expired uploads release it',async()=>{
  const outcomes=await Promise.allSettled(Array.from({length:5},()=>media.intent(owner,weddingId,input(2*1024**2))));assert.equal(outcomes.filter(r=>r.status==='fulfilled').length,2);const usage=(await media.list(owner,weddingId)).usage;assert.equal(Number(usage.reserved_bytes),8*1024**2);
- for(const result of outcomes)if(result.status==='fulfilled')await store.pool.query("update std_media_assets set expires_at=now()-interval '1 second' where id=$1",[result.value.id]);await media.sweep();assert.equal(Number((await media.list(owner,weddingId)).usage.reserved_bytes),0);
+ for(const result of outcomes)if(result.status==='fulfilled')await store.pool.query("update std_media_assets set expires_at=now()-interval '1 second' where id=$1",[result.value.id]);await media.sweep(weddingId);assert.equal(Number((await media.list(owner,weddingId)).usage.reserved_bytes),0);
 });
 test('M02 spoofed, corrupt and oversized input rejected without permanent quota',async()=>{
  await assert.rejects(media.intent(owner,weddingId,input(26*1024**2)),(e:DomainError)=>e.code==='FILE_TOO_LARGE');

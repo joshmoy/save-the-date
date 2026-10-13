@@ -38,3 +38,5 @@ Checkpoint 2026-10-12: P01–P04 admission and M03 guest access/invited projecti
 API checkpoint: schema-derived OpenAPI/correlated redacted logs/media cursor pages connected; 117 full regressions and focused HTTP/parser checks. Continue older invitation/planning histories and explicit asynchronous job IDs, then load/security/browser matrix.
 
 History checkpoint: older invitation/planning runs and photograph pages connected; 117 tests pass. Continue explicit async job identifiers, remaining growing lists and HTTP admission/export performance, then security/browser release matrix.
+
+Async/load checkpoint: transport IDs/status and resource-scoped invitation download implemented; 118 regressions pass. Local admission/export targets met on recorded reference profile; registry audit zero known vulnerabilities. Continue recovery ownership continuity, remaining lists/security headers and browser/mobile-LCP/a11y release gates.

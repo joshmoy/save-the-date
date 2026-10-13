@@ -1,3 +1,4 @@
+import {jobReferences,readJob,type AsyncResourceType} from './job-access.js';
 import { randomUUID, createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -14,6 +15,8 @@ pg.types.setTypeParser(1082,value=>value);
 export class PostgresStore implements FoundationRepository {
  readonly pool: pg.Pool;
  constructor(connectionString:string,readonly deletionLedger?:import('@save-the-date/adapters').DeletionLedgerPort,readonly admissionLedger?:import('@save-the-date/adapters').AdmissionLedgerPort,readonly resourceErasureLedger?:import('@save-the-date/adapters').ResourceErasureLedgerPort) { this.pool=new pg.Pool({connectionString,max:20}); }
+ async jobReferences(actor:Actor,weddingId:string,type:AsyncResourceType,resourceId:string){return jobReferences(this,actor,weddingId,type,resourceId);}
+ async readJob(actor:Actor,weddingId:string,jobId:string){return readJob(this,actor,weddingId,jobId);}
  async ping(){await this.pool.query('select 1');}
  async close(){await this.pool.end();}
  async transaction<T>(fn:(tx:PoolClient)=>Promise<T>):Promise<T>{const tx=await this.pool.connect();try{await tx.query('begin');const r=await fn(tx);await tx.query('commit');return r;}catch(e){await tx.query('rollback');if((e as {code?:string}).code==='23505')throw new DomainError(409,'CONFLICT','This value is already in use');throw e;}finally{tx.release();}}

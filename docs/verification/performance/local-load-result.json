@@ -1,0 +1,57 @@
+{
+  "verifiedAt": "2026-10-13T03:06:10.370Z",
+  "profile": {
+    "os": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M4",
+    "logicalCpus": 10,
+    "node": "v22.23.0",
+    "database": "16.14 (Homebrew)",
+    "network": "Loopback HTTP; camera/client network delay excluded from server samples",
+    "admissionRecovery": "Independent filesystem journal with file/directory fsync",
+    "exports": "Eight real JPEG+PDF card bundles, four families, two wording variants; sequential worker handling; queue wait excluded",
+    "limitations": "Local synthetic load only; no production-scale or mobile-LCP claim"
+  },
+  "admission": {
+    "concurrency": 20,
+    "samples": [
+      53.31,
+      67.63,
+      85.5,
+      125.3,
+      103.83,
+      143.15,
+      162.7,
+      181.86,
+      219.21,
+      199.35,
+      288.02,
+      232.09,
+      249.16,
+      305.85,
+      266.41,
+      322.73,
+      339.74,
+      378.28,
+      356.79,
+      389.62
+    ],
+    "p95Ms": 378.28,
+    "clientLoopbackP95Ms": 402.11291600000004,
+    "uniqueAdmissions": 20
+  },
+  "exports": {
+    "samples": [
+      1089.6409159999998,
+      981.915958,
+      946.380917,
+      963.5358329999999,
+      958.9494170000007,
+      973.6963329999999,
+      996.7292079999997,
+      942.8410839999997
+    ],
+    "p95Ms": 1089.6409159999998
+  },
+  "weddingId": "67c79d36-daaa-4d45-8f17-e11cf4365948"
+}

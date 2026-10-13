@@ -48,6 +48,8 @@ export interface MediaRepository {
 
 // The application depends on operations, not a database engine or query API.
 export interface FoundationRepository extends IdentityRepository {
+ jobReferences(actor:Actor,weddingId:string,type:"invitation-export"|"planner-brief"|"creative-generation"|"archive-export"|"email",resourceId:string):Promise<{jobId:string;jobIds:string[]}>;
+ readJob(actor:Actor,weddingId:string,jobId:string):Promise<unknown>;
  ping():Promise<void>;
  resendVerification(email:string,tokenHash:string,link:string):Promise<void>;
  register(email:string,passwordHash:string,tokenHash:string,link?:string):Promise<void>;

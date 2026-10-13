@@ -26,6 +26,7 @@ export class Application {
   res.setHeader('Content-Type',file.contentType);res.setHeader('Accept-Ranges','bytes');const range=req.headers.range;
   if(range){const match=/^bytes=(\d+)-(\d*)$/.exec(range);const start=Number(match?.[1]),end=match?.[2]?Number(match[2]):file.bytes.length-1;if(!match||start>end||start>=file.bytes.length){res.status(416).setHeader('Content-Range','bytes */'+file.bytes.length);res.end();return;}const last=Math.min(end,file.bytes.length-1);res.status(206).setHeader('Content-Range',`bytes ${start}-${last}/${file.bytes.length}`);res.send(file.bytes.subarray(start,last+1));return;}res.send(file.bytes);
  }
+ async queued(actor:Actor,weddingId:string,type:'invitation-export'|'planner-brief'|'creative-generation'|'archive-export'|'email',result:unknown){const id=z.object({id:uuid}).parse(result).id,jobs=await this.store.jobReferences(actor,weddingId,type,id);return apiSchemas.asyncResult.parse({...result as Record<string,unknown>,...jobs,statusPath:'/api/v1/weddings/'+weddingId+'/jobs/'+jobs.jobId});}
  async dispatch(req:Request,res:Response){
   res.setHeader('Cache-Control','no-store');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Content-Type-Options','nosniff');
   const method=req.method;const parts=req.path.replace(/^\/api\/v1\/?/,'').split('/').filter(Boolean);const body=req.body??{};
@@ -102,13 +103,14 @@ export class Application {
   if(parts[0]==='weddings'){
    if(parts.length===1){if(method==='GET')return this.store.listWeddings(actor);if(method==='POST'){res.status(201);return this.store.createWedding(actor,weddingSchema.parse(body));}}
    const id=uuid.parse(parts[1]);
+   if(parts[2]==='jobs'&&parts.length===4&&method==='GET')return this.store.readJob(actor,id,uuid.parse(parts[3]));
    if(parts.length===2){if(method==='GET')return this.store.readWedding(actor,id);if(method==='PATCH')return this.store.patchWedding(actor,id,weddingPatchSchema.parse(body));if(method==='DELETE'){deleteSchema.parse(body);await this.store.deleteWedding(actor,id);return {message:'Workspace deleted. Recovery available for thirty days',weddingId:id};}}
-   if(this.notifications&&parts[2]==='notifications'){if(parts.length===3&&method==='GET')return this.notifications.list(actor,id,req.query.cursor===undefined?undefined:uuid.parse(req.query.cursor));if(parts[4]==='retry'&&method==='POST'){const v=apiSchemas.retryNotification.parse(body);return this.notifications.retry(actor,id,uuid.parse(parts[3]),v.recipient,uuid.parse(req.headers['idempotency-key']));}}
+   if(this.notifications&&parts[2]==='notifications'){if(parts.length===3&&method==='GET')return this.notifications.list(actor,id,req.query.cursor===undefined?undefined:uuid.parse(req.query.cursor));if(parts[4]==='retry'&&method==='POST'){const v=apiSchemas.retryNotification.parse(body);res.status(202);return this.queued(actor,id,'email',await this.notifications.retry(actor,id,uuid.parse(parts[3]),v.recipient,uuid.parse(req.headers['idempotency-key'])));}}
    if(this.retention&&parts[2]==='retention'){
     if(parts.length===3&&method==='GET')return this.retention.status(actor,id);
     if(parts[3]==='review'&&method==='POST')return this.retention.review(actor,id);
-    if(parts[3]==='exports'&&parts.length===4&&method==='POST'){const input=apiSchemas.archiveExport.parse(body);return this.retention.export(actor,id,input.includeSensitive,uuid.parse(req.headers['idempotency-key']));}
-    if(parts[3]==='exports'&&parts[5]==='retry'&&method==='POST')return this.retention.retry(actor,id,uuid.parse(parts[4]));
+    if(parts[3]==='exports'&&parts.length===4&&method==='POST'){const input=apiSchemas.archiveExport.parse(body);res.status(202);return this.queued(actor,id,'archive-export',await this.retention.export(actor,id,input.includeSensitive,uuid.parse(req.headers['idempotency-key'])));}
+    if(parts[3]==='exports'&&parts[5]==='retry'&&method==='POST'){res.status(202);return this.retention.retry(actor,id,uuid.parse(parts[4]));}
     if(parts[3]==='exports'&&parts[5]==='access'&&method==='GET'){await this.retention.download(actor,id,uuid.parse(parts[4]));return {ready:true};}
     if(parts[3]==='exports'&&parts.length===5&&method==='GET'){const file=await this.retention.download(actor,id,uuid.parse(parts[4]));res.setHeader('Content-Type',file.contentType);res.setHeader('Content-Length',String(file.bytes));res.setHeader('Content-Disposition','attachment; filename="wedding-archive.tar"');await pipeline(Readable.from(file.chunks),res);return;}
    }
@@ -122,7 +124,7 @@ export class Application {
     if(parts[4]==='send'&&method==='POST'){const v=apiSchemas.passSend.parse(body);return this.passes.send(actor,id,passId,v.expectedVersion,v.recipients,uuid.parse(req.headers['idempotency-key']));}
     if(parts[4]==='revoke'&&method==='POST'){const v=passActionSchema.parse(body);return this.passes.revoke(actor,id,passId,v.expectedVersion,v.reason,uuid.parse(req.headers['idempotency-key']));}
     if(parts[4]==='reissue'&&method==='POST'){const v=passActionSchema.parse(body);return this.passes.reissue(actor,id,passId,v.expectedVersion,v.reason,uuid.parse(req.headers['idempotency-key']));}
-    if(parts[5]==='retry'&&method==='POST')return this.passes.retryTicket(actor,id,passId,z.enum(['jpeg','pdf']).parse(parts[4]));
+    if(parts[5]==='retry'&&method==='POST'){res.status(202);return this.passes.retryTicket(actor,id,passId,z.enum(['jpeg','pdf']).parse(parts[4]));}
     if(parts.length===5&&method==='GET'){const format=z.enum(['jpeg','pdf']).parse(parts[4]);res.setHeader('Content-Disposition',`attachment; filename=admission-pass.${format}`);this.binary(req,res,await this.passes.download(actor,id,passId,format));return;}
    }
    if(this.passes&&parts[2]==='events'&&parts[4]==='redeem'&&method==='POST')return this.passes.redeem(actor,id,uuid.parse(parts[3]),redemptionSchema.parse(body).credential,uuid.parse(req.headers['idempotency-key']));
@@ -151,10 +153,10 @@ export class Application {
     if((parts.length===3&&method==='POST')||(parts.length===4&&method==='PATCH')){const v=apiSchemas.invitationSave.parse(body);return this.invitations.save(actor,id,v.title,v.design,v.expectedVersion,parts[3]?uuid.parse(parts[3]):undefined);}
     if(parts[3]==='exports'){
      const exportId=uuid.parse(parts[4]),format=z.enum(['jpeg','pdf']).parse(parts[5]);
-     if(parts[6]==='retry'&&method==='POST')return this.invitations.retry(actor,id,exportId,format);
+     if(parts[6]==='retry'&&method==='POST'){res.status(202);return this.invitations.retry(actor,id,exportId,format);}
      if(method==='GET'){res.setHeader('Content-Disposition',`attachment; filename=invitation-${exportId}.${format}`);this.binary(req,res,await this.invitations.download(actor,id,exportId,format));return;}
     }
-    if(parts[4]==='export'&&method==='POST'){const v=apiSchemas.invitationExport.parse(body);res.status(202);return this.invitations.queue(actor,id,uuid.parse(parts[3]),v.expectedVersion,v.preview as ResolvedDesign,uuid.parse(req.headers['idempotency-key']));}
+    if(parts[4]==='export'&&method==='POST'){const v=apiSchemas.invitationExport.parse(body);res.status(202);return this.queued(actor,id,'invitation-export',await this.invitations.queue(actor,id,uuid.parse(parts[3]),v.expectedVersion,v.preview as ResolvedDesign,uuid.parse(req.headers['idempotency-key'])));}
    }
    if(this.creative&&parts[2]==='creative'){
     if(parts.length===3&&method==='GET')return this.creative.list(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
@@ -166,12 +168,12 @@ export class Application {
      if(parts[5]==='approve'&&method==='POST')return this.creative.approve(actor,id,cid,conceptRevisionSchema.parse(body).expectedVersion);
      if(parts[5]==='theme-diff'&&method==='POST')return this.creative.themeDiff(actor,id,cid,conceptRevisionSchema.parse(body).expectedVersion);
      if(parts[5]==='apply'&&method==='POST'){const v=apiSchemas.themeApply.parse(body);return this.creative.applyTheme(actor,id,cid,v.expectedVersion,v.weddingVersion,v.siteVersion);}
-     if(parts[5]==='brief'&&method==='POST'){res.status(202);return this.creative.exportBrief(actor,id,cid,conceptRevisionSchema.parse(body).expectedVersion,uuid.parse(req.headers['idempotency-key']));}
+     if(parts[5]==='brief'&&method==='POST'){res.status(202);return this.queued(actor,id,'planner-brief',await this.creative.exportBrief(actor,id,cid,conceptRevisionSchema.parse(body).expectedVersion,uuid.parse(req.headers['idempotency-key'])));}
     }
-    if(parts[3]==='runs'&&parts.length===4&&method==='POST'){res.status(202);return this.creative.generate(actor,id,creativeGenerationSchema.parse(body),uuid.parse(req.headers['idempotency-key']));}
+    if(parts[3]==='runs'&&parts.length===4&&method==='POST'){res.status(202);return this.queued(actor,id,'creative-generation',await this.creative.generate(actor,id,creativeGenerationSchema.parse(body),uuid.parse(req.headers['idempotency-key'])));}
     if(parts[3]==='runs'&&parts[5]==='cancel'&&method==='POST')return this.creative.cancel(actor,id,uuid.parse(parts[4]));
     if(parts[3]==='assets'&&method==='GET'){this.binary(req,res,await this.creative.readAsset(actor,id,uuid.parse(parts[4])));return;}
-    if(parts[3]==='briefs'){const briefId=uuid.parse(parts[4]),format=z.enum(['json','pdf']).parse(parts[5]);if(parts[6]==='retry'&&method==='POST')return this.creative.retryBrief(actor,id,briefId,format);if(parts.length===6&&method==='GET'){res.setHeader('Content-Disposition',`attachment; filename=planner-brief.${format}`);this.binary(req,res,await this.creative.downloadBrief(actor,id,briefId,format));return;}}
+    if(parts[3]==='briefs'){const briefId=uuid.parse(parts[4]),format=z.enum(['json','pdf']).parse(parts[5]);if(parts[6]==='retry'&&method==='POST'){res.status(202);return this.creative.retryBrief(actor,id,briefId,format);}if(parts.length===6&&method==='GET'){res.setHeader('Content-Disposition',`attachment; filename=planner-brief.${format}`);this.binary(req,res,await this.creative.downloadBrief(actor,id,briefId,format));return;}}
    }
    if(this.uploads&&parts[2]==='upload-grants'){
     if(parts.length===3&&method==='GET')return this.uploads.list(actor,id);

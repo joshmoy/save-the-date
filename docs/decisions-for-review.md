@@ -115,3 +115,11 @@ New RSVP, upload and admission manual credentials use sixteen random unambiguous
 
 ## Older histories and photographs
 Use explicit load-older controls for invitation exports and planning activity so unsaved designs/context remain intact. Polling refreshes the extent already loaded. Paginated photograph selection retains the current saved asset option until its name is loaded. Historical pagination fixtures remain failed/queued metadata, never invented completed integrations. The connector cannot launch a separate Chrome browser here; cross-browser/device acceptance remains documented.
+
+## Async status and release checks
+- Keep domain resource IDs and actual transport job IDs distinct. One file job is not a completed multi-format bundle. Initial timeout replay references original jobs; format retries report new jobs. Staff status hides payloads/provider IDs and rechecks tenant/requester/album scope.
+- Preserve generic anonymous verification/recovery acknowledgements instead of exposing account existence through conditional job IDs. Guest upload status stays bound to its separate upload session.
+- Recheck embedded photograph album scope on every invitation download. Deletion closes access immediately; moderation changes leave an owner’s immutable snapshot private unless it is deleted. Physical server copy erasure remains separately queued/replayed.
+- Send only event/wedding source references when requesting an invitation export, avoiding large preview-photo bytes in the one-MiB JSON request limit. The API recomputes the resolved snapshot authoritatively.
+- Scope expiry test sweeps to their own wedding; retain the production bounded batch with deterministic oldest-first ordering.
+- Local load and registry audit results are bounded evidence; do not claim mobile LCP, container package security or production SLAs from them. Review post-snapshot ownership continuity next: the current conservative restore runbook requires manual review before opening identity recovery, and a durable ownership marker can enforce that boundary.
