@@ -80,7 +80,7 @@ export interface PublicationRepository {
  exchangeShared(slug:string,hash:string|string[],sessionHash:string):Promise<void>;
  publicSite(slug:string,sessionHash?:string|string[],guestSessionHash?:string|string[],view?:{mode:'page'|'asset'|'album'|'albums'|'posts'|'post';id?:string;cursor?:string}):Promise<unknown>;
  publicPost(slug:string,path:string,sessionHash?:string|string[],guestSessionHash?:string|string[]):Promise<unknown>;
- listPosts(actor:Actor,id:string):Promise<unknown>;
+ listPosts(actor:Actor,id:string,cursor?:string):Promise<unknown>;
  savePost(actor:Actor,id:string,post:import('@save-the-date/contracts').PostInput,version:number,postId?:string):Promise<unknown>;
  publishPost(actor:Actor,id:string,postId:string,version:number,publish:boolean):Promise<unknown>;
  deletePost(actor:Actor,id:string,postId:string,version:number):Promise<unknown>;

@@ -1,6 +1,6 @@
 import {z} from '@save-the-date/contracts';
 import {DomainError} from '@save-the-date/domain';
-const schema=z.object({version:z.literal(1),kind:z.enum(['media','invitation-exports','creative-runs','public-posts']),weddingId:z.uuid(),id:z.uuid(),createdAt:z.iso.datetime(),position:z.number().int().min(0).max(100000).optional()}).strict();
+const schema=z.object({version:z.literal(1),kind:z.enum(['media','invitation-exports','creative-runs','public-posts','staff-posts']),weddingId:z.uuid(),id:z.uuid(),createdAt:z.iso.datetime(),position:z.number().int().min(0).max(100000).optional()}).strict();
 export type ListCursor=z.infer<typeof schema>;
 export function encodeCursor(value:ListCursor){return Buffer.from(JSON.stringify(schema.parse(value))).toString('base64url');}
 export function decodeCursor(raw:string|undefined,kind:ListCursor['kind'],weddingId:string){if(raw===undefined)return null;try{if(raw.length>2048||!/^[a-zA-Z0-9_-]+$/.test(raw))throw Error();const value=schema.parse(JSON.parse(Buffer.from(raw,'base64url').toString()));if(value.kind!==kind||value.weddingId!==weddingId.toLowerCase()||(kind==='media'&&value.position===undefined))throw Error();return value;}catch{throw new DomainError(400,'INVALID_CURSOR','This list position is invalid. Reload the first page');}}

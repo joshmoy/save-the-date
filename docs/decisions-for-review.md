@@ -129,3 +129,6 @@ Enforce the existing runbook’s ownership review instead of silently restoring 
 
 ## Public gallery and journal bounds
 Load eight published albums, six approved memories per album and twenty journal summaries initially. Scoped cursors recheck current publication and guest access; individual image/post URLs resolve independently of page boundaries. Website landing pages omit full blog bodies. Load-more/retry controls retain already viewed content. Use self-hosted Work Sans for the existing sans choice and Source Serif 4 for classic headings; keep each couple’s chosen palette. Mobile section navigation wraps with 44px targets. No original wedding data or credentials were changed.
+
+## Staff journal history
+Use stable creation-time/UUID cursors for a hundred editable drafts per page, retaining unsaved selected-post content while loading older drafts. Migration025 adds the previously absent creation timestamp; historical posts use their known publication time, unpublished historical drafts use migration time, with no invented precise creation history. This is additive and preserves post contents and public paths.

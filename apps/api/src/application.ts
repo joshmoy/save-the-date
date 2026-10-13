@@ -202,7 +202,7 @@ export class Application {
     if(parts[3]==='shared-code'&&method==='POST'){const token=credential();await this.publication.rotateShared(actor,id,this.hash(token));return {code:token,message:'Old website access codes and sessions are now revoked'};}
    }
    if(parts[2]==='posts'){
-    if(parts.length===3&&method==='GET')return this.publication.listPosts(actor,id);
+    if(parts.length===3&&method==='GET')return this.publication.listPosts(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
     if(parts.length===3&&method==='POST'){const v=postSaveSchema.parse(body);res.status(201);return this.publication.savePost(actor,id,v.post,v.expectedVersion);}
     const postId=uuid.parse(parts[3]);
     if(parts.length===4&&method==='PATCH'){const v=postSaveSchema.parse(body);return this.publication.savePost(actor,id,v.post,v.expectedVersion,postId);}
