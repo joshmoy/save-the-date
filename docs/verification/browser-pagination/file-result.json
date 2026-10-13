@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-13T10:39:47.836Z",
+  "source": "authenticated CUA browser downloads",
+  "jpeg": {
+    "width": 1500,
+    "height": 2100,
+    "qr": "http://localhost:3000/w/browser-pages-ff722582"
+  },
+  "pdf": {
+    "pages": 1,
+    "width": 360,
+    "height": 504
+  }
+}
