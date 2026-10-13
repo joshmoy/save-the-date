@@ -2200,7 +2200,16 @@
         "tags": [
           "weddings"
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Validated operation result; domain publication, capacity and role invariants are enforced by the API",

@@ -22,7 +22,7 @@ after(async()=>{await store.close();});
 test('W01: verified creation, two separate weddings and concealed foreign tenant',async()=>{
  const unverified=await user('unverified',false);await assert.rejects(store.createWedding(unverified,weddingInput('unverified-'+prefix)),(e:DomainError)=>e.code==='VERIFY_EMAIL');
  const a=await store.createWedding(owner,{...weddingInput('a-'+prefix),primaryDate:'2026-08-01'}),b=await store.createWedding(owner,weddingInput('b-'+prefix));weddingId=a.id;secondId=b.id;
- assert.equal(a.site_visibility,'shared');assert.equal(a.primary_date,'2026-08-01');assert.equal((await store.listWeddings(owner)).length,2);
+ assert.equal(a.site_visibility,'shared');assert.equal(a.primary_date,'2026-08-01');assert.equal((await store.listWeddings(owner)).weddings.length,2);
  await assert.rejects(store.readWedding(other,a.id),(e:DomainError)=>e.status===404);
  await assert.rejects(store.createWedding(other,weddingInput(a.slug)),(e:DomainError)=>e.status===409);
  for(const slug of ['api','UPPER','a','invalid--path'])assert.equal(weddingSchema.safeParse({...weddingInput('valid-path'),slug}).success,false);
@@ -45,7 +45,7 @@ test('W02: simultaneous draft saves commit one revision',async()=>{
 test('W01/W02: invite is addressed, single-use, expiring and event-scoped',async()=>{
  const token=credential();await store.invite(owner,weddingId,{email:partner.email,role:'co_owner',eventIds:[],albumIds:[]},hash(token),'local link');
  await assert.rejects(store.acceptInvite(other,hash(token)),(e:DomainError)=>e.code==='INVALID_LINK');
- assert.equal((await store.listWeddings(partner)).length,0);await store.acceptInvite(partner,hash(token));assert.equal((await store.listWeddings(partner)).length,1);
+ assert.equal((await store.listWeddings(partner)).weddings.length,0);await store.acceptInvite(partner,hash(token));assert.equal((await store.listWeddings(partner)).weddings.length,1);
  await assert.rejects(store.acceptInvite(partner,hash(token)));
  const p=credential();await store.invite(owner,weddingId,{email:planner.email,role:'planner',eventIds:[],albumIds:[]},hash(p),'local link');await store.acceptInvite(planner,hash(p));
  await assert.rejects(store.invite(planner,weddingId,{email:other.email,role:'co_owner',eventIds:[],albumIds:[]},hash(credential()),'local link'),(e:DomainError)=>e.status===404);

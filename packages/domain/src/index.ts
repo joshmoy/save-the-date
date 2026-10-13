@@ -56,7 +56,7 @@ export interface FoundationRepository extends IdentityRepository {
  register(email:string,passwordHash:string,tokenHash:string,link?:string):Promise<void>;
  recover(email:string,tokenHash:string,link?:string):Promise<void>;
  rateLimit(key:string,limit:number,seconds?:number):Promise<void>;
- listWeddings(actor:Actor):Promise<unknown>;
+ listWeddings(actor:Actor,cursor?:string):Promise<unknown>;
  tenant(actor:Actor,weddingId:string):Promise<TenantContext>;
  createWedding(actor:Actor,input:import('@save-the-date/contracts').WeddingInput):Promise<unknown>;
  readWedding(actor:Actor,id:string):Promise<unknown>;
