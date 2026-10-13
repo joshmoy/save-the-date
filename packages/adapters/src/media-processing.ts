@@ -20,15 +20,16 @@ export class NativeMediaProcessor implements MediaProcessorPort {
     return {display:result.data,contentType:'image/webp',width:result.info.width,height:result.info.height,duration:null};
    }catch{throw Error(['image/heic','image/heif'].includes(declaredType)?'MEDIA_PHONE_FORMAT_UNSUPPORTED':'MEDIA_INVALID_IMAGE');}
   }
-  if(!iso)throw Error('MEDIA_TYPE_MISMATCH');
+  if(!['video/mp4','video/quicktime'].includes(declaredType)||!iso)throw Error('MEDIA_TYPE_MISMATCH');
   const scratch=await mkdtemp(path.join(tmpdir(),'std-media-'));
   try{const input=path.join(scratch,'input'),output=path.join(scratch,'display.mp4'),poster=path.join(scratch,'poster.webp');await writeFile(input,bytes,{mode:0o600});
-   const probe=await run(this.ffprobe,['-v','error','-protocol_whitelist','file,pipe','-show_format','-show_streams','-of','json',input],{timeout:15000,maxBuffer:1024*1024});
+   const probe=await run(this.ffprobe,['-v','error','-protocol_whitelist','file,pipe','-f','mov','-show_format','-show_streams','-of','json',input],{timeout:15000,maxBuffer:1024*1024});
    const metadata=JSON.parse(probe.stdout) as {format:{duration:string;format_name:string};streams:{codec_type:string;width?:number;height?:number}[]};const duration=Number(metadata.format.duration),video=metadata.streams.find(s=>s.codec_type==='video');
    if(!video?.width||!video.height||video.width*video.height>40000000||!Number.isFinite(duration)||duration<=0||duration>300||!metadata.format.format_name.includes('mov'))throw Error('MEDIA_VIDEO_LIMIT');
-   await run(this.ffmpeg,['-nostdin','-v','error','-protocol_whitelist','file,pipe','-threads','1','-i',input,'-map','0:v:0','-map','0:a?','-map_metadata','-1','-vf','scale=1280:1280:force_original_aspect_ratio=decrease:force_divisible_by=2','-c:v','libx264','-preset','fast','-crf','24','-threads','1','-c:a','aac','-movflags','+faststart','-y',output],{timeout:180000,maxBuffer:1024*1024});
+   await run(this.ffmpeg,['-nostdin','-v','error','-protocol_whitelist','file,pipe','-threads','1','-f','mov','-i',input,'-map','0:v:0','-map','0:a?','-map_metadata','-1','-vf','scale=1280:1280:force_original_aspect_ratio=decrease:force_divisible_by=2','-c:v','libx264','-preset','fast','-crf','24','-threads','1','-c:a','aac','-movflags','+faststart','-y',output],{timeout:180000,maxBuffer:1024*1024});
    await run(this.ffmpeg,['-nostdin','-v','error','-threads','1','-i',output,'-frames:v','1','-map_metadata','-1','-y',poster],{timeout:15000,maxBuffer:1024*1024});
-   return {display:await readFile(output),poster:await readFile(poster),contentType:'video/mp4',width:Math.round(video.width*Math.min(1,1280/video.width,1280/video.height)),height:Math.round(video.height*Math.min(1,1280/video.width,1280/video.height)),duration};
+   const inspected=await run(this.ffprobe,['-v','error','-protocol_whitelist','file,pipe','-f','mov','-select_streams','v:0','-show_entries','stream=width,height','-of','json',output],{timeout:15000,maxBuffer:1024*1024}),encoded=JSON.parse(inspected.stdout).streams[0] as {width:number;height:number};if(!Number.isInteger(encoded?.width)||!Number.isInteger(encoded?.height)||encoded.width<1||encoded.height<1||encoded.width>1280||encoded.height>1280)throw Error('MEDIA_VIDEO_PROCESSING_FAILED');
+   return {display:await readFile(output),poster:await readFile(poster),contentType:'video/mp4',width:encoded.width,height:encoded.height,duration};
   }catch(e){if(e instanceof Error&&e.message==='MEDIA_VIDEO_LIMIT')throw e;throw Error('MEDIA_VIDEO_PROCESSING_FAILED');}finally{await rm(scratch,{recursive:true,force:true});}
  }
  private async convertPhone(bytes:Buffer):Promise<Buffer>{return new Promise((resolve,reject)=>{
