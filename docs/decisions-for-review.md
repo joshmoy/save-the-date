@@ -144,3 +144,6 @@ Return one hundred grants per scoped timestamp/UUID page without credential hash
 
 ## Pass and confirmed-attendee history
 Use independent200-row cursors for issued passes and eligible attendee/event pairs. Pair cursors retain event UUID ties. Server has_pass includes any existing lineage, preventing false issue buttons when older passes are outside the loaded page. Preserve loaded extent while polling file state; history pages never expose encrypted payloads or credential hashes. Offline operational exports remain complete human-only snapshots.
+
+## Whole-wedding guest filters
+Page one hundred complete households in name/UUID order, returning only their attendee/response/current-grant records. Apply filters authoritatively across all attendees, including plus ones; keep complete household context for a match. Bind cursors to normalised search/event/status criteria and recheck tenant access. Explicit Apply preserves unsaved filters/forms during older loading; filtered emptiness does not claim the wedding has no guests. CSV and import duplicate detection iterate the complete household set. Pending visitor requests have an independent100-item cursor; resolved requests do not hide pending visitors. Current private grant metadata excludes revoked history, which is retained in audit/data exports.

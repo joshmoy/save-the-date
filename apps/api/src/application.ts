@@ -134,7 +134,8 @@ export class Application {
    if(this.passes&&parts[2]==='events'&&parts[4]==='operational-list'&&method==='GET')return this.passes.operationalList(actor,id,uuid.parse(parts[3]));
    if(this.passes&&parts[2]==='admission-corrections'&&method==='POST')return this.passes.correction(actor,id,admissionCorrectionSchema.parse(body),uuid.parse(req.headers['idempotency-key']));
    if(this.guests&&parts[2]==='guests'){
-    if(parts.length===3&&method==='GET')return this.guests.list(actor,id);
+    if(parts[3]==='requests'&&parts.length===4&&method==='GET')return this.guests.listRequests(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
+    if(parts.length===3&&method==='GET')return this.guests.list(actor,id,apiSchemas.guestListQuery.parse(req.query));
     if(parts[3]==='responses'&&parts[4]==='export'&&method==='GET'){res.setHeader('Content-Disposition','attachment; filename=responses.csv');res.setHeader('Content-Type','text/csv; charset=utf-8');res.send(await this.guests.rsvpExport(actor,id,req.query.sensitive==='true'));return;}
     if(parts[3]==='export'&&method==='GET'){res.setHeader('Content-Disposition','attachment; filename=guests.csv');res.setHeader('Content-Type','text/csv; charset=utf-8');res.send(await this.guests.csvExport(actor,id));return;}
     if(parts[3]==='import'&&method==='POST'){const v=importSchema.parse(body);return parts[4]==='preview'?this.guests.importPreview(actor,id,v.csv):this.guests.importCommit(actor,id,v.csv,v.decisions);}

@@ -96,8 +96,10 @@ export interface InvitationRepository {
  download(actor:Actor,weddingId:string,exportId:string,format:'jpeg'|'pdf'):Promise<{bytes:Buffer;contentType:string}>;
 }
 export type GuestSession={id:string;grantId:string;weddingId:string;partyId:string;slug:string};
+export type GuestListOptions={cursor?:string;search?:string;eventId?:string;state?:'unanswered'|'pending'|'confirmed'|'declined'|'waitlisted'};
 export interface GuestRepository {
- list(actor:Actor,weddingId:string):Promise<unknown>;
+ listRequests(actor:Actor,weddingId:string,cursor?:string):Promise<unknown>;
+ list(actor:Actor,weddingId:string,options?:GuestListOptions):Promise<unknown>;
  save(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').GuestInput,version:number,attendeeId?:string):Promise<unknown>;
  remove(actor:Actor,weddingId:string,attendeeId:string,version:number):Promise<unknown>;
  issueGrant(actor:Actor,weddingId:string,partyId:string,days:number):Promise<{id:string;code:string;url:string;expiresInDays:number}>;
