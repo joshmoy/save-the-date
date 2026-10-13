@@ -78,7 +78,7 @@ export interface PublicationRepository {
  publish(actor:Actor,id:string,version:number,weddingVersion:number):Promise<unknown>;
  rotateShared(actor:Actor,id:string,hash:string):Promise<void>;
  exchangeShared(slug:string,hash:string|string[],sessionHash:string):Promise<void>;
- publicSite(slug:string,sessionHash?:string|string[],guestSessionHash?:string|string[]):Promise<unknown>;
+ publicSite(slug:string,sessionHash?:string|string[],guestSessionHash?:string|string[],view?:{mode:'page'|'asset'|'album'|'albums'|'posts'|'post';id?:string;cursor?:string}):Promise<unknown>;
  publicPost(slug:string,path:string,sessionHash?:string|string[],guestSessionHash?:string|string[]):Promise<unknown>;
  listPosts(actor:Actor,id:string):Promise<unknown>;
  savePost(actor:Actor,id:string,post:import('@save-the-date/contracts').PostInput,version:number,postId?:string):Promise<unknown>;

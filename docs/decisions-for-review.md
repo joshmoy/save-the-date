@@ -126,3 +126,6 @@ Use explicit load-older controls for invitation exports and planning activity so
 
 ## Restored ownership
 Enforce the existing runbook’s ownership review instead of silently restoring an old primary role. Current-schema expansion precedes quarantine; primary/publication/member controls stay held until a separate recent allowlisted operator verifies an existing accepted owner/co-owner and audits reconciliation. Missing lineage requires an authoritative source, not an arbitrary verified account. Ordinary post-snapshot data loss still follows the configured RPO. Workspace reads include current caller roles; held owner controls are hidden in the UI. ADR019 records the boundary. No existing operator grant was added.
+
+## Public gallery and journal bounds
+Load eight published albums, six approved memories per album and twenty journal summaries initially. Scoped cursors recheck current publication and guest access; individual image/post URLs resolve independently of page boundaries. Website landing pages omit full blog bodies. Load-more/retry controls retain already viewed content. Use self-hosted Work Sans for the existing sans choice and Source Serif 4 for classic headings; keep each couple’s chosen palette. Mobile section navigation wraps with 44px targets. No original wedding data or credentials were changed.
