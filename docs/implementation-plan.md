@@ -40,3 +40,5 @@ API checkpoint: schema-derived OpenAPI/correlated redacted logs/media cursor pag
 History checkpoint: older invitation/planning runs and photograph pages connected; 117 tests pass. Continue explicit async job identifiers, remaining growing lists and HTTP admission/export performance, then security/browser release matrix.
 
 Async/load checkpoint: transport IDs/status and resource-scoped invitation download implemented; 118 regressions pass. Local admission/export targets met on recorded reference profile; registry audit zero known vulnerabilities. Continue recovery ownership continuity, remaining lists/security headers and browser/mobile-LCP/a11y release gates.
+
+Ownership checkpoint: current-schema expansion and enforced restored primary-owner review close privilege rollback; complete older-schema encrypted restore passed, 119 tests. Continue remaining growing-list pagination and bounded security/browser/accessibility gates.

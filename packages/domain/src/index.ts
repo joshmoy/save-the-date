@@ -4,9 +4,10 @@ export class DomainError extends Error {
 }
 export const notFound = () => new DomainError(404,'NOT_FOUND','Resource not found');
 export interface Actor { userId: string; sessionId: string; email: string; verified: boolean; reauthenticatedAt: Date }
-export interface TenantContext { weddingId: string; actorId: string; role: Role; eventIds: string[]; albumIds: string[] }
+export interface TenantContext {ownershipRecoveryHold?:boolean; weddingId: string; actorId: string; role: Role; eventIds: string[]; albumIds: string[] }
 export type Capability = 'read'|'edit'|'publish'|'members'|'guests'|'media'|'scan'|'primary';
 export function requireCapability(tenant: TenantContext, capability: Capability, resourceId?: string) {
+ if(tenant.ownershipRecoveryHold&&['primary','publish','members'].includes(capability))throw new DomainError(409,'OWNERSHIP_REVIEW_REQUIRED','Restored ownership needs independent review before this action. Contact support');
  const owner = tenant.role === 'owner' || tenant.role === 'co_owner';
  const allowed = capability==='primary' ? tenant.role==='owner' : capability==='read' ? true : capability==='publish'||capability==='members' ? owner : capability==='edit'||capability==='guests' ? owner||tenant.role==='planner' : capability==='media' ? owner||(['planner','media_contributor'].includes(tenant.role)&&!!resourceId&&tenant.albumIds.includes(resourceId)) : owner||(tenant.role==='security'&&!!resourceId&&tenant.eventIds.includes(resourceId));
  if(!allowed) throw notFound();
@@ -168,6 +169,7 @@ export interface RetentionRepository {
  download(actor:Actor,weddingId:string,exportId:string):Promise<{chunks:AsyncIterable<Uint8Array>;bytes:number;contentType:string}>;
 }
 export interface OperatorRepository {
+ resolveOwnership(actor:Actor,weddingId:string,primaryOwnerId:string,ownershipVerified:true,reason:string):Promise<unknown>;
  resolveAdmissionHold(actor:Actor,weddingId:string,passId:string,reason:string,notAdmittedConfirmed:true):Promise<unknown>;
  recoverAccount(actor:Actor,userId:string,input:{reason:string;ownershipVerified:true}):Promise<unknown>;
  dashboard(actor:Actor,cursor?:string):Promise<unknown>;
