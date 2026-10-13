@@ -87,3 +87,5 @@ export * from './planner-brief.js';
 
 export * from './archive.js';
 export * from './deletion-ledger.js';
+export {localS3Verification} from './local-s3-verification.js';
+export {startDedicatedRenderBrowser} from './render-browser.js';

@@ -9,3 +9,8 @@ node_modules
 **/.env*
 *.JPG
 *.JPG
+
+.local
+backups
+**/*.dump
+**/*.backup

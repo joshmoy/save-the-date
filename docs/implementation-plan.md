@@ -30,3 +30,5 @@ Checkpoint 2026-10-12: P01–P04 admission and M03 guest access/invited projecti
 2026-10-12 checkpoint: operator support/metrics committed 6d78101. Notification flows/history/retry and stale-link validation locally verified; continue directly into credential hash rotation and portability/restore/security gates.
 
 2026-10-12 checkpoint: notification controls committed 9fbd1e0. Credential-key rolling readers/writers verified with 105 full tests; next portability and complete recovery drills.
+
+2026-10-13 checkpoint: real two-adapter storage, Linux media/dedicated rendering and full capture-only compose journey passed; 106 full regression tests. Continue directly to complete encrypted database/object/deletion/admission restore and the remaining release gates.

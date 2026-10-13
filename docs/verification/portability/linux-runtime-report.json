@@ -1,0 +1,39 @@
+{
+  "platform": "linux",
+  "architecture": "arm64",
+  "node": "v22.23.2",
+  "checks": [
+    {
+      "name": "Native Linux PNG processing",
+      "state": "passed"
+    },
+    {
+      "name": "Real HEIC processing",
+      "state": "passed"
+    },
+    {
+      "name": "Linux FFmpeg video processing",
+      "state": "passed"
+    },
+    {
+      "name": "Sandboxed royal-elegance JPEG/PDF variants",
+      "state": "failed",
+      "message": "Failed to launch the browser process:  Code: null\n\nstderr:\nFailed to move to new namespace: PID namespaces supported, Network namespace supported, but failed: errno = Operation not permitted\n[47:47:1012/154430.662513:FATAL:content/browser/zygote_host/zygote_host_impl_linux.cc:213] Zygote process exited prematurely with exit code 1\n[1012/154430.665551:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq: No such file or directory (2)\n[1012/154430.665794:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: No such file or directory (2)\n\nTROUBLESHOOTING: https://pptr.dev/troubleshooting\n"
+    },
+    {
+      "name": "Sandboxed garden-romance JPEG/PDF variants",
+      "state": "failed",
+      "message": "Failed to launch the browser process:  Code: null\n\nstderr:\nFailed to move to new namespace: PID namespaces supported, Network namespace supported, but failed: errno = Operation not permitted\n[68:68:1012/154430.706922:FATAL:content/browser/zygote_host/zygote_host_impl_linux.cc:213] Zygote process exited prematurely with exit code 1\n[1012/154430.709479:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq: No such file or directory (2)\n[1012/154430.709504:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: No such file or directory (2)\n\nTROUBLESHOOTING: https://pptr.dev/troubleshooting\n"
+    },
+    {
+      "name": "Sandboxed modern-minimal JPEG/PDF variants",
+      "state": "failed",
+      "message": "Failed to launch the browser process:  Code: null\n\nstderr:\nFailed to move to new namespace: PID namespaces supported, Network namespace supported, but failed: errno = Operation not permitted\n[90:90:1012/154430.753082:FATAL:content/browser/zygote_host/zygote_host_impl_linux.cc:213] Zygote process exited prematurely with exit code 1\n[1012/154430.757361:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq: No such file or directory (2)\n[1012/154430.757393:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: No such file or directory (2)\n\nTROUBLESHOOTING: https://pptr.dev/troubleshooting\n"
+    },
+    {
+      "name": "Sandboxed photo-story JPEG/PDF variants",
+      "state": "failed",
+      "message": "Failed to launch the browser process:  Code: null\n\nstderr:\nFailed to move to new namespace: PID namespaces supported, Network namespace supported, but failed: errno = Operation not permitted\n[112:112:1012/154430.794713:FATAL:content/browser/zygote_host/zygote_host_impl_linux.cc:213] Zygote process exited prematurely with exit code 1\n[1012/154430.796742:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq: No such file or directory (2)\n[1012/154430.796763:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: No such file or directory (2)\n\nTROUBLESHOOTING: https://pptr.dev/troubleshooting\n"
+    }
+  ]
+}

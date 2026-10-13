@@ -1,0 +1,36 @@
+{
+  "platform": "linux",
+  "architecture": "arm64",
+  "node": "v22.23.2",
+  "browserMode": "dedicated endpoint",
+  "checks": [
+    {
+      "name": "Native Linux PNG processing",
+      "state": "passed"
+    },
+    {
+      "name": "Real HEIC processing",
+      "state": "passed"
+    },
+    {
+      "name": "Linux FFmpeg video processing",
+      "state": "passed"
+    },
+    {
+      "name": "Sandboxed royal-elegance JPEG/PDF variants",
+      "state": "passed"
+    },
+    {
+      "name": "Sandboxed garden-romance JPEG/PDF variants",
+      "state": "passed"
+    },
+    {
+      "name": "Sandboxed modern-minimal JPEG/PDF variants",
+      "state": "passed"
+    },
+    {
+      "name": "Sandboxed photo-story JPEG/PDF variants",
+      "state": "passed"
+    }
+  ]
+}

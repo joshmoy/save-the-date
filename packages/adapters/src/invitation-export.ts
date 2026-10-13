@@ -2,17 +2,17 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
-import puppeteer from 'puppeteer-core';
+import {openRenderBrowser} from './render-browser.js';
 import {PDFDocument} from 'pdf-lib';
 import {invitationHtml,type ResolvedDesign} from '@save-the-date/templates';
 export interface InvitationRendererPort{render(snapshot:ResolvedDesign,format:'jpeg'|'pdf'):Promise<{bytes:Buffer;contentType:string;checksum:string;width:number;height:number}>}
 export class BrowserInvitationRenderer implements InvitationRendererPort{
- constructor(private executablePath:string,private fontDirectory:string){}
+ constructor(private executablePath:string,private fontDirectory:string,private browserEndpoint?:string){}
  async render(snapshot:ResolvedDesign,format:'jpeg'|'pdf'){
   let fonts=await readFile(path.join(this.fontDirectory,'fonts.css'),'utf8');
   for(const match of [...fonts.matchAll(/url\(\.\/([^)]*)\)/g)]){if(!/^[a-z0-9-]+\.woff2?$/.test(match[1]))throw Error('FONT_ASSET_INVALID');const bytes=await readFile(path.join(this.fontDirectory,match[1]));const expected=(snapshot.fontManifest.checksums as Record<string,string>)[match[1]];if(expected&&createHash('sha256').update(bytes).digest('hex')!==expected)throw Error('FONT_ASSET_CHANGED');fonts=fonts.replace(match[0],`url(data:font/woff2;base64,${bytes.toString('base64')})`);}
   if(snapshot.photo&&!snapshot.photo.src.startsWith('data:image/'))throw Error('PHOTO_NOT_SNAPSHOTTED');
-  const browser=await puppeteer.launch({executablePath:this.executablePath,headless:true,args:['--disable-dev-shm-usage'],timeout:30000});
+  const browser=await openRenderBrowser(this.executablePath,this.browserEndpoint);
   try{const page=await browser.newPage();await page.setViewport({width:480,height:672,deviceScaleFactor:3.125});await page.setRequestInterception(true);page.on('request',r=>{if(r.url().startsWith('data:')||r.url()==='about:blank')void r.continue();else void r.abort();});
    await page.setContent(invitationHtml(snapshot,fonts),{waitUntil:'load',timeout:30000});
    await page.evaluate(async()=>{await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode()));});

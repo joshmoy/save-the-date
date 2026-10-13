@@ -1,0 +1,3 @@
+import 'dotenv/config';
+import {startDedicatedRenderBrowser} from '@save-the-date/adapters';
+const path=process.env.INVITATION_BROWSER_PATH;if(!path)throw Error('Configure INVITATION_BROWSER_PATH for the dedicated sandboxed browser');const port=Number(process.env.RENDER_BROWSER_PORT??9223),browser=await startDedicatedRenderBrowser(path,port);let stopping=false;async function stop(){if(stopping)return;stopping=true;await browser.close();}process.on('SIGTERM',()=>void stop());process.on('SIGINT',()=>void stop());console.log(JSON.stringify({event:'renderer.ready',port,profile:'isolated temporary',sandbox:'enabled'}));await new Promise<void>(resolve=>browser.on('disconnected',resolve));

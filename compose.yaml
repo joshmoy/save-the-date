@@ -18,12 +18,18 @@ services:
       NODE_ENV: development
       DB_ADAPTER: postgres
       DB_CONNECTION: postgresql://std:local-only-change-me@db:5432/std_local
-      PUBLIC_ORIGIN: http://localhost:3000
+      PUBLIC_ORIGIN: ${STD_PUBLIC_ORIGIN:-http://localhost:3002}
       API_INTERNAL_ORIGIN: http://api:4000
       TOKEN_HASH_KEYS: development-compose-key-change-before-production
       STORAGE_ADAPTER: filesystem
       STORAGE_ROOT: /data/storage
       STORAGE_NAMESPACE: weddings
+      DELETION_LEDGER_ROOT: /data/deletion-ledger
+      ADMISSION_ENCRYPTION_KEYS: '{"local":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="}'
+      MEDIA_MALWARE_ADAPTER: clamd
+      CLAMD_HOST: clamd
+      CLAMD_PORT: 3310
+      RENDER_BROWSER_ENDPOINT: ${STD_RENDER_BROWSER_ENDPOINT:-}
       EMAIL_ADAPTER: capture
       EMAIL_CAPTURE_ROOT: /data/mail
       EMAIL_FROM: local@example.test
@@ -36,12 +42,23 @@ services:
     build: {context: ., target: api}
     environment: *platform
     depends_on: {migrate: {condition: service_completed_successfully}}
-    volumes: ["storage:/data/storage", "mail:/data/mail"]
+    volumes: ["storage:/data/storage", "mail:/data/mail", "deletion-ledger:/data/deletion-ledger"]
   worker:
     build: {context: ., target: worker}
     environment: *platform
     depends_on: {migrate: {condition: service_completed_successfully}}
-    volumes: ["storage:/data/storage", "mail:/data/mail"]
+    volumes: ["storage:/data/storage", "mail:/data/mail", "deletion-ledger:/data/deletion-ledger"]
+  clamd:
+    image: clamav/clamav@sha256:638d90201ee7ee6a82d249a2fc23b132e578673b5f1f2766852b127676ca1ef6
+    platform: linux/amd64
+    mem_limit: 2g
+    cpus: 2
+    volumes: ["./infra/clamd.conf:/etc/clamav/clamd.conf:ro"]
+    healthcheck:
+      test: ["CMD", "clamdscan", "--config-file=/etc/clamav/clamd.conf", "--ping=1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
   web:
     build: {context: ., target: web}
     environment:
@@ -49,9 +66,10 @@ services:
       API_INTERNAL_ORIGIN: http://api:4000
       HOSTNAME: 0.0.0.0
       PORT: 3000
-    ports: ["127.0.0.1:3000:3000"]
+    ports: ["127.0.0.1:${STD_WEB_PORT:-3002}:3000"]
     depends_on: [api]
 volumes:
   postgres:
   storage:
   mail:
+  deletion-ledger:
