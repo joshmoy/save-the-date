@@ -82,3 +82,5 @@ M05/O02 archive history: scoped repository/API/OpenAPI cursor and connected poll
 Shared-site journal privacy: publication access precedes path lookup; existing/missing gated paths both require shared access. Focused publication/pagination checks and isolated124-test full suite pass without skips; build/lint/type checks pass. Existing/private/invited post boundaries remain enforced.
 
 Verification startup/security: pnpm test/test:full build current tested packages and run in a new disposable local database with private files/capture/disabled AI. Full124 tests/no skips passed and generated resources removed. Existing app data was never targeted. Development incoming URL logging disabled; three actual verification/reset/invite marker requests200 and marker absent from server output. Build/lint/type checks pass.
+
+R3 status-message accessibility: public journal and staff household/request/pass/upload pagination announce success through polite status regions. Actual browser journal20→25/status text verified without errors; build/lint/type pass. Evidence: verification/browser-pagination/journal-announcement.png. Full AA/device review remains pending.

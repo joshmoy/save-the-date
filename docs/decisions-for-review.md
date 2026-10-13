@@ -162,3 +162,6 @@ Build the tested dependency graph before execution, preventing stale dist packag
 
 ## Development request secrecy
 Disable framework incoming URL logs because verification/reset/invite links may contain one-use credentials. Keep authoritative API correlation and database audit records. Three actual development requests with synthetic markers were absent from output; installed Next16.4 logging behavior was checked directly.
+
+## Asynchronous accessibility feedback
+Announce completed load-more operations through existing or explicit polite status regions. Messages report actual loaded counts or completed history changes; errors retain alert semantics. Do not force focus away from the user’s current task. Actual journal status update was verified in the browser; full assistive-device acceptance remains separate.
