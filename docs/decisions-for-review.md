@@ -132,3 +132,6 @@ Load eight published albums, six approved memories per album and twenty journal 
 
 ## Staff journal history
 Use stable creation-time/UUID cursors for a hundred editable drafts per page, retaining unsaved selected-post content while loading older drafts. Migration025 adds the previously absent creation timestamp; historical posts use their known publication time, unpublished historical drafts use migration time, with no invented precise creation history. This is additive and preserves post contents and public paths.
+
+## Page response security
+Apply no-referrer to all pages so private query/fragment journeys do not leak through outgoing navigation; deny embedding and unused browser device features while preserving same-origin scanner camera use. Use a document CSP compatible with the existing Next/Chakra runtime; do not claim nonce-based script protection. TLS/HSTS and validated proxy attribution require the actual deployment contract. Verify actual built HTTP responses, not configuration snapshots.
