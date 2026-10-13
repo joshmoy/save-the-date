@@ -1,7 +1,7 @@
 import {z} from '@save-the-date/contracts';
 import {DomainError,notFound} from '@save-the-date/domain';
 import type {PostgresStore} from './index.js';
-export type PublicView={mode:'page'|'asset'|'album'|'albums'|'posts'|'post';id?:string;cursor?:string};
+export type PublicView={mode:'access'|'page'|'asset'|'album'|'albums'|'posts'|'post';id?:string;cursor?:string};
 const cursorSchema=z.object({version:z.literal(1),kind:z.enum(['public-albums','public-album-media']),weddingId:z.uuid(),id:z.uuid(),position:z.number().int().min(0),title:z.string().max(160).optional(),albumId:z.uuid().optional(),rank:z.number().int().min(0).max(1).optional(),createdAt:z.iso.datetime().optional()}).strict();
 const encode=(value:z.infer<typeof cursorSchema>)=>Buffer.from(JSON.stringify(cursorSchema.parse(value))).toString('base64url');
 function decode(raw:string|undefined,kind:'public-albums'|'public-album-media',wid:string,albumId?:string){if(!raw)return null;try{if(raw.length>2048||!/^[a-zA-Z0-9_-]+$/.test(raw))throw Error();const v=cursorSchema.parse(JSON.parse(Buffer.from(raw,'base64url').toString()));if(v.kind!==kind||v.weddingId!==wid||(kind==='public-albums'?v.title===undefined:v.albumId!==albumId||v.rank===undefined||!v.createdAt))throw Error();return v;}catch{throw new DomainError(400,'INVALID_CURSOR','This album position is invalid. Reload the wedding website');}}

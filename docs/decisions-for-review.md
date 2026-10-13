@@ -153,3 +153,6 @@ Use one new synthetic workspace rather than modifying existing wedding resources
 
 ## Private archive history
 Use fifty-row timestamp/UUID cursors, returning only status metadata and preserving loaded extent through polling. Clear stale load errors after recovery. Keep file access checks independent of history pagination and require recent authentication for sensitive archives. Extend the existing separate synthetic browser workspace with explicitly failed history metadata and one actual archive; no original wedding resources or account grants are changed. API retention/operator dependencies already use domain interfaces, so no redundant rewrite is needed.
+
+## Shared journal access ordering
+Check current website access before looking up a journal path, preventing unauthorised visitors from distinguishing existing and missing posts on a shared wedding. Recheck the specific post audience afterwards. No public endpoint exposes the internal access-only projection.
