@@ -10,6 +10,7 @@ test('production config requires explicit verified database TLS and distinguishe
   // Workers need no private API server key; createServer separately enforces it.
   assert.equal(loadConfig().API_TLS_KEY_PATH,undefined);
   for(const mode of ['', 'require','verify-ca','no-verify','disable']){process.env.DB_CONNECTION='postgresql://synthetic:fixture@db.example.test/std'+(mode?'?sslmode='+mode:'');assert.throws(loadConfig,/sslmode=verify-full/);}
+  for(const connection of ['postgresql://synthetic:fixture@db.example.test/std?sslmode=verify-full&sslmode=no-verify','postgresql://synthetic:fixture@db.example.test/std?sslmode=verify-full&host=/tmp','postgresql:///std?sslmode=verify-full']){process.env.DB_CONNECTION=connection;assert.throws(loadConfig,/unambiguous network host/);}
   process.env.DB_CONNECTION='postgresql://synthetic:fixture@db.example.test/std?sslmode=verify-full';process.env.API_INTERNAL_ORIGIN='http://api.example.test';assert.throws(loadConfig,/HTTPS/);
   process.env.API_INTERNAL_ORIGIN='https://api.example.test';process.env.API_TLS_CERT_PATH='/synthetic/cert.pem';assert.throws(loadConfig,/both API TLS/);
   process.env.API_TLS_CERT_PATH='';process.env.STORAGE_ADAPTER='s3';process.env.S3_BUCKET='synthetic-media';process.env.DELETION_LEDGER_S3_BUCKET='synthetic-ledger';process.env.S3_ENDPOINT='http://storage.example.test';assert.throws(loadConfig,/object storage endpoint requires HTTPS/);process.env.S3_ENDPOINT='https://storage.example.test';

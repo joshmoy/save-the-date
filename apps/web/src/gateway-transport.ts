@@ -27,3 +27,14 @@ export async function gatewayRequest(url:string,options:{method:string;headers:H
   if(options.body)void pipeline(Readable.fromWeb(options.body as import('node:stream/web').ReadableStream),request).catch(reject);else request.end();
  });
 }
+
+/** Server-rendered public reads use the same verified peer as the browser gateway. */
+export async function publicApiRequest(path:string,cookie:string,env:Record<string,string|undefined>=process.env){
+ if(!path.startsWith('/api/v1/public/')||path.includes('..')||path.includes('?')||path.includes('#'))throw Error('Invalid public API path');
+ return gatewayRequest(gatewayOrigin(env)+path,{method:'GET',headers:new Headers({Cookie:cookie}),body:null,caPath:env.API_TLS_CA_PATH||undefined,signal:AbortSignal.timeout(10000)});
+}
+
+export async function readPublicApi<T>(path:string,cookie:string,env:Record<string,string|undefined>=process.env){
+ const response=await publicApiRequest(path,cookie,env);
+ return {status:response.status,data:response.ok?await response.json() as T:null};
+}

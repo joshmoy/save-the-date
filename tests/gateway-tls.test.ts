@@ -6,7 +6,7 @@ import {mkdtemp,readFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {loadConfig} from '@save-the-date/config';
 import {createServer as createApi} from '../apps/api/src/server.js';
-import {gatewayOrigin,gatewayRequest} from '../apps/web/src/gateway-transport.js';
+import {gatewayOrigin,gatewayRequest,publicApiRequest,readPublicApi} from '../apps/web/src/gateway-transport.js';
 
 test('gateway origins enforce production TLS and reject credential-bearing or non-origin URLs',()=>{
  assert.equal(gatewayOrigin({}), 'http://127.0.0.1:4000');
@@ -20,6 +20,8 @@ test('streaming gateway verifies certificate trust and hostname while preserving
  execFileSync('openssl',['req','-x509','-newkey','rsa:2048','-nodes','-keyout',key,'-out',cert,'-days','1','-subj','/CN=localhost','-addext','subjectAltName=DNS:localhost'],{stdio:'ignore'});
  const bytes=Buffer.from('Wedding — café 💐\u0000','utf8');
  const server=createServer({key:await readFile(key),cert:await readFile(cert),minVersion:'TLSv1.2'},async(req,res)=>{
+  if(req.url?.endsWith('/broken-json')){res.setHeader('content-type','application/json');res.end('{');return;}
+  if(req.url?.startsWith('/api/v1/public/')){res.setHeader('content-type','application/json');res.end(JSON.stringify({path:req.url,cookie:req.headers.cookie??''}));return;}
   if(req.url==='/empty'){res.writeHead(204);res.end();return;}
   if(req.url==='/slow'){return;}
   const chunks:Buffer[]=[];for await(const chunk of req)chunks.push(Buffer.from(chunk));
@@ -30,6 +32,12 @@ test('streaming gateway verifies certificate trust and hostname while preserving
  const options={method:'POST',headers:new Headers({'content-type':'application/octet-stream'}),body:new ReadableStream<Uint8Array>({start(controller){controller.enqueue(bytes);controller.close();}}),signal:AbortSignal.timeout(5000),caPath:cert};
  try{
   const response=await gatewayRequest(origin,options);assert.deepEqual(Buffer.from(await response.arrayBuffer()),bytes);assert.equal(response.headers.getSetCookie().length,2);
+  const publicEnv={PLATFORM_RUNTIME_ENV:'production',API_INTERNAL_ORIGIN:origin,API_TLS_CA_PATH:cert};
+  for(const path of ['/api/v1/public/weddings/synthetic','/api/v1/public/weddings/synthetic/posts/update']){const result=await publicApiRequest(path,'std_site=synthetic',publicEnv);assert.deepEqual(await result.json(),{path,cookie:'std_site=synthetic'});}
+  await assert.rejects(publicApiRequest('/api/v1/public/weddings/synthetic','std_site=synthetic',{...publicEnv,API_TLS_CA_PATH:''}));
+  assert.equal((await readPublicApi('/api/v1/public/weddings/synthetic','std_site=synthetic',publicEnv)).status,200);
+  await assert.rejects(readPublicApi('/api/v1/public/weddings/broken-json','',publicEnv));
+  await assert.rejects(publicApiRequest('/api/v1/identity/session','synthetic',publicEnv));
   const get={method:'GET',headers:new Headers(),body:null,signal:AbortSignal.timeout(5000)};
   await assert.rejects(gatewayRequest(origin,get));
   await assert.rejects(gatewayRequest('https://127.0.0.1:'+address.port,{...get,caPath:cert}));
