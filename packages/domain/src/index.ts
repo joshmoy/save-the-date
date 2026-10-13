@@ -37,6 +37,7 @@ export interface NotificationRepository {
 export interface MediaRepository {
  list(actor:Actor,weddingId:string,cursor?:string):Promise<unknown>;
  uploadStatus(actor:{userId:null;uploadSessionId:string},weddingId:string):Promise<unknown>;
+ listAlbums(actor:Actor,weddingId:string,cursor?:string):Promise<unknown>;
  saveAlbum(actor:Actor,weddingId:string,input:import('@save-the-date/contracts').AlbumInput,version:number,albumId?:string):Promise<unknown>;
  intent(actor:MediaUploadActor,weddingId:string,input:import('@save-the-date/contracts').UploadIntent):Promise<unknown>;
  expectedUpload(actor:MediaUploadActor,weddingId:string,id:string):Promise<number>;

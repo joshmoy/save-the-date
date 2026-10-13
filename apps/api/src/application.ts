@@ -187,6 +187,7 @@ export class Application {
     if(parts.length===4&&method==='DELETE')return this.uploads.revoke(actor,id,uuid.parse(parts[3]));
    }
    if(this.media&&parts[2]==='albums'){
+    if(parts.length===3&&method==='GET')return this.media.listAlbums(actor,id,req.query.cursor===undefined?undefined:z.string().max(2048).parse(req.query.cursor));
     if(parts.length===3&&method==='POST'){const v=albumSaveSchema.parse(body);res.status(201);return this.media.saveAlbum(actor,id,v.album,v.expectedVersion);}
     if(parts.length===4&&method==='PATCH'){const v=albumSaveSchema.parse(body);return this.media.saveAlbum(actor,id,v.album,v.expectedVersion,uuid.parse(parts[3]));}
    }

@@ -1,4 +1,5 @@
 'use client';
+import {albumOptions} from './event-options';
 import {useEffect,useState,useCallback} from 'react';
 import {Button} from '@chakra-ui/react';
 import {ImagePlus,RefreshCw} from 'lucide-react';
@@ -13,7 +14,7 @@ const size=(bytes:string|number)=>(Number(bytes)/1024**2).toLocaleString('en',{m
 export function MediaStudio({weddingId,canPublish}:{weddingId:string;canPublish:boolean}){
  const [pageCursors,setPageCursors]=useState<string[]>([]),cursor=pageCursors.at(-1);
  const [library,setLibrary]=useState<Library|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[progress,setProgress]=useState<number|null>(null),[albumId,setAlbumId]=useState(''),[deleting,setDeleting]=useState<MediaAsset|null>(null);
- const refresh=useCallback(async()=>{const value=await api<Library>('weddings/'+weddingId+'/media'+(cursor?'?cursor='+encodeURIComponent(cursor):''));setLibrary(value);setAlbumId(previous=>value.albums.some(a=>a.id===previous)?previous:value.albums[0]?.id??'');return value;},[weddingId,cursor]);
+ const refresh=useCallback(async()=>{const value=await api<Library>('weddings/'+weddingId+'/media'+(cursor?'?cursor='+encodeURIComponent(cursor):''));value.albums=await albumOptions<Album>('weddings/'+weddingId+'/albums');setLibrary(value);setAlbumId(previous=>value.albums.some(a=>a.id===previous)?previous:value.albums[0]?.id??'');return value;},[weddingId,cursor]);
  useEffect(()=>{let stopped=false,timer:ReturnType<typeof setTimeout>;let delay=2000;async function poll(){try{const value=await refresh();if(!stopped&&value.assets.some(a=>['uploaded','processing','receiving'].includes(a.processing))){timer=setTimeout(poll,delay+Math.random()*400);delay=Math.min(delay*1.5,15000);}}catch(e){if(!stopped)setError(e instanceof Error?e.message:'Media unavailable. Retry.');}}void poll();return()=>{stopped=true;clearTimeout(timer);};},[refresh,notice]);
  async function act(task:()=>Promise<void>){setBusy(true);setError('');setNotice('');try{await task();await refresh();}catch(e){setError(e instanceof Error?e.message:'This action failed. Retry.');}finally{setBusy(false);setProgress(null);}}
  async function upload(file:File,alt:string,caption:string){
