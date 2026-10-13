@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 import path from "node:path";
 
 const nextConfig: NextConfig = {
+  // API audit/correlation remains authoritative; dev access URLs can carry one-use tokens.
+  logging: {incomingRequests: false},
   poweredByHeader: false,
   async headers() {
     return [{source: "/:path*", headers: [
