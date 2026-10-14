@@ -1,7 +1,7 @@
 # Requirements traceability
 
 Every mandatory PRD identifier is listed individually. Foundation evidence does not claim the complete requirement across later dependent slices. No mocked production capability is complete.
-Current table evidence points to scoped tests and rendered reports; historical checkpoint counts below are not the latest release result. All 42 mandatory IDs are represented. Latest complete suite:151 passed before migration028; subsequent focused publication checks:6 passed. Final release regression and the explicitly pending acceptance gates remain required.
+Current table evidence points to scoped tests and rendered reports; historical checkpoint counts below are not the latest release result. All 42 mandatory IDs are represented. Latest complete suite:155 passed, zero skipped after migration028 and renderer3; see verification/final-local-checks.md. Final release regression and the explicitly pending acceptance gates remain required.
 
 | ID | Requirement | Release | Status | Implementation | Evidence |
 |---|---|---|---|---|---|
@@ -169,3 +169,5 @@ I03/I04 final preview: actual Chrome exposed invalid bare Source Serif4 CSS and 
 N01/N02/W03 UI feedback: persistent polite refresh status/aria-busy and conditional provisional-review guidance. Rebuilt actual Chrome mobile empty-history refresh and dated-wedding settings verified; web build/typecheck and focused lint pass. verification/notifications/report.md and refresh-mobile.png. Live delivery and physical assistive-technology checks remain unverified.
 
 I03/I04 current Linux font check: four families/photo-no-photo with Work Sans and renderer3 passed actual JPEG/PDF dimensions, QR decoding and embedded-font assertions. Two representative JPEGs visually inspected. Existing Linux image with read-only current-code mounts and dedicated sandboxed browser; not a fresh production image. See verification/renderer3-linux/report.md and report.json.
+
+Final current-source local checkpoint (2026-10-14):155 complete-suite tests pass/no skips; build/type9/9 and lint pass. Fresh non-root web/API/worker images build; guarded localhost capture-only Compose publication/queued export/protected download and migration028 pass. Actual container marketing and distinct couple pages fit the configured mobile viewport. See verification/final-local-checks.md and final-portable/report.md. External/human/device/browser/performance/production gates remain unverified as listed in release-gates.md.

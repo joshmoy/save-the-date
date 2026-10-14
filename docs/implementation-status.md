@@ -1,57 +1,40 @@
 # Implementation status
 
-Updated 2026-10-14. MVP release acceptance remains incomplete. The goal is active; external approval does not prevent the remaining local engineering work.
+Updated 2026-10-14. Goal active; R3 acceptance remains incomplete. Preserve the full 42-requirement scope.
 
-## Latest verified state
+## Current verified source
 
-151 full PostgreSQL/API/domain/adapter tests pass with zero skips. Build, lint and all nine workspace type checks pass. No public deployment, real guest messages or paid AI usage was authorised or performed. Original wedding data and unrelated changes are preserved.
+Connected implementations cover identity/workspaces/memberships/events; stable published websites/blog; two website themes/four card families; real queued immutable JPEG/PDF; guests/private RSVP/capacity; authoritative admission; private processed/moderated media; manual/configurable AI concepts/approved handoff; Raven Relay delivery states; archives/retention/erasure; operator/support/metrics. See requirements-traceability.md for scoped evidence.
 
-Implemented connected flows include identity/workspaces/memberships/events, canonical website and blog publication, two website themes, four invitation families with actual immutable JPEG/PDF exports, households/private RSVPs/capacity, authoritative journalled admission, private media/guest uploads/moderation, manual and configurable AI concepts/boards/approved briefs, Raven Relay delivery states, owner archives/retention/deletion, and operator/support/metrics. Their individual evidence and remaining acceptance limits are in requirements-traceability.md and verification/.
+Final local checks on a154a30: 155 tests pass, zero skips; build9/9, typecheck9/9 and lint pass. Test databases/files removed. Build must finish before typecheck because Next regenerates its types. See verification/final-local-checks.md. No real guest email, paid AI use, public deployment or original wedding data mutation occurred.
 
-Recent commits: encrypted read-only legacy operational snapshots (`e82d1b9`); restartable private legacy blog/album imports (`3e28953`); declared pilot load (`37b683d`); workspace keyboard bypass (`115202f`); legacy archive preservation (`a56167b`); malformed-reference handling (`b296ba0`); public/private guest keyboard journeys (`01567ab`). Derived website surfaces now preserve text contrast without changing chosen palette colours.
+Recent corrections: recovery-safe optional-answer expiry/erasure; controlled legacy historical handover; published/draft blog path separation (migration028); hidden-section anchors and registry-only gifting; versioned bundled invitation fonts/renderer3 numeric-name quoting and line metrics; delivery refresh announcements and correct dated-service guidance. Each feature has a commit and decision record.
 
-## Current verification evidence
+## Relevant evidence
 
-- Declared local pilot: 100 published weddings, 500 events, 100,000 attendees;300 successful public reads across three 100-request bursts concurrent with 20 unique admissions. Admission server p95 397.10 ms; eight actual JPEG/PDF bundles p95 1.70 s at worker concurrency 1. Rate limits remain unchanged. See verification/performance/pilot-profile.json.
-- Actual Chrome: 105-record collection navigation, desktop/360px layouts, keyboard focus/skip links/current-view labels, real household plus-one submission and distinct upload-session empty state. Two attendees confirmed for one event while the second stayed unanswered. The corrected website surface measured 4.5422:1 for normal text. These are scoped checks, not full WCAG conformance.
-- Recovery: 70 tables, 19 objects and 48 font/style/license assets restored from authenticated encrypted replica, with erasure/admission replay, selective pre-024/025 schema expansion and migration027 handover hold preservation. Failure-independent production RPO/RTO is not proved by the local drill.
-- Portable runtime: real Linux ARM64 PNG/HEIC/video processing, all-template JPEG/PDF/QR output and capture-only compose journeys pass. Runtime findings improved from 18 critical/489 high to 1 critical/219 high; full findings, including libxml2 CVE-2026-6653, remain recorded. No complete production security claim follows.
-- Legacy preparation: all ten original migrations rehearsed in a disposable database; encrypted users/pass/scan/settings snapshot retains admission/revocation facts, counts/checksums and redacted exceptions. Content imports are private/restartable; actual archives preserve validated dates/references and explicitly omit unknown credential metadata. No operational cutover or external asset processing is implied.
+- Actual Chrome desktop/mobile and keyboard journeys across core workflows; latest corrected invitation preview, delivery feedback and website sections captured. Scoped checks do not establish full WCAG conformance or other browser/device acceptance.
+- 155-test regression includes tenant/role, concurrent capacity/scan, revocation/retry, publication, media, AI failure/schema and notification invariants.
+- Declared 100-wedding/500-event/100k-attendee pilot: admission p95 397.10ms; eight card bundles p95 1.70s at concurrency 1. Mobile LCP remains unmeasured.
+- Complete encrypted recovery: 70 tables,19 objects,48 font/style/license assets; independent erasure/admission replay and held legacy history. New focused pre-028 encrypted restore proves canonical article preservation and draft-path404 after expansion.
+- Filesystem/S3 conformance and prior separate-process compose passed. Current renderer3 Linux worker/current-code mounts passed all four families, photo/no-photo, QR/geometry/embedded fonts; dedicated sandboxed browser reused. This is separate from a fresh image build.
+- Runtime security review records 1 critical/219 high findings (including unresolved libxml2 finding), reduced from 18/489. No complete production security claim.
 
-Invitation typography now bundles Work Sans, pins both font formats and stylesheet bytes, and isolates version-2 card typography from workspace CSS. Existing system-font drafts require an explicit portable font choice; completed files remain immutable. See architecture-decisions/025-invitation-font-portability.md. The final rebuilt mobile preview is now verified with renderer3 and separately embedded Source Serif4/Work Sans; see ADR027.
+## Next concrete action
 
-## Next concrete work
+Fresh current-source portable images and connected capture-only Compose smoke now pass, including migration028, actual worker JPEG/PDF and protected downloads. Actual container marketing/couple pages pass the scoped mobile layout check. See verification/final-portable/report.md.
 
-Legacy snapshot, mapping, writer fencing, historical transfer and controlled local handover are implemented. Tests cover source freeze, durable target hold, independent-ledger failure/retry, used/revoked preservation, encrypted-file transfer/release, recent verified primary ownership, unchanged historical lineage, conflicting evidence and terminal used/unconfirmed pass safeguards. Pre-switch rollback source authority was exercised with a rolled-back synthetic redemption while target admission stayed held. Encrypted replica recovery retains migration027 handover fields and the hold. Production promotion and real notifications remain unperformed.
+Remaining release work needs human/device/authorised external or unavailable browser-tool evidence: full browser/assistive-technology review, declared mobile-LCP profile, copy/usability/planner assessments, physical QR/camera checks, live providers, authenticated operator browser access and production recovery/deployment review. Follow verification/release-gates.md. Do not repeat successful exports/full regression absent a relevant source change or failure.
 
-The primary-flow audit found and fixed an offscreen inline event editor: desktop/mobile heading focus, keyboard order, cancel return, native validation and cross-workspace reset now pass. A retention audit additionally found that manual optional-answer deletion could resurrect through archives/backups; recovery-safe erasure, archive revocation and worker cleanup are verified with146 full tests/no skips and the complete encrypted restore drill. Automatic90-day optional-answer expiry, collection cutoff and12-month audit retention pass exact-boundary, concurrency, private-RSVP and outage-isolation checks (149 full tests/no skips). Next continue the remaining browser/requirement audit. Measure actual mobile LCP on a declared profile when supported browser controls are usable. A native Lighthouse attempt stopped before audit/storage clearing when the native window became unavailable; API timing is not a substitute.
+## External acceptance
 
-## External release gates
+Owner copy review, independent mobile usability, three-of-five planner assessment, physical two-phone QR/camera checks, authorised live provider smoke, authenticated operator browser access, production independent-failure-domain recovery and deployment review remain unverified. Previous automatic review rejected expanding the browser account's operator privileges; no grant was made. Production promotion, real mail and paid AI require explicit authorisation.
 
-Owner-reviewed copy, human usability/planner acceptance, physical camera/two-phone QR checks, authorised live provider smoke, production failure-independent recovery/failover and deployment review remain unverified. Do not deploy, send real mail or incur paid AI usage without explicit authorisation.
+## Safe resume and commands
 
-## Safe resume
+Root .env loads automatically. DB_CONNECTION is platform PostgreSQL; DATABASE_URL is legacy and never a fallback. Use a new local database, capture email and disabled optional AI services.
 
-Root `.env` loads automatically; platform `DB_CONNECTION` remains distinct from legacy `DATABASE_URL`. Run `pnpm db:migrate`, then `pnpm dev:web`, `pnpm dev:api` and `pnpm dev:worker` with capture/disabled optional providers for local work. Do not start a worker against real configured delivery/AI providers during unauthorised verification.
+Setup: pnpm install --frozen-lockfile; copy/edit .env.example as .env; pnpm db:migrate; pnpm build. Start separate terminals: pnpm dev:api, pnpm dev:worker, pnpm dev:web. Open /platform; / is marketing, /w/[slug] is the current published couple site.
 
-Focused runner selection is available: `pnpm test --file=publication.test.ts` (repeat `--file` for related files; optional `--name=pattern`). Selection validation has a passing standalone unit check and focused lint. The latest complete-suite result remains151; no complete suite or export rerun was performed for this harness change.
+Focused checks: pnpm test --file=publication.test.ts (repeat --file; optional --name). Final commands and licensed fixture/tool prerequisites are in verification/final-local-checks.md and runbooks/local-setup.md.
 
-Run focused tests for changed behaviour; export checks only when rendering, templates, fonts or export logic changes. Reserve the complete suite for final release verification.
-
-Full checks: `pnpm build`, `pnpm lint`, `pnpm typecheck`, and `TEST_HEIC_FIXTURE=/tmp/std-phone-verification.heic TEST_INVITATION_BROWSER_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm test:full`. The runner uses fresh disposable databases and preserves failed targets. `node scripts/verify-pilot-profile.mjs` runs the larger isolated load profile with the browser path configured.
-
-Browser fixture checkpoint: `/tmp/std-navigation-checkpoint.json`; its private connection/grants stay outside the checkout. Start only this isolated target with `node --import tsx scripts/start-navigation-browser.ts /tmp/std-navigation-checkpoint.json`. Native root worker remains stopped; revalidate all process handles before resuming. See runbooks/local-setup.md, deployment.md, migrations-recovery.md and event-day-admission.md.
-
-Latest focused product check: S01 hidden-event CTA and registry-only gifting corrected; actual published Chrome/mobile fixture verified, web typecheck/build and changed-file lint pass. See verification/publication/section-visibility.md. Full-suite baseline remains151; continue the remaining browser/requirement audit.
-
-Latest publication boundary fix: draft slugs no longer become public aliases before owner publication. Migration028 preserves reservations and backfills only current published paths; older unproven aliases need owner review (ADR026). Six focused publication tests/no skips and focused lint pass; tested API/worker dependencies built successfully. Latest complete-suite baseline remains151; no export rerun.
-
-Traceability reconciliation: all42 mandatory PRD IDs now point to scoped current tests/reports instead of early whole-suite counts. verification/release-gates.md separates remaining local verification from human/device/provider/production evidence. No additional tests or exports ran for this documentation update.
-
-Migration028 recovery expansion now passes a targeted real encrypted PostgreSQL backup/replica/restore test: approved canonical path retained; reserved draft URL404; both reservations preserved. Disposable source/restore/runner databases removed. Focused lint passes; no browser/exports/full suite. See verification/recovery/post-path-expansion.md.
-
-Latest font correction: renderer3 quotes numeric font-family names and fixes measured Source Serif4 clipping, preserving older rendering contracts. Three focused font tests/no skips, template build, focused lint and web production build pass. Actual rebuilt mobile preview verified and screenshot replaced. No full template matrix or complete suite ran.
-
-Focused N01/N02/W03 browser review: delivery refresh now announces completion/busy state; scheduled expiry no longer shows provisional-review instructions. Actual rebuilt Chrome/mobile check, changed-file lint, web typecheck/build pass. No email/action submission, exports or full suite; evidence notifications/report.md.
-
-Renderer3/Work Sans Linux gap closed by focused four-family photo/no-photo actual export checks, reusing the dedicated browser. Geometry, QR and font embedding pass; two generated cards visually inspected. Existing image/current-code mount limitation recorded in verification/renderer3-linux/report.md. Full suite and unrelated processing were not run.
+Browser fixture: /tmp/std-navigation-checkpoint.json; private credentials remain outside Git. Its owned server may be stale after the final build: stop/restart it before further UI inspection. Do not start a root worker against live configured providers. Existing dedicated renderer on port 9223 can be reused only for isolated render contexts.

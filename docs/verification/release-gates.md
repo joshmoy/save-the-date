@@ -4,7 +4,7 @@ This is a release checklist, not a completion declaration. The traceability tabl
 
 | Gate | Current evidence | Still required |
 |---|---|---|
-| Tenant/roles, RSVP capacity, single admission | PostgreSQL/API tests;100-way admission; journal replay; pilot load | Final regression after latest changes |
+| Tenant/roles, RSVP capacity, single admission | PostgreSQL/API tests;100-way admission; journal replay; pilot load | Passed155-test final local regression; physical/event-day acceptance remains separate |
 | Website/blog publication | Immutable snapshots, shared/invited boundaries, derived contrast; six focused post-path checks | Remaining desktop/browser keyboard/error-state matrix; owner copy review |
 | Invitations | Four families, photo/no-photo, actual JPEG/PDF/QR; bundled fonts and pixel parity | Physical two-phone QR samples |
 | Media | Real private ClamAV/HEIC/video, quotas, moderation and revocation; filesystem/S3 conformance | Required phone/browser upload journeys and remaining rendered error states |
@@ -14,7 +14,9 @@ This is a release checklist, not a completion declaration. The traceability tabl
 | Recovery/retention | Encrypted70-table restore,19 objects,48 font/style/license assets; independent erasure/admission replay | Production independent-failure-domain RPO/RTO rehearsal (migration028 expansion now verified separately) |
 | Performance | Declared100-wedding/100k-attendee pilot; admission p95 below1s and export p95 below60s | Mobile public LCP p75 under declared profile; no successful browser audit yet |
 | Accessibility/devices | Scoped keyboard/contrast/360px reviews and screenshots | Full WCAG2.2AA review; recent iOS Safari/Android Chrome and desktop Safari/Edge/Firefox journeys |
-| Portable deployment/security | Separate web/API/worker compose and Linux native-processing/dedicated-renderer evidence; runtime findings recorded | Current-source final portable smoke/build; deployment/certificate/backup review; resolve or assess remaining runtime findings |
+| Portable deployment/security | Separate web/API/worker compose and Linux native-processing/dedicated-renderer evidence; runtime findings recorded | Deployment/certificate/backup review; resolve or assess remaining runtime findings (fresh local build/smoke passed) |
 | Human pilot | No invented participant evidence | Owner copy, independent usability, planner usefulness and recorded sample sizes |
 
-Next local order: complete outstanding browser journeys and final invitation preview; targeted Work Sans Linux verification only when preparing that portability check; reconcile outcomes; then one final build/lint/type/full regression and applicable portable smoke. Human/device/authorised provider and production checks remain explicitly unverified until performed. Do not run export matrices for unrelated changes.
+Final local build/lint/type checks and155-test regression passed; fresh current-source portable build and connected smoke passed. Scoped Chrome reviews and current Linux rendering are recorded. No further export matrix/full-suite rerun is justified without relevant changes.
+
+Remaining acceptance requires actual owner/participant/planner review, physical devices, supported browser/assistive-technology sessions, authorised providers/operator access and production infrastructure. Mobile LCP is unmeasured: the earlier native Lighthouse attempt became unavailable before running, and API timings are not substituted. No gate is waived by the green local checks. Do not deploy, send actual emails or incur paid AI usage without explicit authorisation.

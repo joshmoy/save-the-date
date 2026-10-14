@@ -1,0 +1,30 @@
+{
+  "profile": "std-r3-verification",
+  "weddingId": "c2dde368-8677-4858-9db5-d658aa07676f",
+  "website": "http://localhost:3002/w/portable-8e832f30-60b8-45d6-b57d-00876ad174d1",
+  "email": "captured only",
+  "publication": "passed",
+  "workerExports": "actual JPEG/PDF passed",
+  "privateDownloads": "unauthenticated access denied",
+  "output": "/tmp/std-final-compose-files",
+  "runtime": {
+    "platform": "linux",
+    "architecture": "arm64",
+    "node": "v22.23.3"
+  },
+  "migration028": "applied",
+  "images": {
+    "api": "sha256:ba9ec0f3241ae47e266c9014d8add6e7c7005d733c7496c50b9366c7b0ac31ba",
+    "web": "sha256:195d63ce8687902d077c660c503df4ff452cc9330cadec53ebc50aea515e9374",
+    "worker": "sha256:9415ca62a11102f3e0355de31ac26078156df53ef861b5d2c1b2de23ff3231a4"
+  },
+  "mobile": {
+    "configuredWidth": 360,
+    "documentWidth": 345,
+    "bodyWidth": 345,
+    "pages": [
+      "marketing",
+      "published couple"
+    ]
+  }
+}
