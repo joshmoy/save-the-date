@@ -34,6 +34,8 @@ Owner-reviewed copy, human usability/planner acceptance, physical camera/two-pho
 
 Root `.env` loads automatically; platform `DB_CONNECTION` remains distinct from legacy `DATABASE_URL`. Run `pnpm db:migrate`, then `pnpm dev:web`, `pnpm dev:api` and `pnpm dev:worker` with capture/disabled optional providers for local work. Do not start a worker against real configured delivery/AI providers during unauthorised verification.
 
+Focused runner selection is available: `pnpm test --file=publication.test.ts` (repeat `--file` for related files; optional `--name=pattern`). Selection validation has a passing standalone unit check and focused lint. The latest complete-suite result remains151; no complete suite or export rerun was performed for this harness change.
+
 Run focused tests for changed behaviour; export checks only when rendering, templates, fonts or export logic changes. Reserve the complete suite for final release verification.
 
 Full checks: `pnpm build`, `pnpm lint`, `pnpm typecheck`, and `TEST_HEIC_FIXTURE=/tmp/std-phone-verification.heic TEST_INVITATION_BROWSER_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm test:full`. The runner uses fresh disposable databases and preserves failed targets. `node scripts/verify-pilot-profile.mjs` runs the larger isolated load profile with the browser path configured.

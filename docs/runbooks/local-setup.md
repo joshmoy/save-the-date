@@ -57,3 +57,13 @@ The event editor supports optional end date/time in the event timezone; an end b
 Run only checks relevant to the change during implementation. Export verification is needed for template, typography, rendering or export changes; reserve the complete suite for final release verification.
 
 The invitation, admission-ticket, planner-brief and recovery verifiers accept optional `TEST_RENDER_BROWSER_ENDPOINT=http://127.0.0.1:9223` to reuse an already-running private dedicated sandboxed renderer (see render-browser.md). Set it only to a renderer you own, with an empty dedicated profile; never point it at a personal browsing session. Each artifact uses an isolated context and disconnects after cleanup. The explicit browser-lifecycle test still starts and closes one browser to verify ownership and cleanup. Without this option, individual artifacts launch their own browser. Production configuration remains the separate documented render-browser adapter setting.
+
+Focused database/API verification uses the same isolated database and private scratch paths:
+
+```sh
+pnpm test --file=publication.test.ts
+pnpm test --file=guests.test.ts --name=capacity
+pnpm test --file=notifications.test.ts --file=email-provider.test.ts
+```
+
+Repeat `--file` for related files; `tests/` is optional. Unknown flags/files and invalid name patterns fail before database creation. `--full` deliberately rejects selectors. A name filter can skip unrelated cases, so its result proves only the selected behaviour, not the full file or release.
