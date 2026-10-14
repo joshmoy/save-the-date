@@ -1,5 +1,6 @@
 import {decodeCursor,encodeCursor} from './cursors.js';
 export {readLegacySnapshot,reconcileLegacySnapshot,type LegacySnapshot} from './legacy-snapshot.js';
+export {populatePilotAttendees} from './release-fixture.js';
 import {jobReferences,readJob,type AsyncResourceType} from './job-access.js';
 import { randomUUID, createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
