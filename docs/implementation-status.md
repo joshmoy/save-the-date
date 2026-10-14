@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated 2026-10-14. Goal active; R3 acceptance remains incomplete. Preserve the full 42-requirement scope.
+Updated 2026-10-14. Goal blocked on external acceptance/access; R3 acceptance remains incomplete. Preserve the full 42-requirement scope.
 
 ## Current verified source
 
@@ -38,3 +38,5 @@ Setup: pnpm install --frozen-lockfile; copy/edit .env.example as .env; pnpm db:m
 Focused checks: pnpm test --file=publication.test.ts (repeat --file; optional --name). Final commands and licensed fixture/tool prerequisites are in verification/final-local-checks.md and runbooks/local-setup.md.
 
 Browser fixture: /tmp/std-navigation-checkpoint.json; private credentials remain outside Git. Owned synthetic server, verification Compose services and dedicated headless renderer9223 are now stopped; volumes/database/files preserved. The user's main application and personal Chrome profile were not stopped. Restart only when a relevant check requires it: node --import tsx scripts/start-navigation-browser.ts /tmp/std-navigation-checkpoint.json; pnpm exec tsx scripts/render-browser.ts for the separate empty-profile renderer. Its temporary Docker WebSocket endpoint must be regenerated after a restart. Do not start a root worker against live configured providers.
+
+Blocked audit: the same external acceptance/access requirements remain after the final local verification turn, verification-service cleanup turn and subsequent checkpoint revalidation. No new local defect or safe independent required action was identified. Resume when human/device/provider/production evidence or the necessary authorised access is available; preserve the full objective and155-test checkpoint.
