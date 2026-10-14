@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated 2026-10-14. Goal blocked on external acceptance/access; R3 acceptance remains incomplete. Preserve the full 42-requirement scope.
+Updated 2026-10-14. Awaiting external acceptance/access; R3 acceptance remains incomplete. Preserve the full 42-requirement scope.
 
 ## Current verified source
 
@@ -40,3 +40,5 @@ Focused checks: pnpm test --file=publication.test.ts (repeat --file; optional --
 Browser fixture: /tmp/std-navigation-checkpoint.json; private credentials remain outside Git. Owned synthetic server, verification Compose services and dedicated headless renderer9223 are now stopped; volumes/database/files preserved. The user's main application and personal Chrome profile were not stopped. Restart only when a relevant check requires it: node --import tsx scripts/start-navigation-browser.ts /tmp/std-navigation-checkpoint.json; pnpm exec tsx scripts/render-browser.ts for the separate empty-profile renderer. Its temporary Docker WebSocket endpoint must be regenerated after a restart. Do not start a root worker against live configured providers.
 
 Blocked audit: the same external acceptance/access requirements remain after the final local verification turn, verification-service cleanup turn and subsequent checkpoint revalidation. No new local defect or safe independent required action was identified. Resume when human/device/provider/production evidence or the necessary authorised access is available; preserve the full objective and155-test checkpoint.
+
+Human acceptance handoff: runbooks/pilot-acceptance.md defines owner review, independent tasks, physical/browser/accessibility checks, mobile-LCP profile, five-planner review and redacted evidence fields. Preparing this pack does not satisfy those gates. No tests or exports were rerun.
