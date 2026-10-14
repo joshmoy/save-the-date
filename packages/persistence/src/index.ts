@@ -7,7 +7,7 @@ import path from 'node:path';
 import pg, { type PoolClient } from 'pg';
 import type { Actor, TenantContext, FoundationRepository } from '@save-the-date/domain';
 import { DomainError, notFound, requireCapability, requireRecentAuthentication } from '@save-the-date/domain';
-import type { WeddingInput, EventInput, Role } from '@save-the-date/contracts';
+import {legacyContentSchema,postSchema,albumSchema,type WeddingInput,type EventInput,type Role} from '@save-the-date/contracts';
 
 export const lookupHashes=(value:string|string[]|undefined)=>typeof value==='string'?[value]:value??[];
 
@@ -100,13 +100,36 @@ export class PostgresStore implements FoundationRepository {
  await tx.query('update std_guest_grants set revoked_at=coalesce(revoked_at,now()) where wedding_id=$1 and ($2::timestamptz is null or created_at<=$2)',[id,cutoff]);await tx.query('update std_guest_sessions set expires_at=least(expires_at,now()) where grant_id in(select id from std_guest_grants where wedding_id=$1 and ($2::timestamptz is null or created_at<=$2))',[id,cutoff]);await tx.query('update std_upload_grants set revoked_at=coalesce(revoked_at,now()) where wedding_id=$1 and ($2::timestamptz is null or created_at<=$2)',[id,cutoff]);await tx.query('update std_upload_sessions set expires_at=least(expires_at,now()) where wedding_id=$1 and ($2::timestamptz is null or created_at<=$2)',[id,cutoff]);await tx.query('delete from std_site_sessions where wedding_id=$1 and ($2::timestamptz is null or exists(select 1 from std_shared_grants where wedding_id=$1 and created_at<=$2))',[id,cutoff]);await tx.query('update std_shared_grants set credential_hash=$2,generation=generation+1,created_at=now() where wedding_id=$1 and ($3::timestamptz is null or created_at<=$3)',[id,randomUUID(),cutoff]);await tx.query('update std_member_invites set revoked_at=coalesce(revoked_at,now()) where wedding_id=$1 and accepted_at is null and ($2::timestamptz is null or created_at<=$2)',[id,cutoff]);const passes=await tx.query("update std_passes set status='revoked',encrypted_payload=null,revoked_reason='Workspace removed',version=version+1 where wedding_id=$1 and status='active' and ($2::timestamptz is null or issued_at<=$2) returning id",[id,cutoff]);for(const p of passes.rows)await tx.query("insert into std_pass_history(id,wedding_id,pass_id,action,actor_id,reason) values($1,$2,$3,'revoked',$4,'Workspace removed')",[randomUUID(),id,p.id,actorId]);await tx.query("update std_jobs set state='cancelled' where wedding_id=$1 and state in ('pending','leased','running') and ($2::timestamptz is null or created_at<=$2)",[id,cutoff]);
  }
  async deleteWedding(actor:Actor,id:string){requireRecentAuthentication(actor);await this.transaction(async tx=>{await tx.query('select id from std_weddings where id=$1 for update',[id]);requireCapability(await this.tenant(actor,id,tx),'primary');if(this.deletionLedger)await this.deletionLedger.write({weddingId:id,state:'requested',eraseAfter:new Date(Date.now()+30*86400000).toISOString(),recordedAt:(await tx.query('select clock_timestamp() as now')).rows[0].now.toISOString()});await tx.query("update std_weddings set deleted_at=now(),recovery_until=now()+interval '30 days',version=version+1 where id=$1",[id]);await tx.query("insert into std_deletion_tombstones(wedding_id,erase_after) values($1,now()+interval '30 days') on conflict(wedding_id) do update set requested_at=now(),erase_after=excluded.erase_after,erased_at=null",[id]);await tx.query('update std_member_invites set revoked_at=now() where wedding_id=$1 and accepted_at is null',[id]);await tx.query("update std_jobs set state='cancelled' where wedding_id=$1 and state in ('pending','leased','running')",[id]);await this.quarantineWedding(tx,id,actor.userId);await this.audit(tx,id,actor.userId,'wedding.deleted',id);});}
- async importLegacy(email:string,input:WeddingInput,snapshot:unknown,checksum:string){return this.transaction(async tx=>{
+ async importLegacy(email:string,input:WeddingInput,snapshot:unknown,checksum:string){
+  const source=legacyContentSchema.parse(snapshot);
+  if(createHash('sha256').update(JSON.stringify(snapshot)).digest('hex')!==checksum)throw new DomainError(400,'LEGACY_CHECKSUM_MISMATCH','Legacy source does not match its checksum');
+  return this.transaction(async tx=>{
+  await tx.query('select pg_advisory_xact_lock(hashtextextended($1,0))',['legacy:'+input.slug]);
   const user=await tx.query('select id from std_users where email=$1 and verified_at is not null and deleted_at is null for update',[email]);if(!user.rowCount)throw new DomainError(409,'VERIFIED_OWNER_REQUIRED','Owner must be a verified platform account');
-  if((await tx.query('select 1 from std_retired_slugs where slug_hash=$1',[createHash('sha256').update(input.slug).digest('hex')])).rowCount)throw new DomainError(409,'SLUG_RETIRED','This wedding path cannot be reused');const id=randomUUID(),owner=user.rows[0].id;
+  if((await tx.query('select 1 from std_retired_slugs where slug_hash=$1',[createHash('sha256').update(input.slug).digest('hex')])).rowCount)throw new DomainError(409,'SLUG_RETIRED','This wedding path cannot be reused');
+  const existing=await tx.query('select w.id,w.primary_owner_id,w.deleted_at,s.source_checksum from std_weddings w left join std_legacy_snapshots s on s.wedding_id=w.id where w.slug=$1 for update of w',[input.slug]);
+  if(existing.rowCount&&(existing.rows[0].primary_owner_id!==user.rows[0].id||existing.rows[0].source_checksum!==checksum||existing.rows[0].deleted_at))throw new DomainError(409,'LEGACY_TARGET_CONFLICT','This path has different ownership, source or deletion history');
+  const id=existing.rows[0]?.id??randomUUID(),owner=user.rows[0].id;
+  if(!existing.rowCount){
   await tx.query('insert into std_weddings(id,slug,primary_owner_id,display_names,timezone,primary_date,locale,palette) values($1,$2,$3,$4,$5,$6,$7,$8)',[id,input.slug,owner,input.displayNames,input.timezone,input.primaryDate,input.locale,input.palette]);
   await tx.query("insert into std_memberships(wedding_id,user_id,role) values($1,$2,'owner')",[id,owner]);
   await tx.query("insert into std_events(id,wedding_id,title,type,timezone,to_be_confirmed) values($1,$2,'Wedding reception','reception','Africa/Lagos','1 August 2026 — schedule awaiting owner review')",[randomUUID(),id]);
-  await tx.query('insert into std_legacy_snapshots(wedding_id,source_checksum,source_data) values($1,$2,$3)',[id,checksum,snapshot]);await this.audit(tx,id,owner,'legacy.imported',id);return id;
+  await tx.query('insert into std_legacy_snapshots(wedding_id,source_checksum,source_data) values($1,$2,$3)',[id,checksum,snapshot]);
+  }
+  // Stable source-derived IDs make retries and pre-existing seed backfills safe.
+  const sourceId=(kind:string,key:string)=>{const bytes=createHash('sha256').update(id+':'+kind+':'+key).digest().subarray(0,16);bytes[6]=(bytes[6]&15)|80;bytes[8]=(bytes[8]&63)|128;const hex=bytes.toString('hex');return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);};
+  for(const post of source.posts){
+   const postId=sourceId('post',post.id),draft=postSchema.parse({title:post.title,slug:post.pageRoute.slice('/updates/'.length),excerpt:post.summary,body:[{type:'paragraph',text:post.details}]});
+   const current=await tx.query('select id from std_posts where wedding_id=$1 and id=$2',[id,postId]);
+   if(current.rowCount)continue;
+   await tx.query('insert into std_posts(id,wedding_id,slug,draft) values($1,$2,$3,$4)',[postId,id,draft.slug,draft]);
+   await tx.query('insert into std_post_paths(wedding_id,slug,post_id) values($1,$2,$3)',[id,draft.slug,postId]);
+  }
+  for(const [position,album] of source.albums.entries()){
+   const draft=albumSchema.parse({title:album.title,description:album.description,position});
+   await tx.query('insert into std_albums(id,wedding_id,title,description,position) values($1,$2,$3,$4,$5) on conflict(id) do nothing',[sourceId('album',album.slug),id,draft.title,draft.description,draft.position]);
+  }
+  await this.audit(tx,id,owner,'legacy.imported',id);return id;
  });}
 
  async recoverWedding(actor:Actor,id:string){requireRecentAuthentication(actor);await this.transaction(async tx=>{const r=await tx.query('update std_weddings set deleted_at=null,recovery_until=null,version=version+1 where id=$1 and primary_owner_id=$2 and deleted_at is not null and recovery_until>now() returning id',[id,actor.userId]);if(!r.rowCount)throw notFound();if(this.deletionLedger)await this.deletionLedger.write({weddingId:id,state:'recovered',eraseAfter:new Date().toISOString(),recordedAt:(await tx.query('select clock_timestamp() as now')).rows[0].now.toISOString()});await tx.query('delete from std_deletion_tombstones where wedding_id=$1 and erased_at is null',[id]);await tx.query("insert into std_memberships(wedding_id,user_id,role) values($1,$2,'owner') on conflict(wedding_id,user_id) do update set role='owner'",[id,actor.userId]);await this.audit(tx,id,actor.userId,'wedding.recovered',id);});}

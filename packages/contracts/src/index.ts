@@ -49,3 +49,4 @@ export * from './passes.js';
 export * from './uploads.js';
 export * from './creative.js';
 export * from './operator.js';
+export * from './legacy.js';

@@ -7,7 +7,7 @@ R0 identity, tenancy, memberships, events, canonical website publication and rec
 
 ## Latest verified milestone
 
-As of2026-10-14, **137 full tests pass with no skips; build, lint and all nine type checks pass**. Current work includes bounded tenant/account lists and actual Chrome105-record navigation,360px layouts, verified API/public-page/database transport, encoded video geometry and editable event end times. Original weddings and secrets are preserved. No public deployment, real guest messages or paid AI usage was authorised or performed.
+As of2026-10-14, **138 full tests pass with no skips; build, lint and all nine type checks pass**. Current work includes bounded tenant/account lists and actual Chrome105-record navigation,360px layouts, verified API/public-page/database transport, encoded video geometry and editable event end times. Original weddings and secrets are preserved. No public deployment, real guest messages or paid AI usage was authorised or performed.
 
 Patched Linux ARM64 Node22.23.3 passes real PNG/HEIC/video processing and all four invitation families' actual JPEG/PDF/QR variants. Capture-only compose registration/publication/private exports pass. Runtime scan improved from18 critical/489 high to1 critical/219 high; full findings remain visible, including Debian's minor/no-DSA classification of libxml2 CVE-2026-6653. This is not a complete security or production readiness claim.
 
@@ -15,7 +15,7 @@ Recovery remains verified at69 tables/19 objects/40 fonts, with encrypted replic
 
 ## Current work and next action
 
-Patched runtime build/security evidence is committed as af9eb87; final current-source capture/publication/private export compose smoke passed. Read-only encrypted legacy operational snapshot/reconciliation rehearsal now passes against all ten original migrations. Next finish tenant-owned legacy content import and explicit operational mapping preparation, run the declared100-wedding/1000-attendee/100-public-read-per-second profile, and complete browser/accessibility review. Resume from current verified code rather than restarting R0.
+Patched runtime build/security evidence is committed as af9eb87; final current-source capture/publication/private export compose smoke passed. Read-only encrypted legacy operational snapshot/reconciliation rehearsal now passes against all ten original migrations. Tenant-owned legacy blog drafts/private albums now import restartably and preserve owner edits. Next finish explicit operational mapping preparation, run the declared100-wedding/1000-attendee/100-public-read-per-second profile, and complete browser/accessibility review. Resume from current verified code rather than restarting R0.
 
 External release evidence remains owner-reviewed copy/human usability/planner acceptance, physical phone/camera checks, authorised provider smoke, production failure-independent recovery/failover and deployment review. Missing external approval does not block independent engineering.
 

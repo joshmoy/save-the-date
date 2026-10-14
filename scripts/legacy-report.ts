@@ -11,9 +11,11 @@ const report={checksum,counts:{posts:updates.length,albums:mediaCategories.lengt
 const output=process.env.LEGACY_REPORT_PATH??'/tmp/std-legacy-report.json';
 await writeFile(output,JSON.stringify(report,null,2));console.log(JSON.stringify(report));
 if(process.env.LEGACY_APPLY==='1'){
- const c=loadConfig(),store=new PostgresStore(c.DB_CONNECTION),email=process.env.LEGACY_OWNER_EMAIL;
+ const c=loadConfig(),endpoint=new URL(c.DB_CONNECTION),email=process.env.LEGACY_OWNER_EMAIL;
+ if(!['localhost','127.0.0.1'].includes(endpoint.hostname)||!endpoint.pathname.endsWith('_test'))throw Error('Legacy apply is a local _test rehearsal only; production cutover needs a separately reviewed migration.');
  if(!email)throw new Error('LEGACY_OWNER_EMAIL must identify an explicitly verified account');
+ const store=new PostgresStore(c.DB_CONNECTION);
  try{
-  const id=await store.importLegacy(email,weddingSchema.parse({displayNames:snapshot.couple,slug:'adeola-and-joshua',timezone:'Africa/Lagos',primaryDate:snapshot.historicalDate}),snapshot,checksum);console.log('Preserved seed draft '+id+'; nothing was published');
+  const id=await store.importLegacy(email,weddingSchema.parse({displayNames:snapshot.couple,slug:'adeola-and-joshua',timezone:'Africa/Lagos',primaryDate:snapshot.historicalDate}),snapshot,checksum);console.log('Imported private seed '+id+' with '+updates.length+' blog drafts and '+mediaCategories.length+' albums; external assets await reviewed import. Nothing was published.');
  }finally{await store.close();}
 }
