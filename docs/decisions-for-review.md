@@ -235,3 +235,7 @@ Use a minimal independent event/cutoff marker to prevent deleted optional RSVP a
 ## Pilot necessity schedules (2026-10-14)
 
 Adopt the TRD's proposed90-day post-event optional-answer limit and12-month audit-event retention as pilot defaults pending necessity/legal review before paid launch. Use the event end, start fallback and UTCduration; do not invent dates. Stop new optional collection at the deadline and erase through independent markers in the minute worker sweep. Keep support/provider callback schedules separate. This supersedes the earlier90-day operational-audit decision; old purged records cannot be reconstructed. See architecture-decisions/024-retention-schedules.md.
+
+## 2026-10-14 — Portable invitation fonts
+
+Replaced new system-dependent sans-serif choices with bundled Work Sans; existing drafts require explicit selection rather than silently changing an immutable snapshot. Pinned stylesheet and both font formats, retained version-1 rendering for compatible historical jobs, and isolated version-2 typography from workspace CSS. See ADR025. Follow the requested focused verification policy: rerun exports only for relevant changes and reserve the full suite for final release.
