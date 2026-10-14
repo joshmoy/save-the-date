@@ -148,3 +148,7 @@ Actual long-list Chrome interaction exposed an editor opening above the viewport
 ### R01/M05/O02 optional-answer erasure (2026-10-14)
 
 `rsvp-erasure.ts`, guest question policy, independent resource ledger, recovery replay and worker `rsvp-answer-delete` close answer resurrection through old sensitive archives/backups. `tests/rsvp-erasure.test.ts` uses a real generated TAR, verifies immediate download revocation, private file removal, ordinary-archive and tenant isolation, later-answer preservation, restored-answer/archive replay and cleanup requeue. No independent ledger means no deletion. Owner UI explains affected archives; actual360px review in `verification/browser-pagination/answer-deletion-mobile.jpg`. This establishes manual deletion; the separate proposed automatic90-day post-event policy remains to be reconciled with the TRD.
+
+### R01/M05/O02 policy alignment (2026-10-14)
+
+`PostgresRetention.expireAnswers`, the minute sweep, guest question projections/submit policy and expired-question guards enforce the proposed90-day post-event optional-answer limit. End/start/unknown-date boundaries, ledger refusal, concurrent idempotency, restored-answer replay and12-month scoped audit expiry are exercised in `tests/retention-policy.test.ts`. Support/provider callbacks retain separate90-day schedules. Necessity/legal confirmation before paid launch remains external; these defaults do not assert legal compliance.
