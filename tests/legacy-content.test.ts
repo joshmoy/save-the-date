@@ -1,14 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash,randomUUID} from 'node:crypto';
-import {PostgresStore,PostgresPublication} from '@save-the-date/persistence';
+import {PostgresStore,PostgresPublication,PostgresRetention} from '@save-the-date/persistence';
 import {weddingSchema,postSchema} from '@save-the-date/contracts';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {FilesystemStorage,type Job} from '@save-the-date/adapters';
 import {updates} from '../apps/web/src/data/updates.js';
 import {mediaCategories} from '../apps/web/src/data/mediaCategories.js';
 
 test('legacy content seed is tenant-owned, private, restartable and preserves owner edits',async()=>{
  const connection=process.env.TEST_DB_CONNECTION;assert.ok(connection);
  const endpoint=new URL(connection);assert.ok(['localhost','127.0.0.1'].includes(endpoint.hostname)&&endpoint.pathname.endsWith('_test'));
+ const root=await mkdtemp(tmpdir()+'/std-legacy-content-export-'),storage=new FilesystemStorage(root);
  const store=new PostgresStore(connection),prefix=randomUUID(),email='legacy-content-'+prefix+'@example.test';
  const source={schemaVersion:1,couple:'Adeola & Joshua',historicalDate:'2026-08-01',posts:updates,albums:mediaCategories,exceptions:['External references require reviewed asset import']};
  const checksum=createHash('sha256').update(JSON.stringify(source)).digest('hex'),input=weddingSchema.parse({displayNames:source.couple,slug:'legacy-'+prefix,timezone:'Africa/Lagos',primaryDate:source.historicalDate});
@@ -30,7 +34,22 @@ test('legacy content seed is tenant-owned, private, restartable and preserves ow
   assert.equal((await store.pool.query('select count(*) from std_active_publications where wedding_id=$1',[weddingId])).rows[0].count,'0');
   assert.equal((await store.pool.query('select count(*) from std_media_assets where wedding_id=$1',[weddingId])).rows[0].count,'0');
   assert.equal((await store.readWedding(owner,weddingId)).primary_date,'2026-08-01');
+  const retention=new PostgresRetention(store,storage,'legacy-content','https://example.test'),queued=await retention.export(owner,weddingId,false,randomUUID());
+  const row=(await store.pool.query('select * from std_jobs where dedupe_key=$1',['archive:'+queued.id])).rows[0];
+  await store.pool.query("update std_jobs set state='leased',lease_owner='legacy-export-test',lease_until=now()+interval '5 minutes' where id=$1",[row.id]);
+  const job:Job={id:row.id,weddingId,payload:row.payload,type:row.type,attempts:1,leaseOwner:'legacy-export-test',requestedBy:owner.userId};
+  await retention.process(job);const download=await retention.download(owner,weddingId,queued.id),chunks=[];
+  for await(const chunk of download.chunks)chunks.push(Buffer.from(chunk));
+  const archive=Buffer.concat(chunks),bytes=Number.parseInt(archive.subarray(124,136).toString().replaceAll('\0','').trim(),8),metadata=JSON.parse(archive.subarray(512,512+bytes).toString());
+  assert.equal(metadata.records.std_legacy_content[0].content.posts[0].date,updates[0].date);
+  assert.equal(metadata.records.std_legacy_content[0].content.posts[0].image,updates[0].image);
+  assert.equal(metadata.records.std_legacy_content[0].sourceChecksum,checksum);
+  assert.deepEqual(metadata.legacySourceOmissions,[]);
+  await store.pool.query('update std_legacy_snapshots set source_data=$2 where wedding_id=$1',[weddingId,{token:'private legacy credential'}]);
+  const unsafe=await retention.export(owner,weddingId,false,randomUUID()),snapshot=(await store.pool.query('select snapshot from std_archive_exports where id=$1',[unsafe.id])).rows[0].snapshot;
+  assert.deepEqual(snapshot.legacySourceOmissions,[{code:'LEGACY_SOURCE_REQUIRES_REVIEW'}]);assert.deepEqual(snapshot.records.std_legacy_content,[]);
+  assert.ok(!JSON.stringify(snapshot).includes('private legacy credential'));
   const other='legacy-other-'+prefix+'@example.test';await store.register(other,'synthetic','other-'+prefix);await store.verify('other-'+prefix);
   await assert.rejects(store.importLegacy(other,input,source,checksum),/different ownership/);
- }finally{await store.close();}
+ }finally{await store.close();await rm(root,{recursive:true,force:true});}
 });

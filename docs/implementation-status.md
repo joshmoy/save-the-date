@@ -15,12 +15,12 @@ Recovery remains verified at69 tables/19 objects/40 fonts, with encrypted replic
 
 ## Current work and next action
 
-Patched runtime build/security evidence is committed as af9eb87; final current-source capture/publication/private export compose smoke passed. Read-only encrypted legacy operational snapshot/reconciliation rehearsal now passes against all ten original migrations. Tenant-owned legacy blog drafts/private albums now import restartably and preserve owner edits. Next finish explicit operational mapping preparation, continue the full browser/accessibility and throttled mobile LCP review. Initial actual Chrome keyboard review and workspace skip-link/disclosure fixes now pass at desktop/360px; full WCAG/screen-reader/device acceptance is not claimed. Resume from current verified code rather than restarting R0.
+Patched runtime build/security evidence is committed as af9eb87; final current-source capture/publication/private export compose smoke passed. Read-only encrypted legacy operational snapshot/reconciliation rehearsal now passes against all ten original migrations. Tenant-owned legacy blog drafts/private albums now import restartably and preserve owner edits. Actual queued archives preserve validated legacy dates/references and explicitly omit unknown credential metadata. Next finish explicit operational mapping preparation, continue the full browser/accessibility and throttled mobile LCP review. Initial actual Chrome keyboard review and workspace skip-link/disclosure fixes now pass at desktop/360px; full WCAG/screen-reader/device acceptance is not claimed. Resume from current verified code rather than restarting R0.
 
 External release evidence remains owner-reviewed copy/human usability/planner acceptance, physical phone/camera checks, authorised provider smoke, production failure-independent recovery/failover and deployment review. Missing external approval does not block independent engineering.
 
 ## Remaining mandatory scope
-API documentation/pagination; production failure-domain recovery validation; R3 security/load/accessibility/browser/device and human pilot gates.
+Explicit legacy operational mapping/rehearsal; complete primary-flow accessibility/browser/mobile performance review and final requirement audit. Production failure-domain recovery, authorised provider/device checks and human pilot acceptance remain external release gates. API documentation, bounded collection navigation and the declared local pilot load now have implementation and verification evidence.
 
 ## External checks
 Live Raven delivery/callback, optional AI provider smoke checks and production storage need configured credentials and explicit authorisation for real/paid traffic. Physical camera and two-phone QR checks need devices. These do not prevent continued local implementation.
