@@ -239,3 +239,5 @@ Adopt the TRD's proposed90-day post-event optional-answer limit and12-month audi
 ## 2026-10-14 — Portable invitation fonts
 
 Replaced new system-dependent sans-serif choices with bundled Work Sans; existing drafts require explicit selection rather than silently changing an immutable snapshot. Pinned stylesheet and both font formats, retained version-1 rendering for compatible historical jobs, and isolated version-2 typography from workspace CSS. See ADR025. Follow the requested focused verification policy: rerun exports only for relevant changes and reserve the full suite for final release.
+
+Verification harnesses can explicitly reuse an owned dedicated renderer via TEST_RENDER_BROWSER_ENDPOINT, reducing repeated Chrome launches. This changes test configuration only; no export matrix was rerun for the argument plumbing. Existing dedicated-renderer integration evidence covers the adapter path; focused lint checked the changed files.

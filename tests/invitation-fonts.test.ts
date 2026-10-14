@@ -23,7 +23,7 @@ test('I03 preview-like ambient typography cannot change version-two export layou
  const {createHash}=await import('node:crypto'),root=await mkdtemp(tmpdir()+'/std-card-isolation-');
  try{
   await cp(templateFontDirectory,root,{recursive:true});const design=designSchema.parse({templateId:'modern-minimal',eventIds:[randomUUID()],fonts:{body:'Work Sans'},qr:false}),resolved=resolveDesign(design,{names:'Amélie & O’Connor',url:'https://example.test/w/font-isolation',palette:{background:'#FFFFFF',primary:'#243449',secondary:'#566779',accent:'#2F567C'},events:[],weddingVersion:1});
-  assert.equal(resolved.rendererVersion,2);const renderer=new BrowserInvitationRenderer(process.env.TEST_INVITATION_BROWSER_PATH!,root),clean=await renderer.render(resolved,'jpeg');
+  assert.equal(resolved.rendererVersion,2);const renderer=new BrowserInvitationRenderer(process.env.TEST_INVITATION_BROWSER_PATH!,root,process.env.TEST_RENDER_BROWSER_ENDPOINT),clean=await renderer.render(resolved,'jpeg');
   const css=await readFile(root+'/fonts.css','utf8'),ambient=css+"h1{letter-spacing:-2px;overflow-wrap:anywhere}p{max-width:20px}a{text-decoration:none;text-underline-offset:9px}";
   await writeFile(root+'/fonts.css',ambient);
   const withAmbient=await renderer.render({...resolved,fontManifest:{...resolved.fontManifest,stylesheetChecksum:createHash('sha256').update(ambient).digest('hex')}},'jpeg');
