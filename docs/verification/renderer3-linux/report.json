@@ -1,0 +1,26 @@
+{
+  "platform": "linux",
+  "architecture": "arm64",
+  "node": "v22.23.3",
+  "rendererVersion": 3,
+  "bodyFont": "Work Sans",
+  "browserMode": "dedicated endpoint",
+  "checks": [
+    {
+      "name": "Renderer3 Work Sans royal-elegance photo/no-photo",
+      "state": "passed"
+    },
+    {
+      "name": "Renderer3 Work Sans garden-romance photo/no-photo",
+      "state": "passed"
+    },
+    {
+      "name": "Renderer3 Work Sans modern-minimal photo/no-photo",
+      "state": "passed"
+    },
+    {
+      "name": "Renderer3 Work Sans photo-story photo/no-photo",
+      "state": "passed"
+    }
+  ]
+}

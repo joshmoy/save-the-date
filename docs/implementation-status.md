@@ -53,3 +53,5 @@ Migration028 recovery expansion now passes a targeted real encrypted PostgreSQL 
 Latest font correction: renderer3 quotes numeric font-family names and fixes measured Source Serif4 clipping, preserving older rendering contracts. Three focused font tests/no skips, template build, focused lint and web production build pass. Actual rebuilt mobile preview verified and screenshot replaced. No full template matrix or complete suite ran.
 
 Focused N01/N02/W03 browser review: delivery refresh now announces completion/busy state; scheduled expiry no longer shows provisional-review instructions. Actual rebuilt Chrome/mobile check, changed-file lint, web typecheck/build pass. No email/action submission, exports or full suite; evidence notifications/report.md.
+
+Renderer3/Work Sans Linux gap closed by focused four-family photo/no-photo actual export checks, reusing the dedicated browser. Geometry, QR and font embedding pass; two generated cards visually inspected. Existing image/current-code mount limitation recorded in verification/renderer3-linux/report.md. Full suite and unrelated processing were not run.
