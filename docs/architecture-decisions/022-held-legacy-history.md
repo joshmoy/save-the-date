@@ -1,0 +1,9 @@
+# 022 — Hold admission while transferring legacy history
+
+A legacy issued pass does not establish an RSVP or a reservation. Old credentials and roles therefore never become platform authority through migration.
+
+`PostgresLegacyTransfer` requires a recently authenticated verified primary owner, an explicitly reviewed complete identity/event mapping, independent admission recovery storage, a frozen source, disabled target admission policies and an initially empty target pass collection. It holds a shared source fence lock while rechecking the final snapshot and writing the target. A committed target hold precedes recovery intents and historical inserts. Source used facts become used passes and admissions; revoked and unused credentials remain quarantined without hashes or payloads. Original invalidation timestamps and historical scan reconciliation remain retained. No capacity conversion or notifications occur.
+
+Retries repair independent ledger commits without creating another admission. Target eligibility is checked inside the serialized write transaction; completed retries reject altered historical target facts. Normal issue, reissue and redemption reject held workspaces. A failure leaves the hold in place.
+
+This is a historical transfer primitive, not an operational cutover. No activation command or production migration is implied. A controlled handover still needs independently reviewed backup, reconciliation, rollback/roll-forward and owner-authorised reissue. Never unfreeze the old writer after target admissions without reconciling all acknowledged and uncertain admissions first.

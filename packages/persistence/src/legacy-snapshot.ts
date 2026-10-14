@@ -4,6 +4,18 @@ import pg from 'pg';
 type Row=Record<string,unknown>;
 export type LegacySnapshot={version:1;capturedAt:string;users:Row[];passes:Row[];scans:Row[];settings:Row[];migrations:Row[];fence?:{version:1;frozen:boolean;frozenAt:string|null}};
 const checksum=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
+export async function withFrozenLegacySource<T>(connection:string,expected:LegacySnapshot,work:()=>Promise<T>):Promise<T>{
+ // Validate transport before opening the locking maintenance connection.
+ const initial=await readLegacySnapshot(connection);if(!initial.fence?.frozen)throw Error('LEGACY_SOURCE_NOT_FROZEN');
+ const client=new pg.Client({connectionString:connection,connectionTimeoutMillis:5000});
+ try{
+  await client.connect();await client.query('begin');
+  const fence=(await client.query('select frozen from public.legacy_write_fence where id=true for share')).rows[0];if(!fence?.frozen)throw Error('LEGACY_SOURCE_NOT_FROZEN');
+  const current=await readLegacySnapshot(connection);
+  if(!current.fence?.frozen||current.fence.frozenAt!==expected.fence?.frozenAt||JSON.stringify(reconcileLegacySnapshot(current).tables)!==JSON.stringify(reconcileLegacySnapshot(expected).tables))throw Error('LEGACY_SOURCE_CHANGED');
+  return await work();
+ }finally{try{await client.query('rollback');}finally{await client.end();}}
+}
 /** A dedicated read-only transaction; no platform or legacy mutation methods exist. */
 export async function readLegacySnapshot(connection:string):Promise<LegacySnapshot>{
  let url:URL;try{url=new URL(connection);}catch{throw Error('LEGACY_CONNECTION_INVALID');}

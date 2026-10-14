@@ -132,3 +132,7 @@ TRD13.1 operational mapping preparation: `PostgresLegacyPlanner`, `legacyMapping
 TRD13.1 writer fencing: legacy migration011, guarded legacy HTTP writers and versioned snapshot fence metadata. Real PostgreSQL race proves an in-flight admission commits before freeze and a later attempt cannot consume another pass; frozen writes/truncate fail and reads preserve records. Maintenance-response test avoids false invalidity/admission claims. Historical transfer and complete rollback/roll-forward rehearsal remain unfinished; production freeze/deployment is not authorised.
 
 Legacy fencing final verification:144 full tests/no skips, build/lint/nine typechecks and diff checks pass. The legacy scanner presents the maintenance reason, keeps indeterminate network failures separate from invalid tickets and clears its busy state. Source/read snapshots remain available while all covered legacy writes are fenced. Production source remains untouched.
+
+### Legacy historical transfer verification (2026-10-14)
+
+R0 portability/migration and P01–P04: `PostgresLegacyTransfer`, migration 026 and `tests/legacy-transfer.test.ts` preserve source admission/revocation facts under a real source writer freeze. The disposable test covers independent-ledger failure before inserts, durable target hold, retry without duplicate admissions, zero active legacy credentials, no inferred RSVP reservations, held redemption/reissue and altered-target rejection. This does not establish operational cutover or production rollback readiness.
