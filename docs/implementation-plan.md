@@ -13,32 +13,14 @@ Each feature receives a commit after relevant checks. Required final gates: buil
 
 Execute sequentially without changing live data, deploying, emailing guests or using paid AI. Resume from implementation-status.md and actual evidence in requirements-traceability.md.
 
-Verified checkpoints (12 October): R0 foundation plus connected site/journal publication slice. Local database restore and Linux API container smoke passed. See verification/r0-report.md and r1-publication-report.md. Next dependency is private processed owner media (hero and post attachments) and the versioned four-family invitation renderer; R1 remains incomplete until actual exports and their quality evidence pass. R2/R3 work is still pending, not blocked solely by credentials.
+## Current execution sequence (2026-10-14)
 
-Resumed goal (12 October): complete all Must requirements through R3, with a Harbour redesign and separate marketing homepage. Sequence: Raven Relay connected email/callback adapter; approved Harbour app tokens and marketing/couple route separation; private processed media to complete site/blog; four-family invitations and real exports; guest/RSVP/admission; guest moderation/visibility; AI/manual boards/briefs; retention/operator/metrics and full release gates. Preserve the existing verified foundation. Later E02–E05 remain excluded.
+Connected R0–R3 feature implementations exist; release acceptance is not complete. Resume from current source and `implementation-status.md`, rather than replaying the historical implementation sequence.
 
-Continuation checkpoint: staff media committed c300830. Invitation families/editor/real exports and immutable retry/stale behavior implemented and verified locally; physical-phone and Linux sandbox gates remain. Move directly to household/CSV/grant/RSVP capacity, then passes/scanner and guest uploads. Do not repeat earlier milestones.
+1. Finish controlled legacy transition evidence: frozen source, explicit mappings, quarantined history, audited release, pre-switch rollback and current-schema encrypted restore. Local source/target rehearsal is implemented; production promotion remains separately authorised.
+2. Finish the primary browser/accessibility matrix across marketing, authentication, workspace, website/blog, invitation editor, guests/RSVP, admission, media/uploads, creative and lifecycle/support. Exercise keyboard, responsive layouts, errors/retries and publication boundaries. Resolve actual defects before expanding verification.
+3. Measure mobile public-page LCP on a declared profile using available supported browser controls; API timing alone does not satisfy this gate.
+4. Reconcile every mandatory traceability row with current implementation and evidence, removing stale foundation-only statements and identifying missing acceptance evidence precisely. Retain physical-device, human usability/planner, owner-copy and authorised live-provider checks as unverified until performed.
+5. Run final build/lint/type/full tests, portable build/smoke and applicable recovery checks after material changes. Recheck environment examples/start commands/deployment/backup instructions. Report residual production runtime findings and deployment-dependent limits truthfully.
 
-Household/RSVP checkpoint: connected CRUD/CSV/access requests/private guest sessions/complete responses, capacity and manual approval verified with PostgreSQL/browser evidence. Next: admission lineage/worker tickets/scanner and 100-way redemption/revocation races, followed by guest media grants and invited projections. Complete R2/R3 gates remain open.
-
-Checkpoint 2026-10-12: P01–P04 admission and M03 guest access/invited projections verified with real files, scanner and browser evidence. Next dependent R3 slice: A01–A05 concepts/boards/approval/planner brief; retention/export/support and release gates remain pending.
-
-2026-10-12 checkpoint: creative A01–A05 connected and locally verified (75 full tests, actual files and browser). Continue R3 M05/O02 retention/archive/erasure, then O01/O03 support/metrics and release gates.
-
-2026-10-12 checkpoint: M05/O02 local retention, streaming archive and recovery-safe erasure verified (84 full tests, real browser TAR). Next O01/O03 support/entitlements/metrics, followed by complete notification and portability/security/restore gates.
-
-2026-10-12 checkpoint: operator support/metrics committed 6d78101. Notification flows/history/retry and stale-link validation locally verified; continue directly into credential hash rotation and portability/restore/security gates.
-
-2026-10-12 checkpoint: notification controls committed 9fbd1e0. Credential-key rolling readers/writers verified with 105 full tests; next portability and complete recovery drills.
-
-2026-10-13 checkpoint: real two-adapter storage, Linux media/dedicated rendering and full capture-only compose journey passed; 106 full regression tests. Continue directly to complete encrypted database/object/deletion/admission restore and the remaining release gates.
-
-2026-10-13 recovery checkpoint: authenticated encrypted PG16/object/font replicas and complete isolated deletion/admission restore passed. Migration023 and audited uncertain-admission controls connected. Next dependency: security/manual-code compliance, pagination/API documentation and release load/browser gates; production recovery guarantees remain bounded by deployment validation.
-
-API checkpoint: schema-derived OpenAPI/correlated redacted logs/media cursor pages connected; 117 full regressions and focused HTTP/parser checks. Continue older invitation/planning histories and explicit asynchronous job IDs, then load/security/browser matrix.
-
-History checkpoint: older invitation/planning runs and photograph pages connected; 117 tests pass. Continue explicit async job identifiers, remaining growing lists and HTTP admission/export performance, then security/browser release matrix.
-
-Async/load checkpoint: transport IDs/status and resource-scoped invitation download implemented; 118 regressions pass. Local admission/export targets met on recorded reference profile; registry audit zero known vulnerabilities. Continue recovery ownership continuity, remaining lists/security headers and browser/mobile-LCP/a11y release gates.
-
-Ownership checkpoint: current-schema expansion and enforced restored primary-owner review close privilege rollback; complete older-schema encrypted restore passed, 119 tests. Continue remaining growing-list pagination and bounded security/browser/accessibility gates.
+The latest local baseline is 145 full tests without skips, all nine workspace build/type tasks and lint passing. Current recovery verifies 70 tables, 19 objects and 40 fonts, with independent erasure/admission replay and handover hold preservation. Actual 100-wedding pilot load and Linux rendering/media evidence are recorded under `verification/`. Detailed evidence and remaining limits belong in traceability/status, not duplicate historical plans.

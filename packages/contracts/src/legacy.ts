@@ -15,3 +15,11 @@ export const legacyMappingSchema=z.object({version:z.literal(1),sourceChecksum:z
  passes:z.array(z.object({sourcePassId:mappingUuid,attendeeId:mappingUuid,eventId:mappingUuid,admittedByUserId:mappingUuid.nullable().default(null),identityEvidence:z.string().trim().min(20).max(2000)}).strict()).max(10000)}).strict()
  .refine(value=>new Set(value.users.map(row=>row.sourceUserId)).size===value.users.length&&new Set(value.passes.map(row=>row.sourcePassId)).size===value.passes.length,'Source mappings must be unique');
 export type LegacyMapping=z.infer<typeof legacyMappingSchema>;
+
+/** Owner attestations do not independently verify backup custody or human review. */
+export const legacyHandoverSchema=z.object({
+ version:z.literal(1),backupReference:z.string().trim().min(20).max(500),backupChecksum:z.string().regex(/^[a-f0-9]{64}$/),
+ reviewEvidence:z.string().trim().min(40).max(2000),identitiesAndEventsReviewed:z.literal(true),
+ backupRestoreRehearsed:z.literal(true),legacyWritersRemainFrozen:z.literal(true),
+ unusedCredentialsRequireConfirmedRsvpAndExplicitReissue:z.literal(true)
+}).strict();

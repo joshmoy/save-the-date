@@ -219,3 +219,7 @@ Legacy source fencing —2026-10-14: use an expand-only, initially disabled data
 ## Held legacy historical transfer (2026-10-14)
 
 Import operational history only into an admission-disabled target with no existing passes. Commit a target hold before ledger intents and historical inserts; keep all old credentials and roles inactive. Preserve used facts even when subsequently invalidated, without interpreting issuance as RSVP or capacity. Historical transfer is not permission to activate either system. See architecture-decisions/022-held-legacy-history.md.
+
+## Reviewed legacy handover release (2026-10-14)
+
+Release is separate from historical transfer. A recently authenticated verified primary owner records backup/identity/event review attestations; the implementation independently checks source freeze, target history and committed recovery records. No credential, role, event policy, RSVP or notification changes on release. The supplied backup reference/checksum is an attestation, not automatic proof of custody or human acceptance. The command is initially restricted to local test targets; production promotion/routing requires separate deployment verification. Before release rollback keeps the target held; after any target admission uncertainty, recover by reconciliation/roll-forward instead of reopening competing writers.

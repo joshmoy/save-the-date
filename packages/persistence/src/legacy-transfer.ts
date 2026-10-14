@@ -1,5 +1,5 @@
 import {createHash,randomUUID} from 'node:crypto';
-import {legacyMappingSchema} from '@save-the-date/contracts';
+import {legacyMappingSchema,legacyHandoverSchema} from '@save-the-date/contracts';
 import {DomainError,notFound,requireRecentAuthentication,type Actor} from '@save-the-date/domain';
 import type {PoolClient} from 'pg';
 import type {AdmissionLedgerRecord} from '@save-the-date/adapters';
@@ -18,7 +18,7 @@ export class PostgresLegacyTransfer{
    const previous=(await this.store.pool.query('select * from std_legacy_transfers where wedding_id=$1',[mapping.weddingId])).rows[0];
    await this.primary(actor,mapping.weddingId);
    let plan:Awaited<ReturnType<PostgresLegacyPlanner['plan']>>;
-   if(previous){if(previous.created_by!==actor.userId||previous.source_checksum!==mapping.sourceChecksum||previous.mapping_checksum!==mappingChecksum)throw new DomainError(409,'LEGACY_TRANSFER_CONFLICT','Review the existing held transfer');plan=previous.reconciliation;}
+   if(previous){if(previous.state==='released')throw new DomainError(409,'LEGACY_ALREADY_RELEASED','Historical transfer is complete; use normal owner controls');if(previous.created_by!==actor.userId||previous.source_checksum!==mapping.sourceChecksum||previous.mapping_checksum!==mappingChecksum)throw new DomainError(409,'LEGACY_TRANSFER_CONFLICT','Review the existing held transfer');plan=previous.reconciliation;}
    else{
     plan=await new PostgresLegacyPlanner(this.store).plan(actor,snapshot,mapping);if(!plan.mappingComplete)throw new DomainError(409,'LEGACY_MAPPING_INCOMPLETE','Resolve all mapping exceptions before historical transfer');
     await this.store.transaction(async tx=>{await tx.query('select id from std_weddings where id=$1 for update',[mapping.weddingId]);await this.primary(actor,mapping.weddingId,tx);if((await tx.query("select id from std_events where wedding_id=$1 and admission_policy<>'disabled' limit 1",[mapping.weddingId])).rowCount)throw new DomainError(409,'LEGACY_TARGET_NOT_DISABLED','Disable all target event admission policies before transfer');if((await tx.query('select id from std_passes where wedding_id=$1 limit 1',[mapping.weddingId])).rowCount)throw new DomainError(409,'LEGACY_TARGET_NOT_EMPTY','Use a target without existing passes');await tx.query('insert into std_legacy_transfers(wedding_id,source_checksum,mapping_checksum,source_frozen_at,reconciliation,created_by) values($1,$2,$3,$4,$5,$6)',[mapping.weddingId,mapping.sourceChecksum,mappingChecksum,snapshot.fence!.frozenAt,plan,actor.userId]);});
@@ -27,7 +27,7 @@ export class PostgresLegacyTransfer{
    for(const record of records){const existing=await this.store.admissionLedger!.get(record.weddingId,record.passId);if(existing&&(existing.eventId!==record.eventId||existing.attendeeId!==record.attendeeId||existing.actorId!==record.actorId))throw Error('LEGACY_LEDGER_LINEAGE_CONFLICT');if(!existing)await this.store.admissionLedger!.write(record);}
    await this.store.transaction(async tx=>{
     await tx.query('select id from std_weddings where id=$1 for update',[mapping.weddingId]);await this.primary(actor,mapping.weddingId,tx);const held=(await tx.query('select * from std_legacy_transfers where wedding_id=$1 for update',[mapping.weddingId])).rows[0];if(held.completed_at){
-     for(const action of plan.actions){const row=(await tx.query('select p.*,a.admitted_at,a.actor_id as admission_actor from std_passes p left join std_admissions a on a.wedding_id=p.wedding_id and a.pass_id=p.id where p.wedding_id=$1 and p.id=$2',[mapping.weddingId,action.sourcePassId])).rows[0];if(!row||row.attendee_id!==action.attendeeId||row.event_id!==action.eventId||row.status!==(action.usedAt?'used':'revoked')||row.credential_hash!==null||row.manual_hash!==null||row.encrypted_payload!==null||(action.usedAt&&(row.used_at?.getTime()!==new Date(String(action.usedAt)).getTime()||row.admitted_at?.getTime()!==new Date(String(action.usedAt)).getTime()||row.used_by!==action.admittedByUserId||row.admission_actor!==action.admittedByUserId)))throw new DomainError(409,'LEGACY_TARGET_CHANGED','Reconcile historical target facts before retrying');}
+     for(const action of plan.actions){const row=(await tx.query('select p.*,a.admitted_at,a.actor_id as admission_actor,a.event_id as admission_event,a.attendee_id as admission_attendee from std_passes p left join std_admissions a on a.wedding_id=p.wedding_id and a.pass_id=p.id where p.wedding_id=$1 and p.id=$2',[mapping.weddingId,action.sourcePassId])).rows[0];if(!row||row.attendee_id!==action.attendeeId||row.event_id!==action.eventId||row.status!==(action.usedAt?'used':'revoked')||row.credential_hash!==null||row.manual_hash!==null||row.encrypted_payload!==null||(action.usedAt&&(row.used_at?.getTime()!==new Date(String(action.usedAt)).getTime()||row.admitted_at?.getTime()!==new Date(String(action.usedAt)).getTime()||row.used_by!==action.admittedByUserId||row.admission_actor!==action.admittedByUserId||row.admission_event!==action.eventId||row.admission_attendee!==action.attendeeId)))throw new DomainError(409,'LEGACY_TARGET_CHANGED','Reconcile historical target facts before retrying');}
      return;
     }
     for(const action of plan.actions){if(!(await tx.query('select a.id from std_attendees a join std_attendee_events ae on ae.wedding_id=a.wedding_id and ae.attendee_id=a.id join std_events e on e.wedding_id=ae.wedding_id and e.id=ae.event_id where a.wedding_id=$1 and a.id=$2 and ae.event_id=$3 and a.deleted_at is null',[mapping.weddingId,action.attendeeId,action.eventId])).rowCount)throw new DomainError(409,'LEGACY_TARGET_CHANGED','Restore the reviewed attendee and event eligibility before retrying');}
@@ -44,4 +44,29 @@ export class PostgresLegacyTransfer{
    return {weddingId:mapping.weddingId,held:true,passes:plan.actions.length,admissions:records.length,legacyCredentialsActivated:0,rolesGranted:0,capacityConverted:false,sourceCounts:reconcileLegacySnapshot(snapshot).tables};
   });
  }
+ /** Attested handover evidence is retained, but does not substitute for an actual restore drill. */
+ async release(actor:Actor,sourceConnection:string,snapshot:LegacySnapshot,input:unknown,evidenceInput:unknown){
+  requireRecentAuthentication(actor);const mapping=legacyMappingSchema.parse(input),evidence=legacyHandoverSchema.parse(evidenceInput),mappingChecksum=createHash('sha256').update(JSON.stringify(mapping)).digest('hex');
+  if(!this.store.admissionLedger)throw new DomainError(503,'ADMISSION_LEDGER_REQUIRED','Reconcile independent recovery storage before handover');
+  return withFrozenLegacySource(sourceConnection,snapshot,()=>this.store.transaction(async tx=>{
+   await tx.query('select id from std_weddings where id=$1 for update',[mapping.weddingId]);await this.primary(actor,mapping.weddingId,tx);
+   const held=(await tx.query('select * from std_legacy_transfers where wedding_id=$1 for update',[mapping.weddingId])).rows[0];
+   if(!held||!held.completed_at||held.source_checksum!==mapping.sourceChecksum||held.mapping_checksum!==mappingChecksum||reconcileLegacySnapshot(snapshot).sourceChecksum!==mapping.sourceChecksum)throw new DomainError(409,'LEGACY_TRANSFER_INCOMPLETE','Reconcile the identical completed historical transfer first');
+   if(held.state==='released'){
+    if(!Object.keys(evidence).every(key=>held.release_evidence[key]===evidence[key as keyof typeof evidence]))throw new DomainError(409,'LEGACY_HANDOVER_CONFLICT','Existing handover evidence differs');
+    return {weddingId:mapping.weddingId,state:'released',credentialsActivated:0};
+   }
+   const plan=held.reconciliation as Awaited<ReturnType<PostgresLegacyPlanner['plan']>>;
+   if((await tx.query('select count(*) from std_passes where wedding_id=$1',[mapping.weddingId])).rows[0].count!==String(plan.actions.length))throw new DomainError(409,'LEGACY_TARGET_CHANGED','Reconcile all target passes before release');
+   for(const action of plan.actions){
+    const row=(await tx.query('select p.*,a.id as admission_id,a.admitted_at,a.actor_id as admission_actor,a.event_id as admission_event,a.attendee_id as admission_attendee from std_passes p left join std_admissions a on a.wedding_id=p.wedding_id and a.pass_id=p.id where p.wedding_id=$1 and p.id=$2',[mapping.weddingId,action.sourcePassId])).rows[0];
+    if(!row||row.attendee_id!==action.attendeeId||row.event_id!==action.eventId||row.status!==(action.usedAt?'used':'revoked')||row.credential_hash!==null||row.manual_hash!==null||row.encrypted_payload!==null||(action.usedAt?(row.used_at?.getTime()!==new Date(String(action.usedAt)).getTime()||row.admitted_at?.getTime()!==new Date(String(action.usedAt)).getTime()||row.used_by!==action.admittedByUserId||row.admission_actor!==action.admittedByUserId||row.admission_event!==action.eventId||row.admission_attendee!==action.attendeeId):!!row.admission_id))throw new DomainError(409,'LEGACY_TARGET_CHANGED','Reconcile unchanged historical target facts before release');
+    if(action.usedAt){const record=await this.store.admissionLedger!.get(mapping.weddingId,action.sourcePassId);if(!record||record.state!=='committed'||record.weddingId!==mapping.weddingId||record.passId!==action.sourcePassId||record.operationKey!==action.sourcePassId||record.passVersion!==1||record.attendeeId!==action.attendeeId||record.eventId!==action.eventId||record.actorId!==action.admittedByUserId||record.admissionId!==row.admission_id)throw new DomainError(409,'LEGACY_LEDGER_NOT_RECONCILED','Complete independent admission recovery reconciliation before release');}
+   }
+   if((await tx.query("select 1 from std_admission_recovery_holds where wedding_id=$1 and state='open' limit 1",[mapping.weddingId])).rowCount)throw new DomainError(409,'ADMISSION_RECOVERY_HOLD','Resolve recovery holds before release');
+   await tx.query("update std_legacy_transfers set state='released',released_at=now(),released_by=$2,release_evidence=$3 where wedding_id=$1",[mapping.weddingId,actor.userId,evidence]);await this.store.audit(tx,mapping.weddingId,actor.userId,'legacy.handover_released',mapping.weddingId,{backupChecksum:evidence.backupChecksum});
+   return {weddingId:mapping.weddingId,state:'released',credentialsActivated:0};
+  }));
+ }
+
 }

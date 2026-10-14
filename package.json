@@ -23,7 +23,8 @@
     "db:legacy-snapshot": "tsx scripts/legacy-operational-snapshot.ts",
     "db:legacy-plan": "tsx scripts/legacy-mapping-plan.ts",
     "user:create:legacy": "node scripts/create-user.mjs",
-    "media:process-images": "node scripts/process-images.mjs"
+    "media:process-images": "node scripts/process-images.mjs",
+    "db:legacy-handover": "tsx scripts/legacy-handover.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

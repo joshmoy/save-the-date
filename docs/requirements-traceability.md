@@ -136,3 +136,7 @@ Legacy fencing final verification:144 full tests/no skips, build/lint/nine typec
 ### Legacy historical transfer verification (2026-10-14)
 
 R0 portability/migration and P01–P04: `PostgresLegacyTransfer`, migration 026 and `tests/legacy-transfer.test.ts` preserve source admission/revocation facts under a real source writer freeze. The disposable test covers independent-ledger failure before inserts, durable target hold, retry without duplicate admissions, zero active legacy credentials, no inferred RSVP reservations, held redemption/reissue and altered-target rejection. This does not establish operational cutover or production rollback readiness.
+
+### Controlled historical handover (2026-10-14)
+
+R0 transition/P01–P04: migration027 and `PostgresLegacyTransfer.release` separate audited owner release from transfer. `scripts/legacy-handover.ts` authenticates a private current session and decrypts an authenticated snapshot; the local test command shares target recovery storage. `tests/legacy-transfer.test.ts` covers stale/unrelated actors, missing recovery records, strict attestations, identical/conflicting retries and terminal used/unconfirmed pass safeguards. Owner attestation is not evidence that a production backup or human review occurred. Production ingress/cutover and real guest notification remain unperformed.
