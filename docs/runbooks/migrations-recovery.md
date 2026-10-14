@@ -50,3 +50,29 @@ Legacy transition: `pnpm db:legacy-report` is read-only. Only a reviewed local `
 The tested rehearsal applies all ten original SQL migrations to a fresh disposable database, captures four pass states, decrypts the exact snapshot and proves source rows/checksums remain unchanged. `used_at` always preserves historical admission, including subsequently invalidated passes. Multiple successful scans or successful scans without the used flag need reconciliation. Legacy `ticket_limit` is an issued-pass limit, not RSVP capacity. Existing legacy users need verified identity mapping; do not copy their roles into platform memberships. No legacy token is activated by this tool, and no notification is sent.
 
 This is backup/reconciliation preparation, not an authorised operational cutover. `LEGACY_APPLY=1 LEGACY_OWNER_EMAIL=verified@example.test pnpm db:legacy-report` now creates real tenant-owned blog drafts and private albums as well as the historical wedding seed, only against a local `_test` target. All posts retain their source wording and permanent slug; source dates and external media references remain in the checksummed source snapshot. No external image/video is represented as a processed asset. The same owner/source/path retry returns the existing wedding and fills missing source-derived records without overwriting edits, restoring deleted records or publishing anything. A different owner/source at that path fails. Before cutover, review an explicit original-wedding/event/attendee/staff mapping, resolve exceptions, import and process authorised assets, freeze old writers, reconcile final counts and rehearse controlled credential reissue with notifications captured locally. Live writes and real notifications still require authorisation. Preserve the original routes and backup until the reviewed transition is verified.
+
+### Explicit operational mapping rehearsal
+
+`pnpm db:legacy-plan ENCRYPTED_SNAPSHOT MAPPING_JSON OUTPUT_JSON` decrypts the authenticated snapshot into a private temporary directory, validates its shape, checks explicit mappings against a repeatable-read read-only target transaction and removes plaintext on exit. Configure `LEGACY_TARGET_CONNECTION` to a local `_test` database and `LEGACY_PLAN_SESSION_FILE` to a mode0600 file containing a current primary-owner session token. The owner must be verified, recently authenticated and outside a restored ownership hold. `BACKUP_ENCRYPTION_KEYS` uses the same private snapshot key ring. Output files are mode0600 and created without overwriting prior reports.
+
+Mapping format:
+
+```json
+{
+  "version": 1,
+  "sourceChecksum": "SHA256_FROM_SNAPSHOT_REPORT",
+  "weddingId": "TARGET_WEDDING_UUID",
+  "users": [{"sourceUserId": "LEGACY_USER_UUID", "targetUserId": "VERIFIED_PLATFORM_USER_UUID"}],
+  "passes": [{
+    "sourcePassId": "LEGACY_PASS_UUID",
+    "attendeeId": "TARGET_ATTENDEE_UUID",
+    "eventId": "TARGET_EVENT_UUID",
+    "admittedByUserId": "VERIFIED_MATCHED_SCANNER_UUID_OR_NULL",
+    "identityEvidence": "Record how this attendee identity and event allocation were reviewed."
+  }]
+}
+```
+
+Source and verified target account emails must match; mismatches require review, not inferred identity or copied privileges. Each target attendee must already have eligibility for the mapped event in the same wedding. Duplicate target attendee/event pairs and existing target passes are exceptions. Used passes retain admission even if subsequently invalidated and are never proposed for reissue. Unused credentials remain quarantined pending owner review of RSVP/eligibility. Scan attempts are mapped as historical evidence, not a new admission authority. Legacy issued-ticket limits are never converted to RSVP capacity.
+
+Exit0 means mappings reconcile locally; exit2 means the report contains exceptions. Neither authorises cutover: `cutoverReady` is always false. Remaining gates are a verified legacy write freeze, final source reconciliation, authenticated backup/rollback rehearsal, reviewed identities and authorised controlled reissue/notification. This tool does not import active credentials or write business records. Do not run dual legacy/platform admission writers. `tests/legacy-plan.test.ts` verifies the full encrypted-file CLI and real target checks, including cross-wedding rejection and unchanged target state.

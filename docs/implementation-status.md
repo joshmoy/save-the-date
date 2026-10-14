@@ -4,7 +4,7 @@ Updated 2026-10-14. MVP release acceptance remains incomplete. The goal is activ
 
 ## Latest verified state
 
-141 full PostgreSQL/API/domain/adapter tests pass with zero skips. Build, lint and all nine workspace type checks pass. No public deployment, real guest messages or paid AI usage was authorised or performed. Original wedding data and unrelated changes are preserved.
+142 full PostgreSQL/API/domain/adapter tests pass with zero skips. Build, lint and all nine workspace type checks pass. No public deployment, real guest messages or paid AI usage was authorised or performed. Original wedding data and unrelated changes are preserved.
 
 Implemented connected flows include identity/workspaces/memberships/events, canonical website and blog publication, two website themes, four invitation families with actual immutable JPEG/PDF exports, households/private RSVPs/capacity, authoritative journalled admission, private media/guest uploads/moderation, manual and configurable AI concepts/boards/approved briefs, Raven Relay delivery states, owner archives/retention/deletion, and operator/support/metrics. Their individual evidence and remaining acceptance limits are in requirements-traceability.md and verification/.
 
@@ -20,7 +20,7 @@ Recent commits: encrypted read-only legacy operational snapshots (`e82d1b9`); re
 
 ## Next concrete work
 
-Finish explicit legacy operational mapping/rehearsal and the primary-flow accessibility/browser audit. Complete actual mobile LCP measurement on a declared profile when supported browser controls are usable. A native Lighthouse attempt stopped before any audit/storage clearing when the native window became unavailable; API timing is not a substitute. Audit each mandatory requirement against current code/evidence before declaring completion.
+Explicit operational mapping and its encrypted-file CLI now pass read-only target/identity/lineage checks. Next implement/rehearse verified legacy writer fencing and historical transfer, then finish the primary-flow accessibility/browser audit. Complete actual mobile LCP measurement on a declared profile when supported browser controls are usable. A native Lighthouse attempt stopped before any audit/storage clearing when the native window became unavailable; API timing is not a substitute. Audit each mandatory requirement against current code/evidence before declaring completion.
 
 ## External release gates
 
