@@ -227,3 +227,7 @@ Release is separate from historical transfer. A recently authenticated verified 
 ## Event editor focus (2026-10-14)
 
 Retain the inline event editor and existing Harbour layout. Move keyboard focus to its named heading when opened, then restore the initiating control when closed. Name repeated edit buttons by their event and reset editor state when opening a different wedding. This fixes a rendered long-list defect without introducing another modal.
+
+## Optional-answer erasure and retained archives (2026-10-14)
+
+Use a minimal independent event/cutoff marker to prevent deleted optional RSVP answers returning through backup restoration. Revoke all older sensitive archives immediately and remove their stored files through a retryable worker job; owners create fresh exports. Preserve ordinary archives, source media, unrelated weddings and later answers. This conservative archive invalidation is disclosed beside the delete control. See architecture-decisions/023-rsvp-answer-erasure.md. A further policy audit identified that the implemented90-day operational audit schedule differs from the TRD's proposed12months, and automatic90-day optional-answer expiry is not yet implemented; reconcile these before release rather than claiming policy completion.

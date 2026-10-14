@@ -1,6 +1,6 @@
 import {z} from '@save-the-date/contracts';
 import type {StoragePort} from './index.js';
-const schema=z.object({version:z.literal(1),kind:z.enum(['media','guest','post','member']),weddingId:z.uuid().transform(v=>v.toLowerCase()),resourceId:z.uuid().transform(v=>v.toLowerCase()),recordedAt:z.iso.datetime()}).strict();
+const schema=z.object({version:z.literal(1),kind:z.enum(['media','guest','post','member','rsvp_answers']),weddingId:z.uuid().transform(v=>v.toLowerCase()),resourceId:z.uuid().transform(v=>v.toLowerCase()),recordedAt:z.iso.datetime()}).strict();
 export type ResourceErasureRecord=z.infer<typeof schema>;
 export interface ResourceErasureLedgerPort {write(record:ResourceErasureRecord):Promise<void>;records():AsyncIterable<ResourceErasureRecord>;eraseWedding(weddingId:string):Promise<void>}
 /** Minimal deletion/revocation markers, outside the database and object-backup rollback boundary. */

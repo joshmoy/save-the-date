@@ -4,7 +4,7 @@ Updated 2026-10-14. MVP release acceptance remains incomplete. The goal is activ
 
 ## Latest verified state
 
-145 full PostgreSQL/API/domain/adapter tests pass with zero skips. Build, lint and all nine workspace type checks pass. No public deployment, real guest messages or paid AI usage was authorised or performed. Original wedding data and unrelated changes are preserved.
+146 full PostgreSQL/API/domain/adapter tests pass with zero skips. Build, lint and all nine workspace type checks pass. No public deployment, real guest messages or paid AI usage was authorised or performed. Original wedding data and unrelated changes are preserved.
 
 Implemented connected flows include identity/workspaces/memberships/events, canonical website and blog publication, two website themes, four invitation families with actual immutable JPEG/PDF exports, households/private RSVPs/capacity, authoritative journalled admission, private media/guest uploads/moderation, manual and configurable AI concepts/boards/approved briefs, Raven Relay delivery states, owner archives/retention/deletion, and operator/support/metrics. Their individual evidence and remaining acceptance limits are in requirements-traceability.md and verification/.
 
@@ -22,7 +22,7 @@ Recent commits: encrypted read-only legacy operational snapshots (`e82d1b9`); re
 
 Legacy snapshot, mapping, writer fencing, historical transfer and controlled local handover are implemented. Tests cover source freeze, durable target hold, independent-ledger failure/retry, used/revoked preservation, encrypted-file transfer/release, recent verified primary ownership, unchanged historical lineage, conflicting evidence and terminal used/unconfirmed pass safeguards. Pre-switch rollback source authority was exercised with a rolled-back synthetic redemption while target admission stayed held. Encrypted replica recovery retains migration027 handover fields and the hold. Production promotion and real notifications remain unperformed.
 
-The primary-flow audit found and fixed an offscreen inline event editor: desktop/mobile heading focus, keyboard order, cancel return, native validation and cross-workspace reset now pass. Next: continue the remaining primary-flow accessibility/browser audit and reconcile each mandatory traceability row with current evidence. Measure actual mobile LCP on a declared profile when supported browser controls are usable. A native Lighthouse attempt stopped before audit/storage clearing when the native window became unavailable; API timing is not a substitute.
+The primary-flow audit found and fixed an offscreen inline event editor: desktop/mobile heading focus, keyboard order, cancel return, native validation and cross-workspace reset now pass. A retention audit additionally found that manual optional-answer deletion could resurrect through archives/backups; recovery-safe erasure, archive revocation and worker cleanup are verified with146 full tests/no skips and the complete encrypted restore drill. Next reconcile the TRD’s proposed automatic90-day optional-answer and12-month audit schedules, then continue the remaining browser/requirement audit. Measure actual mobile LCP on a declared profile when supported browser controls are usable. A native Lighthouse attempt stopped before audit/storage clearing when the native window became unavailable; API timing is not a substitute.
 
 ## External release gates
 

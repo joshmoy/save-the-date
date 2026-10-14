@@ -144,3 +144,7 @@ R0 transition/P01–P04: migration027 and `PostgresLegacyTransfer.release` separ
 ### W02 event-editor reachability (2026-10-14)
 
 Actual long-list Chrome interaction exposed an editor opening above the viewport while focus stayed on its trigger. `platform.tsx` now focuses the named editor heading, restores the originating button on close, names edit buttons by event, exposes Add event expansion and resets editor state between weddings. Desktop/360px focus, Tab, Cancel, required-title validation and cross-workspace reset are verified in `verification/browser-pagination/event-editor-focus.md`. Build/lint/nine type checks pass.
+
+### R01/M05/O02 optional-answer erasure (2026-10-14)
+
+`rsvp-erasure.ts`, guest question policy, independent resource ledger, recovery replay and worker `rsvp-answer-delete` close answer resurrection through old sensitive archives/backups. `tests/rsvp-erasure.test.ts` uses a real generated TAR, verifies immediate download revocation, private file removal, ordinary-archive and tenant isolation, later-answer preservation, restored-answer/archive replay and cleanup requeue. No independent ledger means no deletion. Owner UI explains affected archives; actual360px review in `verification/browser-pagination/answer-deletion-mobile.jpg`. This establishes manual deletion; the separate proposed automatic90-day post-event policy remains to be reconciled with the TRD.
