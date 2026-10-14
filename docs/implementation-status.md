@@ -47,3 +47,5 @@ Latest focused product check: S01 hidden-event CTA and registry-only gifting cor
 Latest publication boundary fix: draft slugs no longer become public aliases before owner publication. Migration028 preserves reservations and backfills only current published paths; older unproven aliases need owner review (ADR026). Six focused publication tests/no skips and focused lint pass; tested API/worker dependencies built successfully. Latest complete-suite baseline remains151; no export rerun.
 
 Traceability reconciliation: all42 mandatory PRD IDs now point to scoped current tests/reports instead of early whole-suite counts. verification/release-gates.md separates remaining local verification from human/device/provider/production evidence. No additional tests or exports ran for this documentation update.
+
+Migration028 recovery expansion now passes a targeted real encrypted PostgreSQL backup/replica/restore test: approved canonical path retained; reserved draft URL404; both reservations preserved. Disposable source/restore/runner databases removed. Focused lint passes; no browser/exports/full suite. See verification/recovery/post-path-expansion.md.

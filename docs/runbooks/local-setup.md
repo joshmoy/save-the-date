@@ -67,3 +67,5 @@ pnpm test --file=notifications.test.ts --file=email-provider.test.ts
 ```
 
 Repeat `--file` for related files; `tests/` is optional. Unknown flags/files and invalid name patterns fail before database creation. `--full` deliberately rejects selectors. A name filter can skip unrelated cases, so its result proves only the selected behaviour, not the full file or release.
+
+The targeted post-path recovery test also requires version-compatible pg_dump/pg_restore executables on PATH or PG_DUMP_PATH/PG_RESTORE_PATH. It creates and removes its own guarded local source/restore databases and uses no renderer.
