@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash,randomUUID} from 'node:crypto';
 import {PostgresStore,PostgresPublication,PostgresRetention} from '@save-the-date/persistence';
-import {weddingSchema,postSchema} from '@save-the-date/contracts';
+import {weddingSchema,postSchema,legacyContentSchema} from '@save-the-date/contracts';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {FilesystemStorage,type Job} from '@save-the-date/adapters';
@@ -16,6 +16,7 @@ test('legacy content seed is tenant-owned, private, restartable and preserves ow
  const store=new PostgresStore(connection),prefix=randomUUID(),email='legacy-content-'+prefix+'@example.test';
  const source={schemaVersion:1,couple:'Adeola & Joshua',historicalDate:'2026-08-01',posts:updates,albums:mediaCategories,exceptions:['External references require reviewed asset import']};
  const checksum=createHash('sha256').update(JSON.stringify(source)).digest('hex'),input=weddingSchema.parse({displayNames:source.couple,slug:'legacy-'+prefix,timezone:'Africa/Lagos',primaryDate:source.historicalDate});
+ for(const image of ['not a URL','https://user:private@example.test/photo.jpg'])assert.equal(legacyContentSchema.safeParse({...source,posts:[{...updates[0],image}]}).success,false);
  try{
   await store.register(email,'synthetic password hash','verify-'+prefix);
   await assert.rejects(store.importLegacy(email,input,source,checksum),/verified platform/);
