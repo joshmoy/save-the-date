@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./website": {
+      "types": "./dist/website-theme.d.ts",
+      "import": "./dist/website-theme.js"
     }
   },
   "scripts": {
