@@ -1,6 +1,7 @@
 import test,{before,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
+import {readFile} from 'node:fs/promises';
 import {PostgresStore,PostgresPublication} from '@save-the-date/persistence';
 import {credential,credentialHash,hashPassword,checkPassword} from '@save-the-date/adapters';
 import {weddingSchema,eventSchema,siteConfigSchema,postSchema} from '@save-the-date/contracts';
@@ -27,7 +28,7 @@ test('S01/S03: theme switch preserves content, shared-code rotation revokes sess
 test('B01/B02: safe rich text, publication revisions, aliases and private audience',async()=>{
  const input=postSchema.parse({title:'Venue announcement',slug:'venue-announcement',body:[{type:'paragraph',text:'<script>alert(1)</script>'},{type:'heading',text:'Our venue',bold:true}]});const post=await publication.savePost(planner,weddingId,input,0);assert.equal((await publication.publicSite(weddingSlug)).posts.length,0);await assert.rejects(publication.publishPost(planner,weddingId,post.id,post.version,true));await publication.publishPost(owner,weddingId,post.id,post.version,true);assert.equal((await publication.publicSite(weddingSlug)).posts[0].title,'Venue announcement');
  assert.equal(postSchema.safeParse({...input,body:[{type:'paragraph',text:'bad',href:'javascript:alert(1)'}]}).success,false);await assert.rejects(publication.savePost(owner,weddingId,{...input,attachments:[{assetId:randomUUID(),alt:'foreign',caption:''}]},0));
- const edited=await publication.savePost(planner,weddingId,{...input,title:'Changed draft',slug:'new-venue'},post.version,post.id);assert.equal((await publication.publicPost(weddingSlug,'venue-announcement')).post.title,'Venue announcement');await publication.publishPost(owner,weddingId,post.id,edited.version,true);const alias=await publication.publicPost(weddingSlug,'venue-announcement');assert.equal(alias.redirect,'new-venue');
+ const edited=await publication.savePost(planner,weddingId,{...input,title:'Changed draft',slug:'new-venue'},post.version,post.id);assert.equal((await publication.publicPost(weddingSlug,'venue-announcement')).post.title,'Venue announcement');await assert.rejects(publication.publicPost(weddingSlug,'new-venue'),{code:'NOT_FOUND'});await publication.publishPost(owner,weddingId,post.id,edited.version,true);const alias=await publication.publicPost(weddingSlug,'venue-announcement');assert.equal(alias.redirect,'new-venue');
  await assert.rejects(publication.savePost(owner,weddingId,{...input,slug:'venue-announcement'},0),(e:DomainError)=>e.code==='PATH_RESERVED');await publication.publishPost(owner,weddingId,post.id,edited.version,false);await assert.rejects(publication.publicPost(weddingSlug,'new-venue'));
  const privatePost=await publication.savePost(owner,weddingId,{...input,slug:'private-update',visibility:'invited'},0);await publication.publishPost(owner,weddingId,privatePost.id,1,true);assert.equal((await publication.publicSite(weddingSlug)).posts.length,0);await assert.rejects(publication.publicPost(weddingSlug,'private-update'));
  await assert.rejects(publication.deletePost(other,weddingId,privatePost.id,1));await publication.deletePost(owner,weddingId,privatePost.id,1);assert.equal((await publication.listPosts(owner,weddingId)).posts.length,1);
@@ -38,4 +39,18 @@ test('S01: publishing blocks unreadable palette combinations',async()=>{
 test('HTTP publication module projects only published guest-safe content',async()=>{
  const {createServer}=await import('../apps/api/src/server.js');const {loadConfig}=await import('@save-the-date/config');const config={...loadConfig(),DB_CONNECTION:connection!,TOKEN_HASH_KEYS:prefix.repeat(2)};const {app,store:apiStore}=await createServer(config);await app.listen(0,'127.0.0.1');const base=await app.getUrl();
  try{const r=await fetch(base+'/api/v1/public/weddings/'+weddingSlug);assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'no-store');const data=await r.json();assert.ok(!JSON.stringify(data).includes(owner.email));assert.ok(!JSON.stringify(data).includes('PRIVATE VENUE'));const privateResponse=await fetch(base+'/api/v1/weddings/'+weddingId+'/site');assert.equal(privateResponse.status,401);}finally{await app.close();await apiStore.close();}
+});
+
+test('B02 migration approves only evidenced current published paths and preserves reservations',async()=>{
+ const migration=await readFile(new URL('../packages/persistence/migrations/028_published_post_paths.sql',import.meta.url),'utf8');
+ await store.transaction(async tx=>{
+  await tx.query('create temporary table std_posts (id uuid,wedding_id uuid,published jsonb) on commit drop');
+  await tx.query('create temporary table std_post_paths (post_id uuid,wedding_id uuid,slug text) on commit drop');
+  const id=randomUUID(),wid=randomUUID();
+  await tx.query('insert into std_posts values($1,$2,$3)',[id,wid,{slug:'approved-path'}]);
+  for(const slug of ['approved-path','unreviewed-draft','unproven-old-path'])await tx.query('insert into std_post_paths values($1,$2,$3)',[id,wid,slug]);
+  await tx.query(migration);
+  const rows=(await tx.query('select slug,was_published from std_post_paths order by slug')).rows;
+  assert.deepEqual(rows,[{slug:'approved-path',was_published:true},{slug:'unproven-old-path',was_published:false},{slug:'unreviewed-draft',was_published:false}]);
+ });
 });

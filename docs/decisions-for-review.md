@@ -245,3 +245,5 @@ Verification harnesses can explicitly reuse an owned dedicated renderer via TEST
 Added strict test-file/name selection to the existing disposable runner rather than requiring manual database setup for each focused check. Unknown arguments fail before creating a database; full-release mode rejects filters. One standalone selector unit test and focused lint passed; exports were not rerun.
 
 S01: hiding the events section also hides its hero CTA; optional registry links can render without gifting prose. These respect saved section choices and avoid broken anchors. Verified only in a guarded synthetic local wedding; no public deployment or registry request was made.
+
+B02/S02: separate reserved blog slugs from approved public aliases. Migration028 conservatively enables only the evidenced current published slug for old records; historical aliases without approval provenance stay reserved pending owner review. This may remove an old redirect but does not delete content or its reservation. See ADR026 and migration runbook.
