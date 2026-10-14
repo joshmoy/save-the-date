@@ -45,3 +45,5 @@ Browser fixture checkpoint: `/tmp/std-navigation-checkpoint.json`; its private c
 Latest focused product check: S01 hidden-event CTA and registry-only gifting corrected; actual published Chrome/mobile fixture verified, web typecheck/build and changed-file lint pass. See verification/publication/section-visibility.md. Full-suite baseline remains151; continue the remaining browser/requirement audit.
 
 Latest publication boundary fix: draft slugs no longer become public aliases before owner publication. Migration028 preserves reservations and backfills only current published paths; older unproven aliases need owner review (ADR026). Six focused publication tests/no skips and focused lint pass; tested API/worker dependencies built successfully. Latest complete-suite baseline remains151; no export rerun.
+
+Traceability reconciliation: all42 mandatory PRD IDs now point to scoped current tests/reports instead of early whole-suite counts. verification/release-gates.md separates remaining local verification from human/device/provider/production evidence. No additional tests or exports ran for this documentation update.
