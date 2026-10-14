@@ -247,3 +247,5 @@ Added strict test-file/name selection to the existing disposable runner rather t
 S01: hiding the events section also hides its hero CTA; optional registry links can render without gifting prose. These respect saved section choices and avoid broken anchors. Verified only in a guarded synthetic local wedding; no public deployment or registry request was made.
 
 B02/S02: separate reserved blog slugs from approved public aliases. Migration028 conservatively enables only the evidenced current published slug for old records; historical aliases without approval provenance stay reserved pending owner review. This may remove an old redirect but does not delete content or its reservation. See ADR026 and migration runbook.
+
+Renderer3 corrects font-family quoting and Source Serif4 line height after actual preview inspection. Older snapshot renderer contracts remain available. Used only the three relevant font checks and an actual rebuilt preview; reused dedicated Chrome rather than launching per-export processes. ADR027 records metrics and limitations.

@@ -18,7 +18,7 @@ Recent commits: encrypted read-only legacy operational snapshots (`e82d1b9`); re
 - Portable runtime: real Linux ARM64 PNG/HEIC/video processing, all-template JPEG/PDF/QR output and capture-only compose journeys pass. Runtime findings improved from 18 critical/489 high to 1 critical/219 high; full findings, including libxml2 CVE-2026-6653, remain recorded. No complete production security claim follows.
 - Legacy preparation: all ten original migrations rehearsed in a disposable database; encrypted users/pass/scan/settings snapshot retains admission/revocation facts, counts/checksums and redacted exceptions. Content imports are private/restartable; actual archives preserve validated dates/references and explicitly omit unknown credential metadata. No operational cutover or external asset processing is implied.
 
-Invitation typography now bundles Work Sans, pins both font formats and stylesheet bytes, and isolates version-2 card typography from workspace CSS. Existing system-font drafts require an explicit portable font choice; completed files remain immutable. See architecture-decisions/025-invitation-font-portability.md. The existing mobile screenshot predates the final version-2 typography isolation and is not evidence of that final adjustment.
+Invitation typography now bundles Work Sans, pins both font formats and stylesheet bytes, and isolates version-2 card typography from workspace CSS. Existing system-font drafts require an explicit portable font choice; completed files remain immutable. See architecture-decisions/025-invitation-font-portability.md. The final rebuilt mobile preview is now verified with renderer3 and separately embedded Source Serif4/Work Sans; see ADR027.
 
 ## Next concrete work
 
@@ -49,3 +49,5 @@ Latest publication boundary fix: draft slugs no longer become public aliases bef
 Traceability reconciliation: all42 mandatory PRD IDs now point to scoped current tests/reports instead of early whole-suite counts. verification/release-gates.md separates remaining local verification from human/device/provider/production evidence. No additional tests or exports ran for this documentation update.
 
 Migration028 recovery expansion now passes a targeted real encrypted PostgreSQL backup/replica/restore test: approved canonical path retained; reserved draft URL404; both reservations preserved. Disposable source/restore/runner databases removed. Focused lint passes; no browser/exports/full suite. See verification/recovery/post-path-expansion.md.
+
+Latest font correction: renderer3 quotes numeric font-family names and fixes measured Source Serif4 clipping, preserving older rendering contracts. Three focused font tests/no skips, template build, focused lint and web production build pass. Actual rebuilt mobile preview verified and screenshot replaced. No full template matrix or complete suite ran.

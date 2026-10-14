@@ -6,7 +6,7 @@ This is a release checklist, not a completion declaration. The traceability tabl
 |---|---|---|
 | Tenant/roles, RSVP capacity, single admission | PostgreSQL/API tests;100-way admission; journal replay; pilot load | Final regression after latest changes |
 | Website/blog publication | Immutable snapshots, shared/invited boundaries, derived contrast; six focused post-path checks | Remaining desktop/browser keyboard/error-state matrix; owner copy review |
-| Invitations | Four families, photo/no-photo, actual JPEG/PDF/QR; bundled fonts and pixel parity | New Work Sans Linux rendering; final preview confirmation; physical two-phone QR samples |
+| Invitations | Four families, photo/no-photo, actual JPEG/PDF/QR; bundled fonts and pixel parity | New Work Sans/renderer3 Linux rendering; physical two-phone QR samples |
 | Media | Real private ClamAV/HEIC/video, quotas, moderation and revocation; filesystem/S3 conformance | Required phone/browser upload journeys and remaining rendered error states |
 | AI and handoff | Schema/failure/constraint/provenance/revision tests; manual approved PDF/JSON | Authorised live provider evaluation; three-of-five human planner assessment |
 | Email | Raven adapter, protocol fixtures, idempotency and truthful capture states | Authorised real sender/delivery/webhook smoke; no real email permission given |
