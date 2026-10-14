@@ -243,3 +243,5 @@ Replaced new system-dependent sans-serif choices with bundled Work Sans; existin
 Verification harnesses can explicitly reuse an owned dedicated renderer via TEST_RENDER_BROWSER_ENDPOINT, reducing repeated Chrome launches. This changes test configuration only; no export matrix was rerun for the argument plumbing. Existing dedicated-renderer integration evidence covers the adapter path; focused lint checked the changed files.
 
 Added strict test-file/name selection to the existing disposable runner rather than requiring manual database setup for each focused check. Unknown arguments fail before creating a database; full-release mode rejects filters. One standalone selector unit test and focused lint passed; exports were not rerun.
+
+S01: hiding the events section also hides its hero CTA; optional registry links can render without gifting prose. These respect saved section choices and avoid broken anchors. Verified only in a guarded synthetic local wedding; no public deployment or registry request was made.

@@ -156,3 +156,5 @@ Actual long-list Chrome interaction exposed an editor opening above the viewport
 ### I03/I04 pinned typography (2026-10-14)
 
 Renderer v2 bundles Work Sans and isolates shared preview/export typography. Versioned manifests pin CSS plus WOFF/WOFF2; compatible v1 snapshots retain their original stylesheet. Legacy system-font drafts require explicit migration before new exports. Evidence: tests/invitation-fonts.test.ts integrity and pixel-parity checks; tests/invitations.test.ts four-family Work Sans/photo JPEG/PDF/embedded-font/QR matrix. Latest complete suite:151 passed, zero skipped; build/type9/9 and lint passed. Encrypted restore recovered48 font/style/license assets. See ADR025 for scope and limits. No export rerun is needed for documentation-only changes.
+
+S01 section visibility: shared website component now removes an event CTA when its target section is hidden and renders registry-only gifting. Actual local published Chrome/360px-configured fixture has no unresolved fragments or horizontal overflow. Changed-file lint, web typecheck and production build pass; no exports/full-suite rerun. See verification/publication/section-visibility.md.
