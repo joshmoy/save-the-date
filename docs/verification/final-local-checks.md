@@ -25,3 +25,5 @@ pnpm test:full
 Use equivalent licensed fixture, sandboxed dedicated renderer and PostgreSQL tool paths on other hosts. Root .env supplies the isolated local test administrator connection. Existing wedding databases were not test targets.
 
 Fresh current-source web/API/worker images and connected localhost Compose smoke now pass; see final-portable/report.md. No public deployment, actual guest email or paid AI use occurred. R3 remains unaccepted: see release-gates.md for physical-device, human, authorised-provider, production and remaining browser/performance evidence.
+
+Cleanup: owned verification Compose services, synthetic browser-fixture server and temporary headless renderer stopped after successful checks. Volumes, fixture databases and evidence retained; main app and personal Chrome unchanged. No background export verification loop remains running.
