@@ -26,3 +26,6 @@
 .wrap{overflow-wrap:anywhere}
 
 .historyItem{overflow-wrap:anywhere}
+
+.skipLink{position:fixed;top:12px;left:12px;z-index:100;background:var(--std-surface);color:var(--std-ink);padding:12px 16px;border:1px solid var(--std-line);border-radius:8px;font-weight:600;transform:translateY(-200%)}
+.skipLink:focus{transform:translateY(0)}
