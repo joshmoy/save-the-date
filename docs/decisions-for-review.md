@@ -249,3 +249,5 @@ S01: hiding the events section also hides its hero CTA; optional registry links 
 B02/S02: separate reserved blog slugs from approved public aliases. Migration028 conservatively enables only the evidenced current published slug for old records; historical aliases without approval provenance stay reserved pending owner review. This may remove an old redirect but does not delete content or its reservation. See ADR026 and migration runbook.
 
 Renderer3 corrects font-family quoting and Source Serif4 line height after actual preview inspection. Older snapshot renderer contracts remain available. Used only the three relevant font checks and an actual rebuilt preview; reused dedicated Chrome rather than launching per-export processes. ADR027 records metrics and limitations.
+
+Delivery refresh/older-history completion now has explicit polite status feedback; settings restrict provisional-review guidance to provisional service dates. These small UI corrections preserve Harbour styling and all domain operations. No new email or sensitive archive was submitted.
