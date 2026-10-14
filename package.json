@@ -20,6 +20,7 @@
     "db:migrate": "tsx scripts/platform-migrate.ts",
     "db:migrate:legacy": "node scripts/migrate.mjs",
     "db:legacy-report": "tsx scripts/legacy-report.ts",
+    "db:legacy-snapshot": "tsx scripts/legacy-operational-snapshot.ts",
     "user:create:legacy": "node scripts/create-user.mjs",
     "media:process-images": "node scripts/process-images.mjs"
   },
