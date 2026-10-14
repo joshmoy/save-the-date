@@ -1,3 +1,4 @@
+import {assertLegacyWritable,withLegacyWriteFence} from "../../../src/lib/legacy-write-fence";
 import { NextResponse } from "next/server";
 import { canAccessRole, getCurrentSession } from "../../../src/lib/auth";
 import { getTicketAvailability, updateTicketLimit } from "../../../src/lib/hallPasses";
@@ -14,12 +15,14 @@ export async function GET() {
   return NextResponse.json({ ticketAvailability });
 }
 
-export async function PUT(request: Request) {
+async function PUTImplementation(request: Request) {
   const session = await getCurrentSession();
 
   if (!session || !canAccessRole(session, ["super_admin"])) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
+
+  await assertLegacyWritable();
 
   const body = (await request.json().catch(() => null)) as { ticketLimit?: number | null } | null;
   const rawLimit = body?.ticketLimit;
@@ -32,3 +35,5 @@ export async function PUT(request: Request) {
 
   return NextResponse.json({ ticketAvailability });
 }
+
+export const PUT=withLegacyWriteFence(PUTImplementation);

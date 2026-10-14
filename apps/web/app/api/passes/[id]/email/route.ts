@@ -1,10 +1,11 @@
+import {assertLegacyWritable,withLegacyWriteFence} from "../../../../../src/lib/legacy-write-fence";
 import { NextResponse } from "next/server";
 import { canAccessRole, getCurrentSession } from "../../../../../src/lib/auth";
 import { getHallPassById, updatePassEmailDelivery } from "../../../../../src/lib/hallPasses";
 import { isLikelyEmail } from "../../../../../src/lib/maileroo";
 import { sendPassPdfEmail } from "../../../../../src/lib/passEmail";
 
-export async function POST(
+async function POSTImplementation(
   request: Request,
   {
     params,
@@ -17,6 +18,8 @@ export async function POST(
   if (!session || !canAccessRole(session, ["super_admin"])) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
+
+  await assertLegacyWritable();
 
   const { id } = await params;
   const pass = await getHallPassById(id);
@@ -61,3 +64,5 @@ export async function POST(
     return NextResponse.json({ error: message, pass: updatedPass }, { status: 502 });
   }
 }
+
+export const POST=withLegacyWriteFence(POSTImplementation);

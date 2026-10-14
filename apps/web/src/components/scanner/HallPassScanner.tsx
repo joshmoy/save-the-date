@@ -195,17 +195,28 @@ export function HallPassScanner() {
       setIsRedeeming(true);
       await stopScanner();
 
-      const response = await fetch("/api/passes/redeem", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value }),
-      });
+      let response: Response;
+      try {
+        response = await fetch("/api/passes/redeem", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ value }),
+        });
+      } catch {
+        setIsRedeeming(false);
+        setIsCameraVisible(false);
+        setError("The connection failed. Admission may be uncertain; reconcile with the event lead before retrying.");
+        return;
+      }
 
       setIsRedeeming(false);
       setIsCameraVisible(false);
 
       if (!response.ok) {
-        setError("Could not verify this QR code.");
+        const failure = await response.json().catch(() => null) as {code?:string;error?:string}|null;
+        setError(failure?.code === "LEGACY_WRITES_FROZEN" && typeof failure.error === "string"
+          ? failure.error
+          : "Could not verify this QR code. Reconcile an uncertain admission before retrying.");
         return;
       }
 

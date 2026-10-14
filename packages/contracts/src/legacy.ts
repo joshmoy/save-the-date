@@ -6,7 +6,7 @@ export const legacyContentSchema=z.object({schemaVersion:z.literal(1),couple:z.s
  .refine(value=>new Set(value.posts.map(post=>post.id)).size===value.posts.length&&new Set(value.posts.map(post=>post.pageRoute)).size===value.posts.length&&new Set(value.albums.map(album=>album.slug)).size===value.albums.length,'Legacy source IDs and paths must be unique');
 
 const mappingUuid=z.uuid().transform(value=>value.toLowerCase()),instant=z.iso.datetime({offset:true}).nullable();
-export const legacyOperationalSnapshotSchema=z.object({version:z.literal(1),capturedAt:z.iso.datetime({offset:true}),
+export const legacyOperationalSnapshotSchema=z.object({version:z.literal(1),capturedAt:z.iso.datetime({offset:true}),fence:z.object({version:z.literal(1),frozen:z.boolean(),frozenAt:z.iso.datetime({offset:true}).nullable()}).strict().optional(),
  users:z.array(z.object({id:z.uuid(),email:z.string()}).passthrough()).max(100000),
  passes:z.array(z.object({id:z.uuid(),used_at:instant,invalidated_at:instant,used_by:z.string().nullable(),guest_name:z.string().nullable()}).passthrough()).max(100000),
  scans:z.array(z.object({id:z.uuid(),hall_pass_id:z.uuid().nullable().optional(),result:z.enum(['valid','used','invalid'])}).passthrough()).max(100000),settings:z.array(z.record(z.string(),z.unknown())).max(100),migrations:z.array(z.record(z.string(),z.unknown())).max(1000)}).strict();

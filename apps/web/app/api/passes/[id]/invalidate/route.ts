@@ -1,8 +1,9 @@
+import {assertLegacyWritable,withLegacyWriteFence} from "../../../../../src/lib/legacy-write-fence";
 import { NextResponse } from "next/server";
 import { canAccessRole, getCurrentSession } from "../../../../../src/lib/auth";
 import { getTicketAvailability, invalidateHallPass } from "../../../../../src/lib/hallPasses";
 
-export async function POST(
+async function POSTImplementation(
   _request: Request,
   {
     params,
@@ -16,6 +17,8 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
+  await assertLegacyWritable();
+
   const { id } = await params;
   const pass = await invalidateHallPass(id, session);
 
@@ -27,3 +30,5 @@ export async function POST(
 
   return NextResponse.json({ pass, ticketAvailability });
 }
+
+export const POST=withLegacyWriteFence(POSTImplementation);

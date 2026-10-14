@@ -1,3 +1,4 @@
+import {assertLegacyWritable,withLegacyWriteFence} from "../../../../src/lib/legacy-write-fence";
 import { NextResponse } from "next/server";
 import { canAccessRole, getCurrentSession } from "../../../../src/lib/auth";
 import { logScanAttempt, redeemHallPass } from "../../../../src/lib/hallPasses";
@@ -23,12 +24,14 @@ function extractToken(value: string) {
   return decodeURIComponent(segments.at(-1) ?? trimmed);
 }
 
-export async function POST(request: Request) {
+async function POSTImplementation(request: Request) {
   const session = await getCurrentSession();
 
   if (!session || !canAccessRole(session, ["super_admin", "bouncer"])) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
+
+  await assertLegacyWritable();
 
   const body = (await request.json().catch(() => null)) as { value?: string } | null;
   const token = extractToken(body?.value ?? "");
@@ -50,3 +53,5 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ result });
 }
+
+export const POST=withLegacyWriteFence(POSTImplementation);

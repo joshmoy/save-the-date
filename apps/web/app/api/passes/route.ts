@@ -1,3 +1,4 @@
+import {assertLegacyWritable,withLegacyWriteFence} from "../../../src/lib/legacy-write-fence";
 import { NextResponse } from "next/server";
 import { canAccessRole, getCurrentSession } from "../../../src/lib/auth";
 import {
@@ -37,12 +38,14 @@ export async function GET(request: Request) {
   return NextResponse.json({ ...passList, ticketAvailability, inviteFromStats });
 }
 
-export async function POST(request: Request) {
+async function POSTImplementation(request: Request) {
   const session = await getCurrentSession();
 
   if (!session || !canAccessRole(session, ["super_admin"])) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
+
+  await assertLegacyWritable();
 
   const body = (await request.json().catch(() => null)) as {
     guestName?: string;
@@ -164,3 +167,5 @@ export async function POST(request: Request) {
     emailDelivery,
   });
 }
+
+export const POST=withLegacyWriteFence(POSTImplementation);

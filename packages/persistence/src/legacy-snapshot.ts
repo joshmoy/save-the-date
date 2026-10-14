@@ -2,11 +2,11 @@ import {createHash} from 'node:crypto';
 import pg from 'pg';
 
 type Row=Record<string,unknown>;
-export type LegacySnapshot={version:1;capturedAt:string;users:Row[];passes:Row[];scans:Row[];settings:Row[];migrations:Row[]};
+export type LegacySnapshot={version:1;capturedAt:string;users:Row[];passes:Row[];scans:Row[];settings:Row[];migrations:Row[];fence?:{version:1;frozen:boolean;frozenAt:string|null}};
 const checksum=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 /** A dedicated read-only transaction; no platform or legacy mutation methods exist. */
 export async function readLegacySnapshot(connection:string):Promise<LegacySnapshot>{
- const url=new URL(connection);
+ let url:URL;try{url=new URL(connection);}catch{throw Error('LEGACY_CONNECTION_INVALID');}
  if(!['postgres:','postgresql:'].includes(url.protocol)||!url.hostname||decodeURIComponent(url.hostname).includes('/')||url.searchParams.has('host')||url.searchParams.has('hostaddr'))throw Error('LEGACY_CONNECTION_INVALID');
  if(!['localhost','127.0.0.1','[::1]'].includes(url.hostname)){
   if(url.searchParams.getAll('sslmode').length!==1||url.searchParams.get('sslmode')!=='verify-full'||url.searchParams.has('host')||url.searchParams.has('hostaddr'))throw Error('LEGACY_REMOTE_REQUIRES_VERIFIED_TLS');
@@ -19,8 +19,9 @@ export async function readLegacySnapshot(connection:string):Promise<LegacySnapsh
   const tables=['app_users','hall_passes','scan_attempts','ticket_settings','schema_migrations'] as const;
   const rows:Row[][]=[];
   for(const table of tables)rows.push((await client.query(`select to_jsonb(t) as record from ${table} t order by to_jsonb(t)::text collate "C"`)).rows.map(row=>row.record));
+  let fence:LegacySnapshot['fence'];if((await client.query("select to_regclass('legacy_write_fence') as table")).rows[0].table){const row=(await client.query('select frozen,frozen_at from legacy_write_fence where id=true')).rows[0];if(!row)throw Error('LEGACY_FENCE_INVALID');fence={version:1,frozen:row.frozen,frozenAt:row.frozen_at?.toISOString()??null};}
   await client.query('commit');
-  return {version:1,capturedAt,users:rows[0],passes:rows[1],scans:rows[2],settings:rows[3],migrations:rows[4]};
+  return {version:1,capturedAt,users:rows[0],passes:rows[1],scans:rows[2],settings:rows[3],migrations:rows[4],...(fence?{fence}:{})};
  }finally{await client.end();}
 }
 /** Reports contain IDs and aggregate facts, never names, emails, tokens or password hashes. */

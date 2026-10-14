@@ -32,7 +32,7 @@ test('legacy operational rehearsal preserves admission and revocation facts with
    await client.query("insert into scan_attempts(hall_pass_id,token,scanner_email,result) values($1,'private-token-0','synthetic@example.test','valid')",[ids[0]]);
    const snapshot=await readLegacySnapshot(endpoint.href),report=reconcileLegacySnapshot(snapshot);
    assert.deepEqual(report.passFacts,{used:2,revoked:1,unused:1,usedAndRevoked:1});
-   assert.equal(report.tables.migrations.count,10);assert.equal(report.tables.scans.count,1);
+   assert.equal(report.tables.migrations.count,11);assert.equal(report.tables.scans.count,1);assert.equal(snapshot.fence?.frozen,false);
    assert.equal(report.tables.users.count,1);assert.equal(report.tables.passes.count,4);
    const serialized=JSON.stringify(report);
    for(const secret of ['private-token','private-password-hash','synthetic@example.test','Synthetic Guest'])assert.ok(!serialized.includes(secret));
