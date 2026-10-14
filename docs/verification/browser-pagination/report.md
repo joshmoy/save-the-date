@@ -28,3 +28,15 @@ Actual Chrome review on the isolated navigation fixture verified keyboard access
 Added a first-focusable Skip to workspace content link. Enter moves actual DOM focus to the account content or the selected wedding's named content region, bypassing the header and eleven workspace controls. The next control in the Events region is Add event. New wedding now announces its collapsed/expanded state and controls the named creation section. Actual360px review measured body width360 with no horizontal overflow; `keyboard-skip-mobile.jpg` shows the styled content and visible region focus after skipping.
 
 One screenshot exposed stale styles while a standalone server was running during a rebuild. The isolated process was restarted after the final build; styles and the screenshot were reverified. The saved image is the final styled result. Build, lint and all nine typechecks pass;139 full domain/API/adapter regression tests passed before this small navigation-only change. Physical screen-reader use, Safari/phone matrix and a complete WCAG audit remain unverified.
+
+## Public and guest keyboard review — 2026-10-14
+
+Added first-focusable skip links to the wedding website, private RSVP and memories pages. Actual Chrome Enter activation moved DOM focus to `wedding-content`, `rsvp-content` and `memories-content`. RSVP event sections now have named regions and each Save button identifies its event, so identical household fields have clear event context.
+
+A new synthetic household with one allocated plus-one in the isolated navigation database opened its real private grant. Keyboard submission confirmed both named attendees for Synthetic celebration006; the second eligible event remained unanswered. The saved confirmation explicitly states that email delivery does not affect RSVP confirmation. At360px, body width was360, both event regions were named and no form inputs lacked labels. `guest-keyboard-rsvp-mobile.jpg` shows the actual saved state.
+
+The same private RSVP session opened a distinct upload session. No album was enabled for this fixture, so the actual UI showed the correct empty state and20-file/500MB session allowance; no file upload or media processing is claimed by this check. `guest-keyboard-memories-mobile.jpg` records it. Existing media-processing/moderation evidence remains in the media and guest-upload reports.
+
+The fixture driver `scripts/seed-guest-accessibility.ts /tmp/std-navigation-checkpoint.json` guards the isolated database name, verifies the existing synthetic password/account and retains an existing valid grant checkpoint instead of recreating records. Private codes are saved outside the checkout with mode0600, never printed or included in screenshots.
+
+Mobile performance attempt: the synthetic portable website opened in Chrome and Lighthouse settings were inspected, but the native window became unavailable before an audit could run. No audit or storage clearing occurred. Mobile LCP remains unverified; API load timings are not substituted for LCP.
