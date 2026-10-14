@@ -140,3 +140,7 @@ R0 portability/migration and P01–P04: `PostgresLegacyTransfer`, migration 026 
 ### Controlled historical handover (2026-10-14)
 
 R0 transition/P01–P04: migration027 and `PostgresLegacyTransfer.release` separate audited owner release from transfer. `scripts/legacy-handover.ts` authenticates a private current session and decrypts an authenticated snapshot; the local test command shares target recovery storage. `tests/legacy-transfer.test.ts` covers stale/unrelated actors, missing recovery records, strict attestations, identical/conflicting retries and terminal used/unconfirmed pass safeguards. Owner attestation is not evidence that a production backup or human review occurred. Production ingress/cutover and real guest notification remain unperformed.
+
+### W02 event-editor reachability (2026-10-14)
+
+Actual long-list Chrome interaction exposed an editor opening above the viewport while focus stayed on its trigger. `platform.tsx` now focuses the named editor heading, restores the originating button on close, names edit buttons by event, exposes Add event expansion and resets editor state between weddings. Desktop/360px focus, Tab, Cancel, required-title validation and cross-workspace reset are verified in `verification/browser-pagination/event-editor-focus.md`. Build/lint/nine type checks pass.

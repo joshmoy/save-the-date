@@ -223,3 +223,7 @@ Import operational history only into an admission-disabled target with no existi
 ## Reviewed legacy handover release (2026-10-14)
 
 Release is separate from historical transfer. A recently authenticated verified primary owner records backup/identity/event review attestations; the implementation independently checks source freeze, target history and committed recovery records. No credential, role, event policy, RSVP or notification changes on release. The supplied backup reference/checksum is an attestation, not automatic proof of custody or human acceptance. The command is initially restricted to local test targets; production promotion/routing requires separate deployment verification. Before release rollback keeps the target held; after any target admission uncertainty, recover by reconciliation/roll-forward instead of reopening competing writers.
+
+## Event editor focus (2026-10-14)
+
+Retain the inline event editor and existing Harbour layout. Move keyboard focus to its named heading when opened, then restore the initiating control when closed. Name repeated edit buttons by their event and reset editor state when opening a different wedding. This fixes a rendered long-list defect without introducing another modal.
